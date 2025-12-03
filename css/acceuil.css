@@ -1,0 +1,359 @@
+/* acceuil.css */
+
+/* --- Général --- */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0%;
+}
+html {
+    scroll-behavior: smooth; 
+}
+
+a,
+a:active,
+a:focus {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s; 
+}
+
+/* --- Mise en page Grid principale --- */
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    grid-template-rows: repeat(100, 1fr);
+    height: 250vh;
+}
+
+/* ... (Styles de la navigation et du hero-content inchangés) ... */
+
+.sous_top {
+    grid-row: 1 / 5;
+    grid-column: 1 / 25;
+    background-color: rgba(61, 101, 136, 0); 
+    color: white;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 0;
+    font-size: 1.2rem;
+    z-index: 10;
+    transition: 0.5s ease-in-out;
+}
+
+.sous_top .nav-inner {
+    width: 100%;
+    max-width: 1200px; 
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    padding: 0 20px;
+}
+
+.sous_top:hover {
+    background-color: rgb(255, 255, 255);
+    color: rgb(0, 0, 0);
+}
+
+.sous_top:hover a,
+.sous_top:hover a:active,
+.sous_top:hover a:focus {
+    color: rgb(0, 0, 0);
+}
+
+.sous_top:hover .nav-menu li:hover {
+    color: rgb(252, 135, 2);
+}
+
+.sous_top .logo img {
+    height: 60px; 
+    display: block; 
+}
+
+.sous_top .nav-menu {
+    list-style: none; 
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 25px; 
+}
+
+.sous_top .nav-menu li {
+    cursor: pointer;
+    white-space: nowrap; 
+}
+
+.sous_top .nav-menu li:hover {
+    color: rgb(252, 135, 2);
+}
+
+.sous_top .auth-link {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sous_top .auth-link li {
+    font-weight: bold;
+    background-color: rgb(252, 135, 2);
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer; 
+    transition: 0.3s;
+    color: white;
+}
+
+.sous_top .auth-link li:hover {
+    background-color: rgb(255, 170, 70);
+}
+
+.sous_top:hover .auth-link li {
+    background-color: rgb(252, 135, 2);
+    color: white;
+}
+
+.sous_top:hover .auth-link li:hover {
+    background-color: rgb(255, 170, 70);
+}
+
+.photo {
+    grid-column: 1 / 25;
+    grid-row: 1 / 41; 
+    z-index: 0;
+    background-image: url("../image/d.jpg");
+    background-size: cover;
+    background-position: center;
+    position: relative; 
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+    text-align: center;
+    color: white;
+}
+
+.photo::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); 
+    z-index: 1;
+}
+
+.photo .hero-content {
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    max-width: 1200px; 
+    width: 100%;
+}
+
+.main-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.2;
+    margin-bottom: 40px;
+    color: white;
+}
+
+.key-features {
+    list-style: none; 
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 30px;
+    font-size: 1.4rem;
+}
+
+.key-features li {
+    font-weight: 500;
+    position: relative;
+}
+
+/* --- Style commun aux titres de section --- */
+
+.section-title {
+    grid-column: 5 / 21;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin: 40px 0 20px 0;
+    color: rgb(0, 0, 50);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.section-title h2 {
+    margin: 0;
+    padding: 0;
+}
+
+/* --- Section C'EST QUOI MY COACH UP (Fonctionnalités) --- */
+
+.section-title:not(.qui-suis-je-title) { 
+    grid-row: 42 / 44; 
+}
+
+.perso_text {
+    grid-column: 5 / 21;
+    grid-row: 46/70;
+    padding-top: 20px; 
+    display: flex;
+    flex-direction: column;
+    gap: 40px; 
+    align-items: center;
+    text-align: center;
+}
+
+.perso_text .feature-block {
+    display: flex;
+    flex-direction: column;
+    position: relative; 
+    max-width: 600px;
+    width: 100%;
+}
+
+.perso_text .feature-block::before {
+    content: "";
+    position: absolute;
+    top: 5px; 
+    left: -20px;
+    width: 3px;
+    height: 90%; 
+    background-color: rgb(252, 135, 2); 
+}
+
+.perso_text .feature-title {
+    color: rgb(0, 0, 50); 
+    font-size: 1.8rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin: 0 0 10px 0;
+}
+
+.perso_text .feature-description {
+    color: #444; 
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* --- SECTION QUI SUIS-JE --- */
+
+.qui-suis-je-title {
+    grid-row: 78 / 78;
+}
+
+.a_propos_text {
+    grid-column: 5 / 21;
+    grid-row: 79/95;
+    padding: 20px;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #333;
+    text-align: center;
+}
+
+/* --- SECTION BOUTONS D'ACTIONS --- */
+
+.footer-actions {
+    grid-column: 1 / 25;
+    grid-row: 95 / 100;
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+    gap: 30px; 
+    margin: 40px 0;
+}
+
+.btn {
+    text-transform: uppercase;
+    font-weight: bold;
+    padding: 12px 25px;
+    border-radius: 5px;
+    transition: 0.3s;
+    text-decoration: none;
+    text-align: center;
+}
+
+.btn-primary {
+    background-color: rgb(252, 135, 2);
+    color: white;
+    border: 2px solid rgb(252, 135, 2);
+}
+
+.btn-primary:hover {
+    background-color: rgb(255, 170, 70);
+    border-color: rgb(255, 170, 70);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: rgb(0, 0, 50);
+    border: 2px solid rgb(0, 0, 50);
+}
+
+.btn-secondary:hover {
+    background-color: rgb(0, 0, 50);
+    color: white;
+}
+
+/* --- Responsive Design --- */
+@media screen and (max-width: 1024px) {
+    .main-title {
+        font-size: 2.5rem;
+        margin-bottom: 30px;
+    }
+
+    .key-features {
+        flex-direction: column;
+        gap: 15px;
+        font-size: 1.2rem;
+    }
+
+    .sous_top .nav-inner {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .sous_top .nav-menu {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sous_top .auth-link {
+        margin-top: 10px;
+    }
+
+    .perso_text {
+        padding: 10px;
+        gap: 30px;
+    }
+
+    .perso_text .feature-block {
+        max-width: 100%;
+        padding: 0 10px;
+    }
+
+    .a_propos_text {
+        padding: 10px;
+        font-size: 1rem;
+    }
+
+    .footer-actions {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
+

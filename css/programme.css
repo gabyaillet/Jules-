@@ -1,0 +1,163 @@
+/* acceuil.css */
+
+/* --- Général --- */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0%;
+}
+html {
+    scroll-behavior: smooth; 
+}
+
+a,
+a:active,
+a:focus {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s; 
+}
+
+/* --- Mise en page Grid principale --- */
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    grid-template-rows: repeat(100, 1fr);
+    height: 250vh;
+}
+
+/* ... (Styles de la navigation et du hero-content inchangés) ... */
+
+.sous_top {
+    grid-row: 1 / 5;
+    grid-column: 1 / 25;
+    background-color: rgb(4, 4, 4); 
+    color: rgb(255, 255, 255);
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 0;
+    font-size: 1.2rem;
+    z-index: 10;
+    transition: 0.5s ease-in-out;
+}
+
+.sous_top .nav-inner {
+    width: 100%;
+    max-width: 1200px; 
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    padding: 0 20px;
+}
+
+.sous_top:hover {
+    background-color: #f5f5f5;
+    color: rgb(0, 0, 0);
+}
+
+.sous_top:hover a,
+.sous_top:hover a:active,
+.sous_top:hover a:focus {
+    color: rgb(0, 0, 0);
+}
+
+.sous_top:hover .nav-menu li:hover {
+    color: rgb(252, 135, 2);
+}
+
+.sous_top .logo img {
+    height: 60px; 
+    display: block; 
+}
+
+.sous_top .nav-menu {
+    list-style: none; 
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 25px; 
+}
+
+.sous_top .nav-menu li {
+    cursor: pointer;
+    white-space: nowrap; 
+}
+
+.sous_top .nav-menu li:hover {
+    color: rgb(252, 135, 2);
+}
+
+.sous_top .auth-link {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sous_top .auth-link li {
+    font-weight: bold;
+    background-color: rgb(252, 135, 2);
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer; 
+    transition: 0.3s;
+    color: white;
+}
+
+.sous_top .auth-link li:hover {
+    background-color: rgb(255, 170, 70);
+}
+
+.sous_top:hover .auth-link li {
+    background-color: rgb(252, 135, 2);
+    color: white;
+}
+
+.sous_top:hover .auth-link li:hover {
+    background-color: rgb(255, 170, 70);
+}
+
+.photo {
+    grid-column: 1 / 25;
+    grid-row: 5 / 100;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 40px;
+    background-color: #f5f5f5;
+}
+
+.item {
+    display: flex;
+    flex-direction: row;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.image {
+    flex: 1;
+    background-color: #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    font-weight: bold;
+}
+
+.texte {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+    color: #333;
+}

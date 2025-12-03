@@ -1,0 +1,123 @@
+.grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(24, 1fr);
+    height: 100vh;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    background-color: #696969; 
+}
+
+/* ---------------------------------------------------- */
+/* AA - Conteneur du Formulaire (TRANSPARENT) */
+/* ---------------------------------------------------- */
+.aa {
+    grid-column: 4 / 7;
+    grid-row: 3 / 23;
+    background-color: #00000000; 
+    border-radius: 30px;
+    color: white;
+    display: flex;
+    justify-content: center; 
+    align-items: flex-start; /* MODIFIÉ: Aligne le contenu en haut */
+    padding: 20px;
+    z-index: 1; 
+    overflow: auto;
+}
+
+
+.aa form {
+    display: flex;
+    width: 80%; 
+    flex-direction: column;
+    gap: 15px; 
+    margin-top: 5vh; /* AJOUTÉ: Décale le formulaire vers le bas de 10% de la fenêtre, le remontant visuellement */
+}
+
+
+.aa form img {
+    max-width: 120px; 
+    height: auto; 
+    align-self: center; 
+    margin-bottom: 10px; 
+}
+
+
+.aa legend {
+    font-size: 2em;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+    letter-spacing: 0.1em;
+}
+
+
+.aa label {
+    font-size: 1.1em;
+    font-weight: 500;
+    margin-top: 5px;
+}
+
+.aa input[type="email"],
+.aa input[type="password"] {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.9); 
+    color: #333;
+    font-size: 1em;
+}
+
+.aa input[type="button"] {
+    margin-top: 20px;
+    padding: 12px 20px;
+    background-color: #696969; 
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.aa input[type="button"]:hover {
+    background-color: #4a4a4a; 
+}
+
+
+/* ---------------------------------------------------- */
+/* BB - Bloc Image */
+/* ---------------------------------------------------- */
+.bb {
+    grid-column: 7 / 10;
+    grid-row: 3 / 23;
+    border-radius: 30px;
+    background-image: url("../image/gris_blanc.jpg");
+    background-size: cover;
+    background-position: center;
+    border: 3px white solid;
+    z-index: 2; 
+}
+
+
+/* ---------------------------------------------------- */
+/* CC - Calque de Superposition (Noir semi-transparent) */
+/* ---------------------------------------------------- */
+.cc {
+    grid-column: 4 / 10; 
+    grid-row: 3 / 23;
+    border-radius: 30px;
+    background-color: #000000ab; 
+    z-index: 0; 
+}
+
+a,
+a:active,
+a::after {
+    color: white;
+    text-decoration: none;
+}
