@@ -62,7 +62,7 @@ Meleze.views.catalogue = (function () {
       // s'alignent d'une carte à l'autre sur une même rangée.
       '<div class="mt-auto pt-6">' +
         // Contrepartie : dans la couleur du type de mission
-        '<div class="p-5 text-night ' + t.color + '">' +
+        '<div class="p-5 text-night sm:min-h-[8.75rem] ' + t.color + '">' +
           '<p class="text-sm text-night/60">En échange</p>' +
           '<p class="mt-1 font-display text-xl font-bold leading-tight tracking-[-0.02em]">' + esc(m.reward.title) + '</p>' +
           '<p class="mt-1.5 text-sm text-night/70">offert par ' + esc(m.reward.partner) + '</p>' +

@@ -162,7 +162,7 @@ Meleze.views.home = (function () {
             '<p class="mt-4 max-w-md text-lg text-white/70">Une mission, un local pour vous guider, un commerçant pour vous remercier.</p>' +
             '<a href="#/missions" class="btn-lime mt-8">Je choisis ma mission ' + icon('arrow', 'h-5 w-5') + '</a>' +
           '</div>' +
-          '<div class="ph ph-lg hidden aspect-[4/3] lg:block">' + photo('stars', { sizes: '30vw', alt: '' }) + '</div>' +
+          '<div class="ph ph-lg hidden aspect-[4/3] bg-white/10 lg:block">' + photo('stars', { sizes: '30vw', alt: '' }) + '</div>' +
         '</div>' +
       '</section>'
     );

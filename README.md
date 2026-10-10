@@ -89,8 +89,9 @@ en vert lime comme au feutre, blocs de couleurs pastel, photos en grille « bent
 Règles de sobriété :
 - **Pas d'icônes décoratives** : la typographie porte l'information (seules restent la flèche des
   boutons principaux, le « + » des accordéons et le bouton clair/sombre).
-- **Arrondis dosés** : pilules pour les boutons, filtres et étiquettes ; arrondi léger (12 px) pour
-  les photos, cartes et tuiles ; les grands blocs pleine largeur, la FAQ et la barre d'onglets restent droits.
+- **Photos douces, blocs graphiques** : seules les photos sont arrondies (24 px ; 32 px pour les grandes
+  photos sur ordinateur ; 16 px pour les vignettes). Boutons, filtres et étiquettes sont en pilule.
+  Tout le reste (tuiles de couleur, cartes, encadrés, bons, formulaires, surlignage) est carré.
 
 | Rôle | Couleur |
 |---|---|

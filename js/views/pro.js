@@ -103,10 +103,10 @@ Meleze.views.pro = (function () {
         '</div>' +
 
         '<div class="min-w-0">' +
-          '<form class="flex gap-2" data-form="scan">' +
+          '<form class="flex flex-col gap-3" data-form="scan">' +
             '<label for="code" class="sr-only">Code du QR</label>' +
             '<input class="field min-w-0 font-mono uppercase tracking-wide placeholder:normal-case placeholder:tracking-normal" id="code" name="code" placeholder="Ou tapez le code : MLZ-…" autocomplete="off" autocapitalize="characters" value="' + esc(scanned || '') + '">' +
-            '<button class="btn-primary shrink-0">Lire</button>' +
+            '<button class="btn-primary w-full">Lire</button>' +
           '</form>' +
           '<p class="mt-6 text-sm text-muted">Pour la démo, présentez un de ces QR :</p>' +
           '<div class="mt-3 flex flex-wrap gap-2">' +

@@ -130,12 +130,12 @@
 
   /* Étiquette — texte foncé sur les fonds pastel/lime, lisible aussi en mode sombre */
   .tag { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 font-display text-[0.8rem] font-semibold leading-snug text-ink; }
-  .tag:where([class*='bg-sun'], [class*='bg-leaf'], [class*='bg-sky'], [class*='bg-coral'], [class*='bg-lilac'], [class*='bg-white'], [class*='bg-lime']) { @apply text-night; }
+  .tag:where([class~='bg-sun'], [class~='bg-leaf'], [class~='bg-sky'], [class~='bg-coral'], [class~='bg-lilac'], [class*='bg-white'], [class*='bg-lime']) { @apply text-night; }
 
   /* Photos — seuls éléments arrondis (avec les contrôles) ; le conteneur donne la taille et un fond neutre
      de repli tant que l'image n'est pas chargée */
   .ph { @apply relative overflow-hidden rounded-3xl bg-sunk; }
-  .ph-lg { @apply rounded-4xl; } /* grandes photos */
+  .ph-lg { @apply lg:rounded-4xl; } /* grandes photos : 32 px à partir de lg, 24 px (.ph) en dessous, à largeur égale */
   .ph-sm { @apply rounded-2xl; } /* vignettes */
   .ph > img { @apply absolute inset-0 h-full w-full object-cover; }
   .ph-zoom > img { @apply transition-transform duration-500 ease-out; }

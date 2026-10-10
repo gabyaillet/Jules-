@@ -13,7 +13,7 @@ Meleze.views.wallet = (function () {
 
   // Lignes sur fond blanc : l'étiquette "Inscrit·e" est grise, "À faire valider" lime.
   const STATUS = {
-    inscrite: { label: 'Inscrit·e', cls: 'tag bg-sunk' },
+    inscrite: { label: 'Inscrit·e', cls: 'tag' },
     terminee: { label: 'À faire valider', cls: 'tag bg-lime-300' },
   };
 
