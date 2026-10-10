@@ -29,6 +29,7 @@ Meleze.ui = (function () {
     x: '<path d="M18 6 6 18M6 6l12 12"/>',
     alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
     arrow: '<path d="M5 12h14M13 5l7 7-7 7"/>',
+    chevron: '<path d="m6 9 6 6 6-6"/>',
     logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
     moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/>',
@@ -80,9 +81,9 @@ Meleze.ui = (function () {
       d += 'M' + x + ' ' + y + 'h7v7h-7zM' + (x + 1) + ' ' + (y + 1) + 'v5h5v-5z';
       d += 'M' + (x + 2) + ' ' + (y + 2) + 'h3v3h-3z';
     });
-    return '<svg class="' + o.size + ' ' + (o.muted ? 'text-mineral-500 opacity-50' : 'text-fir-900') + '" viewBox="-2 -2 ' + (N + 4) + ' ' + (N + 4) +
+    return '<svg class="' + o.size + ' ' + (o.muted ? 'text-muted opacity-40' : 'text-olive-900') + '" viewBox="-2 -2 ' + (N + 4) + ' ' + (N + 4) +
       '" role="img" aria-label="QR code ' + esc(code) + '" shape-rendering="crispEdges">' +
-      '<rect x="-2" y="-2" width="' + (N + 4) + '" height="' + (N + 4) + '" fill="#F4F1EA"/>' +
+      '<rect x="-2" y="-2" width="' + (N + 4) + '" height="' + (N + 4) + '" fill="#FAF7F1"/>' +
       '<path fill="currentColor" fill-rule="evenodd" d="' + d + '"/></svg>';
   }
 
@@ -114,10 +115,9 @@ Meleze.ui = (function () {
   function toast(message, tone) {
     const host = document.getElementById('toast');
     if (!host) return;
-    const dot = tone === 'error' ? 'bg-danger' : 'bg-accent';
-    host.innerHTML = '<div class="toast-in pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-full bg-fir-900/95 py-2 pl-2 pr-5 text-sm font-medium text-snow-100 shadow-2xl backdrop-blur-md">' +
-      '<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-fir-900 ' + dot + '">' + icon(tone === 'error' ? 'alert' : 'check', 'h-4 w-4') + '</span>' +
-      '<span>' + esc(message) + '</span></div>';
+    const color = tone === 'error' ? 'text-[#F0B9A6]' : 'text-sage-300';
+    host.innerHTML = '<div class="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-xl bg-olive-900 px-4 py-3 text-sand-50 shadow-lg">' +
+      icon(tone === 'error' ? 'alert' : 'check', 'h-5 w-5 shrink-0 ' + color) + '<span>' + esc(message) + '</span></div>';
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { host.innerHTML = ''; }, 3800);
   }

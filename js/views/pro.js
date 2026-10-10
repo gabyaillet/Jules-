@@ -9,45 +9,41 @@ Meleze.views = Meleze.views || {};
 
 Meleze.views.pro = (function () {
   'use strict';
-  const { esc, icon, qr, photo, duration, date, typeOf, toast } = Meleze.ui;
+  const { esc, icon, qr, duration, date, typeOf, toast } = Meleze.ui;
   const store = Meleze.store;
 
   const ROLES = ['Commerçant partenaire', 'Référent de mission', 'Office de tourisme'];
   const CATEGORIES = ['Expérience', 'Produit local', 'Gourmandise', 'Équipement'];
   const DURATIONS = [30, 45, 60, 90, 120, 150, 180];
 
-  // État local de l'écran scanner
+  // État local de l'écran
   let scanned = null; // dernier code scanné
-  let flash = null; // message de succès après une action
+  let flash = null; // message de succès après une validation
   let created = null; // dernière mission créée (écran de confirmation)
+
+  function field(id, label, control, hint) {
+    return '<div><label class="label" for="' + id + '">' + label + '</label>' + control + (hint ? '<p class="hint">' + hint + '</p>' : '') + '</div>';
+  }
 
   // ------------------------------------------------------------------------
   // Connexion
   // ------------------------------------------------------------------------
   function renderLogin() {
     const demo = Meleze.data.proDemo;
-    return '<div class="mx-auto grid max-w-app gap-8 px-5 pb-16 pt-8 sm:px-8 lg:grid-cols-2 lg:items-stretch lg:pt-12">' +
-      '<div class="ph scrim relative min-h-[16rem] rounded-[2rem] text-snow-50 lg:min-h-full">' + photo('peak', { sizes: '(min-width:1024px) 50vw, 100vw', alt: '' }) +
-        '<div class="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-8">' +
-          '<span class="badge-glass">' + icon('lock', 'h-3.5 w-3.5') + 'Espace partenaires</span>' +
-          '<h1 id="page-title" tabindex="-1" class="mt-4 text-5xl leading-[0.95] sm:text-6xl">Connexion <em class="text-larch-300">pro</em></h1>' +
-          '<p class="mt-3 max-w-sm text-snow-100/85">Commerçants, référents et Office de tourisme&nbsp;: validez les missions, encaissez les bons et publiez vos propres missions.</p>' +
-        '</div>' +
-      '</div>' +
-      '<div class="lg:py-6"><form class="card space-y-5 p-6 sm:p-8" data-form="login" novalidate>' +
+    return '<div class="mx-auto max-w-md px-5 pb-16 pt-8 md:pt-12">' +
+      '<p class="flex items-center gap-2 text-muted">' + icon('lock', 'h-4 w-4') + 'Espace partenaires</p>' +
+      '<h1 id="page-title" tabindex="-1" class="mt-2 text-4xl">Connexion</h1>' +
+      '<p class="mt-2 text-muted">Pour les commerçants, les référents de mission et l’Office de tourisme : valider les missions, encaisser les bons, publier de nouvelles missions.</p>' +
+      '<form class="card mt-6 space-y-5 p-5 sm:p-6" data-form="login" novalidate>' +
         field('email', 'E-mail professionnel', '<input class="field" id="email" name="email" type="email" autocomplete="username" required value="' + demo.email + '">') +
-        field('pin', 'Code PIN', '<input class="field tracking-[0.5em]" id="pin" name="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password" required placeholder="••••">') +
+        field('pin', 'Code PIN', '<input class="field tracking-[0.4em]" id="pin" name="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password" required placeholder="••••">') +
         field('role', 'Je suis', '<select class="field" id="role" name="role">' + ROLES.map((r) => '<option>' + r + '</option>').join('') + '</select>') +
         field('org', 'Structure', '<input class="field" id="org" name="org" required value="Téléphérique du Mont Bochor">') +
-        '<p class="rounded-2xl bg-accent/15 p-4 text-sm"><strong>Démo&nbsp;:</strong> ' + demo.email + ' · PIN <strong>' + demo.pin + '</strong></p>' +
-        '<button class="btn-primary w-full">Se connecter <span class="btn-arrow">' + icon('arrow', 'h-4 w-4') + '</span></button>' +
+        '<p class="rounded-xl bg-tint px-4 py-3 text-[0.95rem]">Pour la démo : ' + demo.email + ', PIN <strong>' + demo.pin + '</strong></p>' +
+        '<button class="btn-primary w-full">Se connecter</button>' +
       '</form>' +
-      '<a href="#/" class="mt-6 inline-flex items-center gap-2 text-sm font-medium text-muted underline underline-offset-4 hover:text-ink">Retour à l’espace touriste</a></div>' +
+      '<a href="#/" class="link mt-6">Retour au site</a>' +
     '</div>';
-  }
-
-  function field(id, label, control, hint) {
-    return '<div><label class="label" for="' + id + '">' + label + '</label>' + control + (hint ? '<p class="hint">' + hint + '</p>' : '') + '</div>';
   }
 
   // ------------------------------------------------------------------------
@@ -55,16 +51,16 @@ Meleze.views.pro = (function () {
   // ------------------------------------------------------------------------
   function renderShell(pro, tab, inner) {
     const tabLink = (id, label, ic) =>
-      '<a href="#/pro/' + id + '" class="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-full text-sm font-semibold transition ' +
-      (tab === id ? 'bg-brand text-on-brand shadow-sm' : 'text-muted hover:text-ink') + '"' + (tab === id ? ' aria-current="page"' : '') + '>' + icon(ic) + label + '</a>';
+      '<a href="#/pro/' + id + '" class="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-lg font-semibold transition-colors ' +
+      (tab === id ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink') + '"' + (tab === id ? ' aria-current="page"' : '') + '>' + icon(ic) + label + '</a>';
 
-    return '<div class="mx-auto max-w-2xl px-5 pb-16 pt-10 sm:px-8">' +
+    return '<div class="mx-auto max-w-2xl px-5 pb-16 pt-8 sm:px-8 md:pt-12">' +
       '<div class="flex items-start justify-between gap-4">' +
-        '<div><p class="eyebrow">' + esc(pro.role) + '</p>' +
-        '<h1 id="page-title" tabindex="-1" class="mt-3 text-5xl leading-[0.95] sm:text-6xl">' + esc(pro.org) + '</h1></div>' +
-        '<button type="button" class="btn-ghost btn-sm shrink-0" data-action="logout" aria-label="Se déconnecter">' + icon('logout', 'h-4 w-4') + '<span class="hidden sm:inline">Quitter</span></button>' +
+        '<div><p class="text-muted">' + esc(pro.role) + '</p>' +
+        '<h1 id="page-title" tabindex="-1" class="mt-1 text-3xl sm:text-4xl">' + esc(pro.org) + '</h1></div>' +
+        '<button type="button" class="btn-secondary btn-sm shrink-0" data-action="logout">' + icon('logout', 'h-4 w-4') + '<span class="hidden sm:inline">Se déconnecter</span><span class="sr-only sm:hidden">Se déconnecter</span></button>' +
       '</div>' +
-      '<nav class="mt-8 flex gap-1 rounded-full bg-sunk p-1 ring-1 ring-line" aria-label="Outils pro">' +
+      '<nav class="mt-6 flex gap-1 rounded-xl bg-sunk p-1" aria-label="Outils pro">' +
         tabLink('scan', 'Scanner', 'scan') + tabLink('creer', 'Créer une mission', 'plus') +
       '</nav>' +
       '<div class="mt-8">' + inner + '</div>' +
@@ -78,26 +74,26 @@ Meleze.views.pro = (function () {
     const user = state.user;
     // Codes de démonstration : on "présente" un QR devant le viseur
     const demos = [{ code: user.code, label: 'QR de ' + user.firstName }]
-      .concat(state.vouchers.map((v) => ({ code: v.code, label: 'Bon ' + v.code.slice(-4) + (v.status === 'consomme' ? ' (utilisé)' : '') })));
+      .concat(state.vouchers.map((v) => ({ code: v.code, label: 'Bon ' + v.code.slice(-4) + (v.status === 'consomme' ? ' (déjà utilisé)' : '') })));
 
     return '<section aria-labelledby="scan-h">' +
       '<h2 id="scan-h" class="sr-only">Scanner un QR code</h2>' +
       '<div class="scan-frame">' +
-        '<span class="scan-corner left-5 top-5 rounded-tl-2xl border-l-4 border-t-4"></span>' +
-        '<span class="scan-corner right-5 top-5 rounded-tr-2xl border-r-4 border-t-4"></span>' +
-        '<span class="scan-corner bottom-5 left-5 rounded-bl-2xl border-b-4 border-l-4"></span>' +
-        '<span class="scan-corner bottom-5 right-5 rounded-br-2xl border-b-4 border-r-4"></span>' +
+        '<span class="scan-corner left-5 top-5 rounded-tl-xl border-l-[3px] border-t-[3px]"></span>' +
+        '<span class="scan-corner right-5 top-5 rounded-tr-xl border-r-[3px] border-t-[3px]"></span>' +
+        '<span class="scan-corner bottom-5 left-5 rounded-bl-xl border-b-[3px] border-l-[3px]"></span>' +
+        '<span class="scan-corner bottom-5 right-5 rounded-br-xl border-b-[3px] border-r-[3px]"></span>' +
         (scanned
-          ? '<div class="absolute inset-0 flex items-center justify-center p-14 opacity-90">' + qr(scanned, { size: 'w-full' }) + '</div>'
-          : '<span class="scan-line"></span><p class="absolute inset-x-0 bottom-10 text-center text-sm font-semibold text-snow-200">Placez le QR dans le cadre</p>') +
+          ? '<div class="absolute inset-0 flex items-center justify-center p-14">' + qr(scanned, { size: 'w-full' }) + '</div>'
+          : '<span class="scan-line"></span><p class="absolute inset-x-0 bottom-9 text-center text-sm text-sand-200">Placez le QR dans le cadre</p>') +
       '</div>' +
 
       '<form class="mt-6 flex gap-2" data-form="scan">' +
         '<label for="code" class="sr-only">Code du QR</label>' +
-        '<input class="field font-mono uppercase tracking-wider" id="code" name="code" placeholder="MLZ-…" autocomplete="off" autocapitalize="characters" value="' + esc(scanned || '') + '">' +
-        '<button class="btn-primary shrink-0">' + icon('scan') + '<span class="sr-only sm:not-sr-only">Lire</span></button>' +
+        '<input class="field font-mono uppercase tracking-wide" id="code" name="code" placeholder="Ou tapez le code : MLZ-…" autocomplete="off" autocapitalize="characters" value="' + esc(scanned || '') + '">' +
+        '<button class="btn-primary shrink-0">Lire</button>' +
       '</form>' +
-      '<p class="mt-4 text-sm font-semibold text-muted">Simulation — présenter un QR&nbsp;:</p>' +
+      '<p class="mt-5 text-sm text-muted">Pour la démo, présentez un de ces QR :</p>' +
       '<div class="mt-2 flex flex-wrap gap-2">' +
         demos.map((d) => '<button type="button" class="chip" data-action="scan-demo" data-code="' + esc(d.code) + '" aria-pressed="' + (scanned === d.code) + '">' + esc(d.label) + '</button>').join('') +
       '</div>' +
@@ -107,14 +103,14 @@ Meleze.views.pro = (function () {
   }
 
   function flashBox() {
-    return '<div class="mb-4 flex items-start gap-3 rounded-[1.5rem] bg-ok/15 p-4 font-medium text-ok">' + icon('check', 'h-6 w-6 shrink-0') + '<span>' + flash + '</span></div>';
+    return '<div class="mb-4 flex items-start gap-3 rounded-xl bg-tint px-4 py-3">' + icon('check', 'mt-0.5 h-5 w-5 shrink-0 text-brand-ink') + '<span>' + flash + '</span></div>';
   }
 
   /** Le cœur "intelligent" : l'écran s'adapte à la nature du code lu. */
   function renderResult(r) {
     if (r.kind === 'unknown') {
-      return '<div class="card flex items-start gap-3 border-danger/40 p-5">' + icon('alert', 'h-6 w-6 shrink-0 text-danger') +
-        '<div><p class="font-semibold">Code inconnu</p><p class="text-sm text-muted">« ' + esc(r.code) + ' » ne correspond à aucun participant ni bon Mélèze.</p></div></div>';
+      return '<div class="flex items-start gap-3 rounded-xl border border-danger/40 bg-card p-4">' + icon('alert', 'mt-0.5 h-5 w-5 shrink-0 text-danger') +
+        '<div><p class="font-semibold">Code inconnu</p><p class="text-muted">« ' + esc(r.code) + ' » ne correspond à aucun participant ni à aucun bon.</p></div></div>';
     }
 
     // --- QR d'un touriste : missions à valider --------------------------------
@@ -122,34 +118,34 @@ Meleze.views.pro = (function () {
       const rows = r.items.map(({ participation: p, mission: m }) => {
         const ready = p.status === 'terminee';
         return '<li class="card p-5">' +
-          '<p class="flex items-center gap-2 text-sm text-muted">' + icon(typeOf(m.type).icon, 'h-4 w-4') + duration(m.duration) + ' · ' + esc(m.location) + '</p>' +
-          '<h3 class="mt-1 text-2xl leading-[1.05]">' + esc(m.title) + '</h3>' +
-          '<p class="mt-2 flex items-center gap-2 text-sm">' + icon('gift', 'h-4 w-4 text-accent-ink') + '<span>Récompense&nbsp;: <strong>' + esc(m.reward.title) + '</strong></span></p>' +
+          '<p class="text-sm text-muted">' + esc(typeOf(m.type).label) + ' · ' + duration(m.duration) + ' · ' + esc(m.location) + '</p>' +
+          '<h3 class="mt-1 text-xl">' + esc(m.title) + '</h3>' +
+          '<p class="mt-2 text-[0.95rem]"><span class="text-muted">Contrepartie :</span> ' + esc(m.reward.title) + '</p>' +
           (ready
-            ? '<button type="button" class="btn-accent mt-4 w-full" data-action="validate" data-id="' + esc(p.id) + '">' + icon('check') + 'Valider la mission</button>'
-            : '<p class="mt-4 rounded-2xl bg-sunk p-3 text-sm text-muted">Mission pas encore déclarée terminée par le participant.</p>') +
+            ? '<button type="button" class="btn-primary mt-4 w-full" data-action="validate" data-id="' + esc(p.id) + '">' + icon('check') + 'Valider la mission</button>'
+            : '<p class="mt-4 rounded-xl bg-sunk px-4 py-3 text-[0.95rem] text-muted">Le participant n’a pas encore indiqué avoir terminé cette mission.</p>') +
         '</li>';
       }).join('');
       return '<div class="flex items-center gap-3">' +
-          '<span class="flex h-14 w-14 items-center justify-center rounded-full bg-accent font-serif text-2xl text-on-accent">' + esc(r.user.firstName[0]) + '</span>' +
-          '<div><p class="text-sm text-muted">Participant·e</p><p class="text-xl font-semibold">' + esc(r.user.firstName) + ' <span class="font-mono text-sm text-muted">' + esc(r.user.code) + '</span></p></div>' +
+          '<span class="flex h-12 w-12 items-center justify-center rounded-full bg-sage-200 font-serif text-xl text-olive-900">' + esc(r.user.firstName[0]) + '</span>' +
+          '<div><p class="text-lg font-semibold">' + esc(r.user.firstName) + '</p><p class="font-mono text-sm text-muted">' + esc(r.user.code) + '</p></div>' +
         '</div>' +
-        (rows ? '<ul class="mt-4 space-y-3">' + rows + '</ul>' : '<p class="card mt-4 p-5 text-muted">Aucune mission en cours pour ce participant.</p>');
+        (rows ? '<ul class="mt-4 space-y-3">' + rows + '</ul>' : '<p class="mt-4 rounded-xl bg-sunk p-4 text-muted">Aucune mission en cours pour ce participant.</p>');
     }
 
     // --- Bon de récompense : consommation unique ---------------------------------
     const v = r.voucher;
     const used = v.status === 'consomme';
     return '<div class="card p-5 ' + (used ? 'bg-sunk' : '') + '">' +
-      '<div class="flex items-center justify-between gap-3">' +
-        '<span class="badge ' + (used ? 'bg-danger/15 text-danger' : 'bg-ok/15 text-ok') + '">' + (used ? 'Déjà utilisé' : 'Bon valable') + '</span>' +
-        '<span class="font-mono text-sm font-bold">' + esc(v.code) + '</span>' +
+      '<div class="flex flex-wrap items-center justify-between gap-2">' +
+        '<span class="tag ' + (used ? 'bg-danger/10 text-danger' : '') + '">' + (used ? 'Déjà utilisé' : 'Bon valable') + '</span>' +
+        '<span class="font-mono text-sm font-semibold">' + esc(v.code) + '</span>' +
       '</div>' +
-      '<h3 class="mt-4 text-3xl leading-[1.05] ' + (used ? 'text-muted line-through decoration-1' : '') + '">' + esc(v.title) + '</h3>' +
-      '<p class="text-sm text-muted">' + esc(v.partner) + ' · émis le ' + date(v.issuedAt) + '</p>' +
+      '<h3 class="mt-3 text-2xl ' + (used ? 'text-muted line-through decoration-1' : '') + '">' + esc(v.title) + '</h3>' +
+      '<p class="text-muted">' + esc(v.partner) + ' · reçu le ' + date(v.issuedAt) + '</p>' +
       (used
-        ? '<button type="button" class="btn mt-5 w-full bg-mineral-300 text-mineral-700" disabled>' + icon('x') + 'Bon consommé le ' + date(v.usedAt) + '</button>'
-        : '<button type="button" class="btn-primary mt-5 w-full" data-action="consume" data-id="' + esc(v.id) + '">' + icon('check') + 'Consommer le bon</button>') +
+        ? '<button type="button" class="btn mt-5 w-full bg-sand-300 text-olive-700" disabled>Bon utilisé le ' + date(v.usedAt) + '</button>'
+        : '<button type="button" class="btn-primary mt-5 w-full" data-action="consume" data-id="' + esc(v.id) + '">Consommer le bon</button>') +
     '</div>';
   }
 
@@ -158,48 +154,47 @@ Meleze.views.pro = (function () {
   // ------------------------------------------------------------------------
   function renderCreate(pro) {
     if (created) {
-      return '<div class="ph relative overflow-hidden rounded-[2rem] text-snow-100">' + photo(created, { sizes: '700px', alt: '' }) +
-        '<div class="absolute inset-0 bg-fir-950/60"></div><div class="relative p-8 sm:p-10">' +
-        '<span class="flex h-12 w-12 items-center justify-center rounded-full bg-larch-400 text-fir-900">' + icon('check', 'h-6 w-6') + '</span>' +
-        '<h2 class="mt-5 text-5xl leading-none">Mission <em class="text-larch-300">publiée</em>&nbsp;!</h2>' +
-        '<p class="mt-2 text-snow-200/90">« ' + esc(created.title) + ' » est visible dès maintenant dans le catalogue, avec sa contrepartie&nbsp;: ' + esc(created.reward.title) + '.</p>' +
-        '<div class="mt-6 flex flex-col gap-3 sm:flex-row">' +
-          '<a href="#/missions?focus=' + esc(created.id) + '" class="btn-accent">Voir dans le catalogue ' + icon('arrow') + '</a>' +
-          '<button type="button" class="btn-glass" data-action="new-mission">Créer une autre mission</button>' +
+      return '<div class="rounded-2xl border border-sage-300 bg-tint p-6 sm:p-8">' +
+        '<p class="flex items-center gap-2 font-semibold text-brand-ink">' + icon('check') + 'Mission publiée</p>' +
+        '<h2 class="mt-2 text-3xl">« ' + esc(created.title) + ' »</h2>' +
+        '<p class="mt-2 text-muted">Elle est visible dès maintenant dans le catalogue, avec sa contrepartie : ' + esc(created.reward.title) + '.</p>' +
+        '<div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">' +
+          '<a href="#/missions?focus=' + esc(created.id) + '" class="btn-primary">Voir dans le catalogue</a>' +
+          '<button type="button" class="link" data-action="new-mission">Créer une autre mission</button>' +
         '</div>' +
-      '</div></div>';
+      '</div>';
     }
 
     const { SEASONS, TYPES } = Meleze.data;
     return '<form class="space-y-6" data-form="create">' +
-      '<fieldset class="card space-y-5 p-5 sm:p-7">' +
-        '<legend class="float-left mb-1 w-full font-serif text-3xl"><span class="text-muted">01</span> La mission</legend>' +
+      '<fieldset class="card space-y-5 p-5 sm:p-6">' +
+        '<legend class="float-left mb-1 w-full font-serif text-2xl">La mission</legend>' +
         field('title', 'Intitulé', '<input class="field" id="title" name="title" required maxlength="80" placeholder="Ex. Nettoyer les berges du Doron">') +
         field('type', 'Type', '<select class="field" id="type" name="type" required>' + TYPES.map((t) => '<option value="' + t.id + '">' + t.label + '</option>').join('') + '</select>') +
         '<div><p class="label" id="seasons-l">Saison(s)</p><div class="grid grid-cols-2 gap-2" role="group" aria-labelledby="seasons-l">' +
-          SEASONS.map((s) => '<label class="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-2xl border border-line bg-surface px-4 has-[:checked]:border-ink has-[:checked]:bg-card">' +
-            '<input type="checkbox" name="seasons" value="' + s.id + '" class="h-5 w-5 accent-[#1B3A2D]">' + s.label + '</label>').join('') +
+          SEASONS.map((s) => '<label class="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-xl border border-line bg-surface px-4 has-[:checked]:border-brand has-[:checked]:bg-tint">' +
+            '<input type="checkbox" name="seasons" value="' + s.id + '" class="h-5 w-5 accent-[#587349]">' + s.label + '</label>').join('') +
         '</div></div>' +
         '<div class="grid grid-cols-2 gap-4">' +
           field('duration', 'Durée', '<select class="field" id="duration" name="duration">' + DURATIONS.map((d) => '<option value="' + d + '"' + (d === 90 ? ' selected' : '') + '>' + duration(d) + '</option>').join('') + '</select>') +
           field('spots', 'Places', '<input class="field" id="spots" name="spots" type="number" min="1" max="500" value="10" required inputmode="numeric">') +
         '</div>' +
         field('location', 'Lieu de rendez-vous', '<input class="field" id="location" name="location" required placeholder="Ex. Pont de la Pêche">') +
-        field('schedule', 'Quand ?', '<input class="field" id="schedule" name="schedule" placeholder="Ex. Samedi · 9h30">') +
-        field('description', 'Description', '<textarea class="field min-h-[7rem]" id="description" name="description" required maxlength="400" placeholder="Ce que les participants vont faire, le matériel à prévoir…"></textarea>') +
+        field('schedule', 'Quand ?', '<input class="field" id="schedule" name="schedule" placeholder="Ex. Samedi, 9h30">') +
+        field('description', 'Description', '<textarea class="field min-h-[7rem]" id="description" name="description" required maxlength="400" placeholder="Ce que les participants vont faire, ce qu’il faut prévoir…"></textarea>') +
       '</fieldset>' +
 
       // Contrepartie : bloc mis en avant, champs obligatoires
-      '<fieldset class="space-y-5 rounded-[1.75rem] bg-accent/15 p-5 ring-2 ring-accent sm:p-7">' +
-        '<legend class="float-left mb-1 flex w-full flex-wrap items-center gap-3 font-serif text-3xl"><span class="text-accent-ink">02</span> La contrepartie <span class="badge bg-accent font-sans text-on-accent">Obligatoire</span></legend>' +
-        '<p class="text-sm text-muted">Pas de mission sans récompense&nbsp;: c’est la promesse Mélèze.</p>' +
-        field('rtitle', 'Récompense offerte', '<input class="field" id="rtitle" name="rtitle" required maxlength="80" placeholder="Ex. Une descente en luge offerte">') +
-        field('rpartner', 'Offerte par', '<input class="field" id="rpartner" name="rpartner" required value="' + esc(pro.org) + '">') +
+      '<fieldset class="space-y-5 rounded-2xl border border-sage-300 bg-tint p-5 sm:p-6">' +
+        '<legend class="float-left mb-1 w-full font-serif text-2xl">La contrepartie <span class="font-sans text-base font-semibold text-brand-ink">(obligatoire)</span></legend>' +
+        '<p class="text-muted">Chaque mission doit offrir quelque chose en échange : c’est le principe de Mélèze.</p>' +
+        field('rtitle', 'Ce que vous offrez', '<input class="field" id="rtitle" name="rtitle" required maxlength="80" placeholder="Ex. Une descente en luge">') +
+        field('rpartner', 'Offert par', '<input class="field" id="rpartner" name="rpartner" required value="' + esc(pro.org) + '">') +
         field('rcat', 'Catégorie', '<select class="field" id="rcat" name="rcat">' + CATEGORIES.map((c) => '<option>' + c + '</option>').join('') + '</select>') +
-        '<label class="flex cursor-pointer items-start gap-3 text-sm font-semibold"><input type="checkbox" name="commit" required class="mt-0.5 h-5 w-5 shrink-0 accent-[#1B3A2D]">Je m’engage à honorer cette contrepartie pour chaque mission validée.</label>' +
+        '<label class="flex cursor-pointer items-start gap-3"><input type="checkbox" name="commit" required class="mt-1 h-5 w-5 shrink-0 accent-[#587349]">Je m’engage à offrir cette contrepartie à chaque participant dont la mission est validée.</label>' +
       '</fieldset>' +
 
-      '<button class="btn-primary w-full">Publier dans le catalogue <span class="btn-arrow">' + icon('arrow', 'h-4 w-4') + '</span></button>' +
+      '<button class="btn-primary w-full">Publier la mission</button>' +
     '</form>';
   }
 
@@ -217,14 +212,14 @@ Meleze.views.pro = (function () {
     validate(el, app) {
       const v = store.validate(el.dataset.id);
       if (v) {
-        flash = 'Mission validée. Bon <span class="font-mono">' + esc(v.code) + '</span> envoyé dans le wallet du participant&nbsp;: ' + esc(v.title) + '.';
-        toast('Mission validée, récompense débloquée !');
+        flash = 'Mission validée. Le bon <span class="font-mono">' + esc(v.code) + '</span> (' + esc(v.title) + ') est arrivé dans l’espace du participant.';
+        toast('Mission validée');
       }
       app.rerender();
     },
     consume(el, app) {
       const v = store.consume(el.dataset.id);
-      if (v) { flash = null; toast('Bon consommé. Bonne expérience !'); }
+      if (v) { flash = null; toast('Bon consommé. Bonne journée !'); }
       app.rerender();
     },
     'new-mission'(el, app) { created = null; app.rerender(); },
@@ -235,13 +230,13 @@ Meleze.views.pro = (function () {
       const f = new FormData(form);
       const demo = Meleze.data.proDemo;
       if (String(f.get('pin')) !== demo.pin) {
-        toast('Code PIN incorrect (démo : ' + demo.pin + ')', 'error');
+        toast('Code PIN incorrect (pour la démo : ' + demo.pin + ')', 'error');
         form.pin.focus();
         return;
       }
       if (!String(f.get('org')).trim()) { form.org.focus(); return; }
       store.login({ email: String(f.get('email')), role: String(f.get('role')), org: String(f.get('org')).trim() });
-      toast('Bienvenue dans l’espace partenaires');
+      toast('Vous êtes connecté·e');
       app.go('#/pro/scan');
     },
     scan(form, app) {

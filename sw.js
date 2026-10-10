@@ -1,11 +1,10 @@
 /* Mélèze — service worker minimal : l'app fonctionne hors-ligne en altitude.
    Stratégie : cache d'abord pour la coquille (fichiers statiques versionnés).
    Pensez à incrémenter VERSION à chaque déploiement. */
-const VERSION = 'meleze-v2';
+const VERSION = 'meleze-v3';
 const SHELL = [
   './', './index.html', './dist/styles.css', './icon.svg', './manifest.webmanifest',
-  './fonts/instrument-serif-latin-400-normal.woff2', './fonts/instrument-serif-latin-400-italic.woff2',
-  './fonts/inter-latin-wght-normal.woff2',
+  './fonts/newsreader-latin-wght-normal.woff2', './fonts/source-sans-3-latin-wght-normal.woff2',
   './js/data.js', './js/photos.js', './js/store.js', './js/ui.js', './js/app.js',
   './js/views/home.js', './js/views/catalogue.js', './js/views/wallet.js', './js/views/pro.js',
 ];

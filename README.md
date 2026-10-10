@@ -21,13 +21,13 @@ Pas de build requis pour tester : le CSS compilé est déjà dans `dist/`.
 
 | Rôle | Étapes |
 |---|---|
-| **Touriste** | Accueil → *Découvrir les missions* → filtrer (Saison / Type) → *Je participe* → **Wallet** → *J'ai terminé ma mission* |
+| **Touriste** | Accueil → *Découvrir les missions* → filtrer (Saison / Type) → *Je participe* → **Mon espace** → *J’ai terminé* |
 | **Pro** | Pied de page → lien discret **Espace partenaires** → `pro@meleze.demo` / PIN **`1234`** |
-| **Scanner** | Puce *QR de Camille* → **Valider la mission** (le bon apparaît dans le wallet) · Puce *Bon PT42* → **Consommer le bon** (il est grisé, impossible de le réutiliser) · un code inconnu affiche une erreur |
+| **Scanner** | Puce *QR de Camille* → **Valider la mission** (le bon apparaît dans « Mon espace ») · Puce *Bon PT42* → **Consommer le bon** (il est grisé, impossible de le réutiliser) · un code inconnu affiche une erreur |
 | **Création** | Onglet *Créer une mission* → mission + **contrepartie obligatoire** → *Publier* → visible aussitôt dans le catalogue avec le badge « Nouveau » |
 
 Les données de démonstration sont stockées dans `localStorage`. Pour repartir de zéro, utilisez le lien
-*Réinitialiser les données de démo* en bas du wallet.
+*Réinitialiser les données de démo* en bas de « Mon espace ».
 
 ## Architecture
 
@@ -35,9 +35,9 @@ Les données de démonstration sont stockées dans `localStorage`. Pour repartir
 Jules-/
 ├── index.html            Coquille : en-tête, <main id="app">, pied de page, barre d'onglets mobile
 ├── src/input.css         Source Tailwind + jetons de couleur (thèmes clair / sombre) + composants
-├── dist/styles.css       CSS compilé et purgé (≈ 43 ko, ≈ 8 ko gzip)
-├── fonts/                Instrument Serif + Inter (woff2 latin, auto-hébergées, licence OFL)
-├── tailwind.config.js    Palette Mélèze (sapin, or du mélèze, neige, minéral)
+├── dist/styles.css       CSS compilé et purgé (≈ 27 ko, ≈ 6 ko gzip)
+├── fonts/                Newsreader + Source Sans 3 (woff2 latin, auto-hébergées, licence OFL)
+├── tailwind.config.js    Palette Mélèze (sauge, lin, olive)
 ├── js/
 │   ├── data.js           Données de démonstration (missions, touriste, bons, identifiants pro)
 │   ├── photos.js         Photothèque (Unsplash ou fichiers locaux) — à remplacer par vos photos
@@ -65,32 +65,37 @@ autorisé), chargées depuis `images.unsplash.com` au bon format (AVIF/WebP) et 
 2. dans `js/photos.js`, remplacez l'identifiant par le chemin : `lake: { src: 'img/lac-des-vaches.webp', alt: '…' }`.
 
 Chaque mission choisit sa photo via le champ `photo` dans `js/data.js` (sinon une photo par type).
-Si une photo ne charge pas (hors-ligne, lien mort), un dégradé vert sapin prend le relais.
+Si une photo ne charge pas (hors-ligne, lien mort), un fond vert sauge prend le relais.
 
 ## Choix d'éco-conception (Green IT)
 
 - **0 framework, 0 traqueur, 0 dépendance JS** ; icônes en SVG inline.
 - Photos **compressées (q=60, AVIF/WebP)**, **responsives** (`srcset`) et **chargées à la demande**
   (`loading="lazy"`) : seule la photo d'accueil est chargée d'emblée. Elles sont ensuite gardées en cache par le service worker.
-- 2 familles de polices **auto-hébergées**, sous-ensemble latin uniquement (~90 ko au total, mises en cache).
+- 2 polices variables **auto-hébergées**, sous-ensemble latin uniquement (~86 ko au total, mises en cache).
 - CSS Tailwind **compilé et purgé** (pas de CDN Tailwind de ~300 ko exécuté sur le téléphone).
-- **Fond neige doux `#F4F1EA`** (jamais de blanc pur) et **mode sombre** quasi noir, économe sur les écrans OLED.
+- **Fond lin `#F3EEE4`** (jamais de blanc pur) et **mode sombre** olive, économe sur les écrans OLED.
 - Contrastes élevés et boutons ≥ 48 px : lisible **en plein soleil, avec des gants**.
-- `prefers-reduced-motion` respecté (bandeau des partenaires, scanner, apparitions).
+- Quasiment aucune animation (seule la ligne du scanner bouge) ; `prefers-reduced-motion` respecté.
 - Service worker : l'app reste utilisable **hors-ligne** après la première visite.
 
 ## Direction artistique
 
-Inspirée d'accordion.net.au : photo plein écran, très grands titres éditoriaux (Instrument Serif, avec
-des mots en italique or), petites photos arrondies glissées dans le texte, cartes photo aux coins très
-arrondis, boutons pilule, bandeau défilant des partenaires, FAQ en accordéon et pied de page géant.
+Objectif : un site qui ressemble à celui d'une station de village, pas à un modèle généré.
+Mise en page calme et pratique (façon panneau d'information ou topo-guide), textes écrits
+simplement, photos légendées, titres de taille raisonnable, pas d'effets (verre dépoli,
+dégradés, animations d'apparition, bandeaux défilants).
 
-| Jeton | Couleur |
+Palette « sauge & lin », dans l'esprit des palettes nature très partagées sur Pinterest :
+
+| Rôle | Couleur |
 |---|---|
-| Vert sapin profond | `#14231C` / `#1B3A2D` |
-| Or d'automne (mélézin) | `#D6A045` / `#C8892B` (texte : `#8A5A14`) |
-| Blanc neige (doux, fond) | `#F4F1EA` / `#FAF8F3` |
-| Gris minéral | `#4A4F4C` / `#7A7F7B` / `#C9CBC5` |
+| Fond (lin) | `#F3EEE4` · cartes `#FAF7F1` · beige `#EAE2D3` / `#DDD1BB` |
+| Vert sauge clair (encadrés, sections) | `#E5EADC` / `#D2DBC4` / `#B7C4A5` |
+| Vert sauge soutenu (boutons, liens) | `#587349` / `#4B6142` |
+| Texte (olive foncé) | `#2B3427` · secondaire `#5E665A` |
+
+Typographies : **Newsreader** (titres, serif éditoriale sobre) et **Source Sans 3** (texte, très lisible au soleil).
 
 ## Modifier les styles
 

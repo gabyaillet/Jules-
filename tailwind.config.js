@@ -1,10 +1,10 @@
 /**
  * Mélèze — configuration Tailwind
  *
- * Les couleurs "sémantiques" (surface, ink, brand…) pointent vers des
- * variables CSS définies dans src/input.css. Ainsi, un seul jeu de classes
- * sert à la fois au thème clair (fond neige doux, jamais #FFF) et au thème
- * sombre (économe sur les écrans OLED), sans dupliquer les `dark:`.
+ * Palette "sauge & lin" : vert sauge clair, beiges naturels, olive foncé
+ * pour le texte. Les couleurs sémantiques (surface, ink, brand…) pointent
+ * vers des variables CSS (src/input.css) : un seul jeu de classes sert au
+ * thème clair et au thème sombre.
  */
 const v = (name) => `rgb(var(--c-${name}) / <alpha-value>)`;
 
@@ -15,33 +15,30 @@ module.exports = {
     extend: {
       colors: {
         // Jetons sémantiques (suivent le thème)
-        surface: v('surface'), // fond de page
+        surface: v('surface'), // fond de page (lin)
         card: v('card'), // cartes
-        sunk: v('sunk'), // zones en creux (champs, pistes)
+        sunk: v('sunk'), // zones en creux
+        tint: v('tint'), // fond sauge très clair (sections, encadrés)
         ink: v('ink'), // texte principal
         muted: v('muted'), // texte secondaire
         line: v('line'), // bordures
-        brand: v('brand'), // action principale
+        brand: v('brand'), // action principale (vert sauge soutenu)
         'on-brand': v('on-brand'),
-        accent: v('accent'), // or du mélèze
-        'on-accent': v('on-accent'),
-        'accent-ink': v('accent-ink'), // or lisible en texte
+        'brand-ink': v('brand-ink'), // vert lisible en texte
         ok: v('ok'),
         danger: v('danger'),
 
-        // Palette brute "Mélèze" (fixe, quel que soit le thème)
-        fir: { 50: '#EEF2EE', 100: '#DDE6DF', 600: '#2F5E49', 700: '#234A39', 800: '#1B3A2D', 900: '#14231C', 950: '#0B1611' },
-        larch: { 100: '#F3E3C0', 300: '#E6C27A', 400: '#D6A045', 500: '#C8892B', 600: '#A86E1C', 700: '#8A5A14' },
-        snow: { 50: '#FAF8F3', 100: '#F4F1EA', 200: '#EBE7DD' },
-        mineral: { 300: '#C9CBC5', 500: '#7A7F7B', 700: '#4A4F4C' },
+        // Palette brute (fixe, quel que soit le thème)
+        sand: { 50: '#FAF7F1', 100: '#F3EEE4', 200: '#EAE2D3', 300: '#DDD1BB', 400: '#C9B897' },
+        sage: { 100: '#E5EADC', 200: '#D2DBC4', 300: '#B7C4A5', 400: '#9AAB88', 500: '#7F9370', 600: '#5F7A53', 700: '#4B6142' },
+        olive: { 700: '#46543F', 800: '#38432F', 900: '#2B3427', 950: '#1D231A' },
       },
       fontFamily: {
-        // Polices auto-hébergées (voir fonts/ et src/input.css), repli système.
-        serif: ['"Instrument Serif"', 'Georgia', 'ui-serif', 'serif'],
-        sans: ['Inter', 'system-ui', '-apple-system', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        // Polices auto-hébergées (fonts/), repli système.
+        serif: ['Newsreader', 'Georgia', 'ui-serif', 'serif'],
+        sans: ['"Source Sans 3"', 'system-ui', '-apple-system', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
-      borderRadius: { '4xl': '2rem' },
-      maxWidth: { app: '72rem' },
+      maxWidth: { app: '70rem' },
     },
   },
   plugins: [],

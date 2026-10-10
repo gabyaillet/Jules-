@@ -68,7 +68,7 @@ Meleze.data = (function () {
       spots: 200,
       host: 'Office de tourisme',
       description:
-        "Vous avez choisi le train puis la navette ? Présentez votre billet à l'Office de tourisme dans les 48 h suivant votre arrivée : la montagne vous dit merci.",
+        "Vous êtes venu en train jusqu'à Moûtiers, puis en navette ? Passez à l'Office de tourisme avec votre billet dans les 48 h qui suivent votre arrivée.",
       reward: { title: 'Entrée patinoire + location de patins', partner: 'Patinoire olympique de Pralognan', category: 'Expérience' },
     },
     {
@@ -113,7 +113,7 @@ Meleze.data = (function () {
       spots: 6,
       host: 'Service sentiers de la commune',
       description:
-        "Raquettes aux pieds, on tasse la neige fraîche pour rendre le chemin praticable aux familles et aux poussettes. Bonne ambiance garantie.",
+        "Raquettes aux pieds, on tasse la neige fraîche pour que le chemin reste praticable pour les familles et les poussettes.",
       reward: { title: 'Demi-journée de location de skis de fond', partner: 'Vanoise Sports', category: 'Équipement' },
     },
     {
@@ -143,7 +143,7 @@ Meleze.data = (function () {
       spots: 8,
       host: 'Association Patrimoine de Pralognan',
       description:
-        "Un artisan murailler vous transmet les gestes d'un savoir-faire ancestral. Travail en petit groupe, adapté aux débutants.",
+        "Un artisan murailler vous montre comment remonter un muret en pierres sèches. Petit groupe, aucune expérience demandée.",
       reward: { title: 'Une tartiflette offerte', partner: 'Restaurant La Grange', category: 'Gourmandise' },
     },
   ];
