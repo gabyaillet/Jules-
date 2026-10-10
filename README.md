@@ -21,7 +21,7 @@ Pas de build requis pour tester : le CSS compilé est déjà dans `dist/`.
 
 | Rôle | Étapes |
 |---|---|
-| **Touriste** | Accueil → *Découvrir les missions* → filtrer (Saison / Type) → *Je participe* → **Mon espace** → *J’ai terminé* |
+| **Touriste** | Accueil → *Voir les missions* → filtrer (Saison / Type) → *Je participe* → **Mon espace** → *J’ai terminé* |
 | **Pro** | Pied de page → lien discret **Espace partenaires** → `pro@meleze.demo` / PIN **`1234`** |
 | **Scanner** | Puce *QR de Camille* → **Valider la mission** (le bon apparaît dans « Mon espace ») · Puce *Bon PT42* → **Consommer le bon** (il est grisé, impossible de le réutiliser) · un code inconnu affiche une erreur |
 | **Création** | Onglet *Créer une mission* → mission + **contrepartie obligatoire** → *Publier* → visible aussitôt dans le catalogue avec le badge « Nouveau » |
