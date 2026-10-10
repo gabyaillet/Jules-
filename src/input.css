@@ -33,11 +33,11 @@
     color-scheme: light;
     --c-surface: 255 255 255; /* blanc */
     --c-card: 255 255 255;
-    --c-sunk: 245 245 241; /* #F5F5F1 */
+    --c-sunk: 245 245 245; /* #F5F5F5 gris neutre */
     --c-tint: 240 250 226; /* #F0FAE2 lime très clair */
     --c-ink: 18 22 20; /* #121614 — contraste ≈ 18:1 */
-    --c-muted: 90 96 92; /* #5A605C — contraste ≈ 6:1 */
-    --c-line: 230 230 224; /* #E6E6E0 */
+    --c-muted: 88 92 96; /* #585C60 — contraste ≈ 6,5:1 */
+    --c-line: 229 229 229; /* #E5E5E5 */
     --c-brand: 18 22 20; /* boutons noirs */
     --c-on-brand: 255 255 255;
     --c-brand-ink: 22 112 63; /* #16703F vert lisible */

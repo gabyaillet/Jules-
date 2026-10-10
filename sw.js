@@ -1,7 +1,8 @@
 /* Mélèze — service worker minimal : l'app fonctionne hors-ligne en altitude.
-   Stratégie : cache d'abord pour la coquille (fichiers statiques versionnés).
-   Pensez à incrémenter VERSION à chaque déploiement. */
-const VERSION = 'meleze-v4';
+   Stratégie : réseau d'abord pour les fichiers du site (on voit toujours la
+   dernière version quand il y a du réseau), cache en secours hors connexion.
+   Les photos, elles, viennent du cache d'abord (elles ne changent pas). */
+const VERSION = 'meleze-v5';
 const SHELL = [
   './', './index.html', './dist/styles.css', './icon.svg', './manifest.webmanifest',
   './fonts/bricolage-grotesque-latin-wght-normal.woff2', './fonts/source-sans-3-latin-wght-normal.woff2',
@@ -30,5 +31,13 @@ self.addEventListener('fetch', (e) => {
       fetch(e.request).then((res) => { c.put(e.request, res.clone()); return res; }))));
     return;
   }
-  e.respondWith(caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || fetch(e.request)));
+  if (url.origin !== self.location.origin) return;
+  e.respondWith(
+    fetch(e.request)
+      .then((res) => {
+        if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(e.request, copy)); }
+        return res;
+      })
+      .catch(() => caches.match(e.request, { ignoreSearch: true }))
+  );
 });

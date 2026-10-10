@@ -9,12 +9,12 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
-  <!-- Thème appliqué avant le premier rendu (évite le flash clair → sombre) -->
+  <!-- Thème : fond blanc par défaut pour tout le monde ; le mode sombre ne
+       s'active que si le visiteur l'a choisi avec le bouton de l'en-tête. -->
   <script>
     (function () {
-      var t = null;
-      try { t = localStorage.getItem('meleze:theme'); } catch (e) {}
-      if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      var t = 'light';
+      try { if (localStorage.getItem('meleze:theme:v2') === 'dark') t = 'dark'; } catch (e) {}
       document.documentElement.dataset.theme = t;
     })();
   </script>

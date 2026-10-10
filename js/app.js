@@ -84,7 +84,7 @@
   // ------------------------------------------------------------------------
   function setTheme(theme) {
     document.documentElement.dataset.theme = theme;
-    try { localStorage.setItem('meleze:theme', theme); } catch (e) { /* rien */ }
+    try { localStorage.setItem('meleze:theme:v2', theme); } catch (e) { /* rien */ }
     const btn = document.getElementById('theme-toggle');
     const dark = theme === 'dark';
     btn.setAttribute('aria-pressed', String(dark));

@@ -74,11 +74,11 @@ Si une photo ne charge pas (hors-ligne, lien mort), un fond vert pastel prend le
   (`loading="lazy"`) : seule la photo d'accueil est chargée d'emblée. Elles sont ensuite gardées en cache par le service worker.
 - 2 polices variables **auto-hébergées**, sous-ensemble latin uniquement (~70 ko au total, mises en cache).
 - CSS Tailwind **compilé et purgé** (pas de CDN Tailwind de ~300 ko exécuté sur le téléphone).
-- **Fond blanc** (choix de design, à la manière de CopenPay) : sur écran OLED, le blanc consomme plus qu'un fond sombre,
-  d'où le **mode sombre** quasi noir proposé dans l'en-tête (et activé automatiquement si le téléphone est en mode sombre).
+- **Fond blanc** pour tout le monde (choix de design, à la manière de CopenPay). Sur écran OLED, le blanc consomme plus
+  qu'un fond sombre : un **mode sombre** quasi noir reste disponible via le bouton de l'en-tête (choix mémorisé).
 - Contrastes élevés et boutons ≥ 48 px : lisible **en plein soleil, avec des gants**.
 - Quasiment aucune animation (seule la ligne du scanner bouge) ; `prefers-reduced-motion` respecté.
-- Service worker : l'app reste utilisable **hors-ligne** après la première visite.
+- Service worker « réseau d'abord » : on voit toujours la dernière version, et l'app reste utilisable **hors-ligne** après la première visite.
 
 ## Direction artistique
 
