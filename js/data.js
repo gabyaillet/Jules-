@@ -18,11 +18,11 @@ Meleze.data = (function () {
 
   /** `color` : fond pastel associé au type (cartes, étiquettes, bons). */
   const TYPES = [
-    { id: 'sentiers', label: 'Sentiers', icon: 'route', color: 'bg-sun' },
-    { id: 'biodiversite', label: 'Biodiversité', icon: 'leaf', color: 'bg-leaf' },
-    { id: 'mobilite', label: 'Mobilité douce', icon: 'train', color: 'bg-sky' },
-    { id: 'proprete', label: 'Propreté', icon: 'trash', color: 'bg-coral' },
-    { id: 'patrimoine', label: 'Patrimoine & entraide', icon: 'heart', color: 'bg-lilac' },
+    { id: 'sentiers', label: 'Sentiers', color: 'bg-sun' },
+    { id: 'biodiversite', label: 'Biodiversité', color: 'bg-leaf' },
+    { id: 'mobilite', label: 'Mobilité douce', color: 'bg-sky' },
+    { id: 'proprete', label: 'Propreté', color: 'bg-coral' },
+    { id: 'patrimoine', label: 'Patrimoine & entraide', color: 'bg-lilac' },
   ];
 
   /** Catalogue initial des missions. `reward` est obligatoire. */

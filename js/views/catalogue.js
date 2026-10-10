@@ -42,11 +42,11 @@ Meleze.views.catalogue = (function () {
       ? '<a href="#/wallet" class="btn-secondary w-full">' + (p.status === 'terminee' ? 'Terminée, à faire valider' : 'Inscrit·e, voir mon espace') + '</a>'
       : '<button type="button" class="btn-primary w-full" data-action="join" data-id="' + esc(m.id) + '">Je participe ' + icon('arrow', 'h-5 w-5') + '</button>';
 
-    return '<li id="mission-' + esc(m.id) + '" class="group flex scroll-mt-48 flex-col">' +
-      '<div class="ph ph-zoom aspect-[4/3] rounded-3xl">' + photo(m, { sizes: '(min-width:1024px) 30vw, (min-width:640px) 45vw, 100vw' }) +
+    return '<li id="mission-' + esc(m.id) + '" class="group flex scroll-mt-24 flex-col md:scroll-mt-48">' +
+      '<div class="ph ph-zoom aspect-[4/3]">' + photo(m, { sizes: '(min-width:1024px) 30vw, (min-width:640px) 45vw, 100vw' }) +
         '<div class="absolute inset-x-3 top-3 flex items-start justify-between gap-2">' +
           '<span class="' + PILL + ' ' + t.color + '">' + esc(t.label) + '</span>' +
-          (m.isNew ? '<span class="' + PILL + ' bg-lime-300">Nouveau</span>' : '') +
+          (m.isNew ? '<span class="sticker rotate-3 bg-lime-300">Nouveau</span>' : '') +
         '</div>' +
       '</div>' +
 
@@ -58,26 +58,30 @@ Meleze.views.catalogue = (function () {
         m.schedule ? ['Quand', esc(m.schedule)] : null,
       ]) + '</div>' +
 
-      // Contrepartie : dans la couleur du type de mission
-      '<div class="mt-6 rounded-3xl p-5 text-night ' + t.color + '">' +
-        '<p class="text-sm text-night/60">En échange</p>' +
-        '<p class="mt-1 font-display text-xl font-bold leading-tight tracking-[-0.02em]">' + esc(m.reward.title) + '</p>' +
-        '<p class="mt-1.5 text-sm text-night/70">offert par ' + esc(m.reward.partner) + '</p>' +
-      '</div>' +
-
-      '<details class="acc mt-3"' + (focusId === m.id ? ' open' : '') + '>' +
-        '<summary class="min-h-[48px] py-2 font-display font-semibold">Plus d’infos<span class="acc-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sunk">' + icon('plus', 'h-4 w-4') + '</span></summary>' +
-        '<div class="pb-2 pt-1">' +
-          '<p class="text-muted">' + esc(m.description) + '</p>' +
-          '<div class="mt-4">' + facts([
-            m.host ? ['Encadré par', esc(m.host)] : null,
-            ['Places', esc(m.spots)],
-            ['Saisons', m.seasons.map((s) => esc(seasonLabel(s))).join(', ')],
-          ]) + '</div>' +
+      // Bas de fiche (contrepartie, détails, bouton) calé en bas : les blocs
+      // s'alignent d'une carte à l'autre sur une même rangée.
+      '<div class="mt-auto pt-6">' +
+        // Contrepartie : dans la couleur du type de mission
+        '<div class="rounded-xl p-5 text-night ' + t.color + '">' +
+          '<p class="text-sm text-night/60">En échange</p>' +
+          '<p class="mt-1 font-display text-xl font-bold leading-tight tracking-[-0.02em]">' + esc(m.reward.title) + '</p>' +
+          '<p class="mt-1.5 text-sm text-night/70">offert par ' + esc(m.reward.partner) + '</p>' +
         '</div>' +
-      '</details>' +
 
-      '<div class="mt-auto pt-5">' + cta + '</div>' +
+        '<details class="acc mt-3"' + (focusId === m.id ? ' open' : '') + '>' +
+          '<summary class="min-h-[48px] py-2 font-display font-semibold">Plus d’infos<span class="acc-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sunk">' + icon('plus', 'h-4 w-4') + '</span></summary>' +
+          '<div class="pb-2 pt-1">' +
+            '<p class="text-muted">' + esc(m.description) + '</p>' +
+            '<div class="mt-4">' + facts([
+              m.host ? ['Encadré par', esc(m.host)] : null,
+              ['Places', esc(m.spots)],
+              ['Saisons', m.seasons.map((s) => esc(seasonLabel(s))).join(', ')],
+            ]) + '</div>' +
+          '</div>' +
+        '</details>' +
+
+        '<div class="pt-5">' + cta + '</div>' +
+      '</div>' +
     '</li>';
   }
 
@@ -93,7 +97,7 @@ Meleze.views.catalogue = (function () {
       '<p class="mt-4 max-w-xl text-lg text-muted">Des actions utiles d’une à deux heures, encadrées par des gens du coin. Chaque fiche indique ce que vous recevez en échange.</p>' +
     '</section>' +
 
-    '<div class="sticky top-[65px] z-30 mt-8 bg-surface/95 backdrop-blur" role="group" aria-label="Filtres">' +
+    '<div class="mt-8 md:sticky md:top-[65px] md:z-30 md:bg-surface/95 md:backdrop-blur" role="group" aria-label="Filtres">' +
       '<div class="mx-auto max-w-app space-y-1 py-2">' +
         chipRow('Saison',
           chip('season', 'all', 'Toute l’année', filters.season === 'all') +
@@ -111,7 +115,7 @@ Meleze.views.catalogue = (function () {
       '</div>' +
       (list.length
         ? '<ul class="mt-6 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">' + list.map((m) => card(m, params.focus)).join('') + '</ul>'
-        : '<div class="mt-6 rounded-4xl bg-sunk px-6 py-14 text-center sm:py-20">' +
+        : '<div class="mt-6 rounded-xl bg-sunk px-6 py-14 text-center sm:py-20">' +
             '<p class="mx-auto max-w-md font-display text-2xl font-bold leading-tight tracking-[-0.02em] sm:text-3xl">Aucune mission ne correspond à ces filtres pour l’instant.</p>' +
             '<p class="mt-3 text-muted">Essayez une autre saison ou un autre type.</p>' +
             '<button type="button" class="btn-secondary btn-sm mt-6" data-action="clear-filters">Voir toutes les missions</button>' +

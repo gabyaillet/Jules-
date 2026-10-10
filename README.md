@@ -83,8 +83,14 @@ Si une photo ne charge pas (hors-ligne, lien mort), un fond vert pastel prend le
 ## Direction artistique
 
 Inspirée de **CopenPay** (Copenhague) : fond blanc, grands titres gras en noir, un mot clé surligné
-en vert lime comme au feutre, blocs de couleurs pastel, photos aux coins arrondis en grille
-« bento », petites pastilles légèrement inclinées, boutons pilule noirs.
+en vert lime comme au feutre, blocs de couleurs pastel, photos en grille « bento », quelques
+étiquettes inclinées façon autocollant, boutons pilule noirs.
+
+Règles de sobriété :
+- **Pas d'icônes décoratives** : la typographie porte l'information (seules restent la flèche des
+  boutons principaux, le « + » des accordéons et le bouton clair/sombre).
+- **Arrondis dosés** : pilules pour les boutons, filtres et étiquettes ; arrondi léger (12 px) pour
+  les photos, cartes et tuiles ; les grands blocs pleine largeur, la FAQ et la barre d'onglets restent droits.
 
 | Rôle | Couleur |
 |---|---|
