@@ -1,7 +1,7 @@
 /* ==========================================================================
    Vue : Accueil touriste
-   Ton volontairement simple et concret, comme un panneau d'information
-   de village : on explique, on rassure, on montre les missions.
+   Style "CopenPay" : grands titres gras, fond blanc, blocs de couleur,
+   photos arrondies en grille et petites pastilles inclinées.
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 Meleze.views = Meleze.views || {};
@@ -11,9 +11,9 @@ Meleze.views.home = (function () {
   const { esc, icon, photo, duration, typeOf, currentSeason, seasonLabel } = Meleze.ui;
 
   const STEPS = [
-    ['Vous choisissez une mission', 'Dans le catalogue, chaque mission indique sa durée, le point de rendez-vous et ce que vous recevez en échange. L’inscription se fait en un clic.'],
-    ['Vous la faites avec quelqu’un du coin', 'Un garde du Parc, l’équipe des sentiers ou un artisan vous accueille. Le matériel est fourni : venez simplement avec de bonnes chaussures.'],
-    ['Le référent valide, vous profitez', 'À la fin, il scanne le QR de votre espace. Votre bon apparaît aussitôt, il suffit de le montrer au commerçant.'],
+    { color: 'bg-sun', ic: 'mountain', title: 'Choisissez une mission', text: 'Sentier, comptage de marmottes, arrivée en train… Chaque fiche indique la durée, le rendez-vous et la contrepartie.' },
+    { color: 'bg-leaf', ic: 'users', title: 'Faites-la avec un local', text: 'Un garde du Parc, l’équipe des sentiers ou un artisan vous accueille. Le matériel est fourni.' },
+    { color: 'bg-sky', ic: 'gift', title: 'Recevez votre cadeau', text: 'Le référent scanne votre QR : le bon arrive dans votre espace, à montrer au commerçant.' },
   ];
 
   const FAQ = [
@@ -23,119 +23,138 @@ Meleze.views.home = (function () {
     ['Comment utiliser mon bon ?', 'Ouvrez « Mon espace » et montrez le QR du bon au commerçant. Il le scanne, et le bon est marqué comme utilisé.'],
   ];
 
-  /** Petite carte mission (photo + infos pratiques). */
+  /** Carte mission avec photo, pour la sélection de saison. */
   function missionCard(m) {
     const t = typeOf(m.type);
-    return '<li><a href="#/missions?focus=' + esc(m.id) + '" class="group block h-full overflow-hidden rounded-2xl border border-line bg-card transition-colors hover:border-muted">' +
-      '<div class="ph aspect-[3/2]">' + photo(m, { sizes: '(min-width:768px) 33vw, 100vw', alt: '' }) + '</div>' +
-      '<div class="p-4">' +
-        '<p class="text-sm text-muted">' + esc(t.label) + ' · ' + duration(m.duration) + '</p>' +
-        '<h3 class="mt-1 text-xl group-hover:underline group-hover:decoration-1 group-hover:underline-offset-4">' + esc(m.title) + '</h3>' +
-        '<p class="mt-3 text-[0.95rem]"><span class="text-muted">En échange :</span> ' + esc(m.reward.title) + '</p>' +
-      '</div>' +
-    '</a></li>';
+    return '<li class="w-[85%] shrink-0 snap-start sm:w-[47%] lg:w-auto">' +
+      '<a href="#/missions?focus=' + esc(m.id) + '" class="group block">' +
+        '<div class="ph ph-zoom aspect-[4/3] rounded-3xl">' + photo(m, { sizes: '(min-width:1024px) 30vw, 85vw', alt: '' }) +
+          '<span class="sticker absolute left-3 top-3 ' + t.color + '">' + icon(t.icon, 'h-4 w-4') + esc(t.label) + '</span>' +
+          '<span class="sticker absolute bottom-3 right-3 bg-white">' + icon('clock', 'h-4 w-4') + duration(m.duration) + '</span>' +
+        '</div>' +
+        '<h3 class="mt-4 text-2xl group-hover:underline group-hover:decoration-lime-400 group-hover:decoration-[3px] group-hover:underline-offset-4">' + esc(m.title) + '</h3>' +
+        '<p class="mt-2 flex items-start gap-2 text-muted">' + icon('gift', 'mt-1 h-4 w-4 shrink-0 text-brand-ink') + esc(m.reward.title) + '</p>' +
+      '</a></li>';
   }
 
   function render(state) {
     const season = currentSeason();
     const picks = state.missions.filter((m) => m.seasons.includes(season)).slice(0, 3);
 
-    // Partenaires et ce qu'ils offrent, déduits des missions
-    const partners = {};
-    state.missions.forEach((m) => { (partners[m.reward.partner] = partners[m.reward.partner] || []).push(m.reward.title); });
-
     return (
-      // ---- Introduction -----------------------------------------------------------
-      '<section class="mx-auto grid max-w-app gap-8 px-5 pb-14 pt-8 sm:px-8 md:grid-cols-[1.1fr_1fr] md:items-center md:gap-12 md:py-16">' +
+      // ---- Hero : titre + grille de photos ----------------------------------------
+      '<section class="mx-auto grid max-w-app gap-10 px-5 pb-16 pt-8 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14 lg:pb-24 lg:pt-14">' +
         '<div>' +
-          '<p class="text-muted">Pralognan-la-Vanoise, été comme hiver</p>' +
-          '<h1 id="page-title" tabindex="-1" class="mt-3 text-[2.5rem] sm:text-6xl">Une heure pour la montagne, une expérience en retour.</h1>' +
-          '<p class="mt-5 max-w-xl text-lg text-muted">Pendant votre séjour, donnez un coup de main à la station : remettre un sentier en état, compter les marmottes avec un garde du Parc, ou tout simplement venir en train. En remerciement, les commerçants du village vous offrent une montée en téléphérique, une soirée à la patinoire ou un beau morceau de Beaufort.</p>' +
-          '<div class="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">' +
-            '<a href="#/missions" class="btn-primary">Voir les missions</a>' +
-            '<a href="#/wallet" class="link">Mon espace ' + icon('arrow', 'h-4 w-4') + '</a>' +
+          '<span class="tag">' + icon('pin', 'h-3.5 w-3.5') + 'Pralognan-la-Vanoise · 4 saisons</span>' +
+          '<h1 id="page-title" tabindex="-1" class="mt-5 text-[2.9rem] font-extrabold sm:text-7xl lg:text-[4.7rem]">Une heure pour la <span class="mark">montagne</span>, une expérience en retour.</h1>' +
+          '<p class="mt-6 max-w-lg text-lg text-muted">Donnez un coup de main à la station pendant votre séjour. Les commerçants du village vous remercient : téléphérique, patinoire, Beaufort d’alpage…</p>' +
+          '<div class="mt-8 flex flex-wrap gap-3">' +
+            '<a href="#/missions" class="btn-primary">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>' +
+            '<a href="#/wallet" class="btn-secondary">Mon espace</a>' +
           '</div>' +
         '</div>' +
-        '<figure>' +
-          '<div class="ph aspect-[4/3] rounded-2xl md:aspect-[4/5]">' + photo('hero', { eager: true, sizes: '(min-width:768px) 45vw, 100vw' }) + '</div>' +
-          '<figcaption class="mt-2 text-sm text-muted">Au-dessus des nuages, un matin d’automne.</figcaption>' +
-        '</figure>' +
-      '</section>' +
-
-      // ---- Comment ça se passe --------------------------------------------------------
-      '<section class="bg-tint" aria-labelledby="how">' +
-        '<div class="mx-auto max-w-app px-5 py-14 sm:px-8 md:py-20">' +
-          '<h2 id="how" class="text-3xl sm:text-4xl">Comment ça se passe</h2>' +
-          '<ol class="mt-8 grid gap-8 md:grid-cols-3">' +
-            STEPS.map(([title, text], i) =>
-              '<li class="border-t border-sage-300 pt-4">' +
-                '<p class="font-serif text-2xl text-brand-ink">' + (i + 1) + '.</p>' +
-                '<h3 class="mt-1 text-xl">' + title + '</h3>' +
-                '<p class="mt-2 text-muted">' + text + '</p>' +
-              '</li>').join('') +
-          '</ol>' +
+        // Grille "bento"
+        '<div class="grid grid-cols-2 gap-3 sm:gap-4">' +
+          '<div class="ph col-span-2 aspect-[16/10] rounded-4xl">' + photo('hero', { eager: true, sizes: '(min-width:1024px) 45vw, 100vw' }) +
+            '<span class="sticker absolute left-4 top-4 -rotate-3 bg-lime-300">' + icon('gift', 'h-4 w-4') + 'Téléphérique offert</span>' +
+          '</div>' +
+          '<div class="ph aspect-square rounded-4xl">' + photo('meadow', { sizes: '(min-width:1024px) 22vw, 48vw', alt: 'Prairie d’alpage' }) +
+            '<span class="sticker absolute bottom-4 left-4 rotate-2 bg-white">' + icon('leaf', 'h-4 w-4') + 'Marmottes</span>' +
+          '</div>' +
+          '<div class="flex aspect-square flex-col justify-between rounded-4xl bg-sky p-5 text-night">' +
+            icon('clock', 'h-7 w-7') +
+            '<p class="font-display text-[1.7rem] font-bold leading-[1.02] tracking-[-0.03em] sm:text-4xl">1 à 2 h<br>par mission</p>' +
+          '</div>' +
         '</div>' +
       '</section>' +
 
-      // ---- Missions du moment -----------------------------------------------------------
-      '<section class="mx-auto max-w-app px-5 py-14 sm:px-8 md:py-20" aria-labelledby="now">' +
-        '<div class="flex flex-wrap items-baseline justify-between gap-3">' +
-          '<h2 id="now" class="text-3xl sm:text-4xl">En ce moment, en ' + seasonLabel(season).toLowerCase() + '</h2>' +
-          '<a href="#/missions" class="link">Toutes les missions (' + state.missions.length + ') ' + icon('arrow', 'h-4 w-4') + '</a>' +
-        '</div>' +
-        '<ul class="mt-8 grid gap-5 sm:grid-cols-2 md:grid-cols-3">' + picks.map(missionCard).join('') + '</ul>' +
+      // ---- Comment ça marche ----------------------------------------------------------
+      '<section class="mx-auto max-w-app px-5 pb-16 sm:px-8 lg:pb-24" aria-labelledby="how">' +
+        '<h2 id="how" class="text-4xl sm:text-6xl">Comment ça marche</h2>' +
+        '<ol class="mt-8 grid gap-4 md:grid-cols-3">' +
+          STEPS.map((s, i) =>
+            '<li class="flex min-h-[15rem] flex-col rounded-4xl p-6 text-night ' + s.color + '">' +
+              '<div class="flex items-center justify-between">' +
+                '<span class="flex h-12 w-12 items-center justify-center rounded-full bg-white font-display text-xl font-bold">' + (i + 1) + '</span>' +
+                icon(s.ic, 'h-7 w-7') +
+              '</div>' +
+              '<h3 class="mt-auto pt-8 text-2xl">' + s.title + '</h3>' +
+              '<p class="mt-2 text-night/75">' + s.text + '</p>' +
+            '</li>').join('') +
+        '</ol>' +
       '</section>' +
 
-      // ---- Pourquoi Mélèze (texte + deux photos) ------------------------------------------
-      '<section class="mx-auto grid max-w-app gap-8 px-5 pb-14 sm:px-8 md:grid-cols-2 md:items-center md:gap-14 md:pb-20" aria-labelledby="why">' +
-        '<div class="grid grid-cols-5 gap-3">' +
-          '<figure class="col-span-3"><div class="ph aspect-[3/4] rounded-2xl">' + photo('forest', { sizes: '(min-width:768px) 28vw, 60vw', alt: 'Sous-bois éclairé par le soleil' }) + '</div></figure>' +
-          '<figure class="col-span-2 self-end"><div class="ph aspect-[3/4] rounded-2xl">' + photo('meadow', { sizes: '(min-width:768px) 18vw, 40vw', alt: 'Prairie d’alpage' }) + '</div>' +
-            '<figcaption class="mt-2 text-sm text-muted">Les alpages, en juin.</figcaption></figure>' +
+      // ---- Missions de saison ----------------------------------------------------------
+      '<section class="mx-auto max-w-app px-5 pb-16 sm:px-8 lg:pb-24" aria-labelledby="now">' +
+        '<div class="flex flex-wrap items-end justify-between gap-4">' +
+          '<div><span class="tag bg-lime-300">' + seasonLabel(season) + '</span>' +
+          '<h2 id="now" class="mt-3 text-4xl sm:text-6xl">Les missions du moment</h2></div>' +
+          '<a href="#/missions" class="link">Les ' + state.missions.length + ' missions ' + icon('arrow', 'h-4 w-4') + '</a>' +
         '</div>' +
+        '<ul class="-mx-5 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0">' + picks.map(missionCard).join('') + '</ul>' +
+      '</section>' +
+
+      // ---- Ce que vous pouvez recevoir (bloc vert) --------------------------------------------
+      '<section class="px-3 sm:px-4" aria-labelledby="gifts">' +
+        '<div class="mx-auto max-w-[80rem] rounded-4xl bg-pine-700 px-5 py-14 text-white sm:px-10 lg:py-20">' +
+          '<div class="mx-auto max-w-app">' +
+            '<div class="flex flex-wrap items-end justify-between gap-4">' +
+              '<h2 id="gifts" class="max-w-2xl text-4xl sm:text-6xl">Ce que les commerçants vous <span class="mark">offrent</span></h2>' +
+              '<p class="max-w-xs text-white/80">Une contrepartie par mission, offerte par un commerce ou un service de la station.</p>' +
+            '</div>' +
+            '<ul class="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">' +
+              state.missions.slice(0, 8).map((m, i) =>
+                '<li class="flex min-h-[9.5rem] flex-col justify-between rounded-3xl p-4 text-night sm:p-5 ' + typeOf(m.type).color + (i % 3 === 1 ? ' sm:rotate-1' : i % 3 === 2 ? ' sm:-rotate-1' : '') + '">' +
+                  icon('gift', 'h-6 w-6') +
+                  '<div><p class="font-display text-lg font-bold leading-tight tracking-[-0.02em]">' + esc(m.reward.title) + '</p>' +
+                  '<p class="mt-1 text-sm text-night/70">' + esc(m.reward.partner) + '</p></div>' +
+                '</li>').join('') +
+            '</ul>' +
+          '</div>' +
+        '</div>' +
+      '</section>' +
+
+      // ---- Pourquoi Mélèze ----------------------------------------------------------------------
+      '<section class="mx-auto grid max-w-app gap-10 px-5 py-16 sm:px-8 lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-24" aria-labelledby="why">' +
         '<div>' +
-          '<h2 id="why" class="text-3xl sm:text-4xl">Pourquoi Mélèze ?</h2>' +
-          '<div class="mt-5 space-y-4 text-muted">' +
+          '<h2 id="why" class="text-4xl sm:text-6xl">Pourquoi «&nbsp;Mélèze&nbsp;»&nbsp;?</h2>' +
+          '<div class="mt-6 space-y-4 text-lg text-muted">' +
             '<p>Beaucoup de visiteurs aiment la Vanoise et aimeraient lui rendre un peu de ce qu’elle leur donne, sans savoir par où commencer.</p>' +
             '<p>Mélèze rassemble de petites missions concrètes, encadrées par des gens d’ici. Les commerçants, eux, ont trouvé une façon simple de dire merci.</p>' +
-            '<p>Le nom vient du mélèze, le seul conifère de nos forêts à perdre ses aiguilles : en octobre, il dore toute la vallée.</p>' +
+            '<p>Et le nom ? Le mélèze est le seul conifère de nos forêts à perdre ses aiguilles. En octobre, il dore toute la vallée.</p>' +
           '</div>' +
         '</div>' +
-      '</section>' +
-
-      // ---- Partenaires ---------------------------------------------------------------------
-      '<section class="border-t border-line" aria-labelledby="partners">' +
-        '<div class="mx-auto max-w-app px-5 py-14 sm:px-8 md:py-20">' +
-          '<h2 id="partners" class="text-3xl sm:text-4xl">Ils participent</h2>' +
-          '<p class="mt-2 text-muted">Les commerçants et structures qui offrent les contreparties.</p>' +
-          '<ul class="mt-8 grid gap-x-10 sm:grid-cols-2">' +
-            Object.keys(partners).map((name) =>
-              '<li class="flex flex-col border-b border-line py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">' +
-                '<span class="font-semibold">' + esc(name) + '</span>' +
-                '<span class="text-[0.95rem] text-muted sm:text-right">' + esc(partners[name][0]) + '</span>' +
-              '</li>').join('') +
-          '</ul>' +
+        '<div class="relative">' +
+          '<div class="ph aspect-[4/3] rounded-4xl">' + photo('forest', { sizes: '(min-width:1024px) 45vw, 100vw', alt: 'Lumière dorée dans une forêt' }) + '</div>' +
+          '<span class="sticker absolute -bottom-4 left-6 -rotate-2 bg-sun px-5 py-2.5 text-base">' + icon('leaf', 'h-5 w-5') + 'Les mélèzes dorent en octobre</span>' +
         '</div>' +
       '</section>' +
 
-      // ---- Questions -----------------------------------------------------------------------
-      '<section class="bg-sunk" aria-labelledby="faq">' +
-        '<div class="mx-auto grid max-w-app gap-6 px-5 py-14 sm:px-8 md:grid-cols-[1fr_2fr] md:py-20">' +
-          '<h2 id="faq" class="text-3xl sm:text-4xl">Vos questions</h2>' +
+      // ---- Questions ------------------------------------------------------------------------------
+      '<section class="mx-auto grid max-w-app gap-8 px-5 pb-16 sm:px-8 lg:grid-cols-[1fr_1.5fr] lg:pb-24" aria-labelledby="faq">' +
+        '<h2 id="faq" class="text-4xl sm:text-6xl">Vos questions</h2>' +
+        '<div class="space-y-3">' +
+          FAQ.map(([q, a]) =>
+            '<details class="acc rounded-3xl bg-sunk px-5 py-4">' +
+              '<summary class="font-display text-lg font-semibold tracking-[-0.01em]">' + q +
+              '<span class="acc-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-surface">' + icon('plus', 'h-4 w-4') + '</span></summary>' +
+              '<p class="mt-2 max-w-xl pb-1 text-muted">' + a + '</p>' +
+            '</details>').join('') +
+        '</div>' +
+      '</section>' +
+
+      // ---- Appel final (bloc noir) -------------------------------------------------------------------
+      '<section class="px-3 pb-3 sm:px-4 sm:pb-4">' +
+        '<div class="mx-auto grid max-w-[80rem] items-center gap-10 overflow-hidden rounded-4xl bg-night px-6 py-14 text-white sm:px-12 lg:grid-cols-[1.4fr_1fr] lg:py-20">' +
           '<div>' +
-            FAQ.map(([q, a]) =>
-              '<details class="acc border-b border-line py-4">' +
-                '<summary class="text-lg font-semibold">' + q + '<span class="acc-icon text-muted">' + icon('chevron') + '</span></summary>' +
-                '<p class="mt-2 max-w-xl text-muted">' + a + '</p>' +
-              '</details>').join('') +
+            '<h2 class="text-4xl sm:text-6xl">Prêt·e à donner <span class="mark">une heure</span> à la Vanoise&nbsp;?</h2>' +
+            '<a href="#/missions" class="btn-lime mt-8">Je choisis ma mission ' + icon('arrow', 'h-5 w-5') + '</a>' +
+          '</div>' +
+          '<div class="hidden grid-cols-2 gap-4 lg:grid">' +
+            '<div class="ph aspect-[3/4] -rotate-3 rounded-3xl">' + photo('stars', { sizes: '18vw', alt: '' }) + '</div>' +
+            '<div class="ph mt-10 aspect-[3/4] rotate-2 rounded-3xl">' + photo('lake', { sizes: '18vw', alt: '' }) + '</div>' +
           '</div>' +
         '</div>' +
-      '</section>' +
-
-      // ---- Dernier mot ------------------------------------------------------------------------
-      '<section class="mx-auto max-w-app px-5 py-14 text-center sm:px-8 md:py-20">' +
-        '<h2 class="mx-auto max-w-xl text-3xl sm:text-4xl">Une heure, c’est souvent assez pour changer un bout de sentier.</h2>' +
-        '<a href="#/missions" class="btn-primary mt-7">Trouver ma mission</a>' +
       '</section>'
     );
   }

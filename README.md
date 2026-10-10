@@ -35,9 +35,9 @@ Les données de démonstration sont stockées dans `localStorage`. Pour repartir
 Jules-/
 ├── index.html            Coquille : en-tête, <main id="app">, pied de page, barre d'onglets mobile
 ├── src/input.css         Source Tailwind + jetons de couleur (thèmes clair / sombre) + composants
-├── dist/styles.css       CSS compilé et purgé (≈ 27 ko, ≈ 6 ko gzip)
-├── fonts/                Newsreader + Source Sans 3 (woff2 latin, auto-hébergées, licence OFL)
-├── tailwind.config.js    Palette Mélèze (sauge, lin, olive)
+├── dist/styles.css       CSS compilé et purgé (≈ 35 ko, ≈ 7 ko gzip)
+├── fonts/                Bricolage Grotesque + Source Sans 3 (woff2 latin, auto-hébergées, licence OFL)
+├── tailwind.config.js    Palette Mélèze (blanc, noir, lime, pastels par type de mission)
 ├── js/
 │   ├── data.js           Données de démonstration (missions, touriste, bons, identifiants pro)
 │   ├── photos.js         Photothèque (Unsplash ou fichiers locaux) — à remplacer par vos photos
@@ -65,37 +65,40 @@ autorisé), chargées depuis `images.unsplash.com` au bon format (AVIF/WebP) et 
 2. dans `js/photos.js`, remplacez l'identifiant par le chemin : `lake: { src: 'img/lac-des-vaches.webp', alt: '…' }`.
 
 Chaque mission choisit sa photo via le champ `photo` dans `js/data.js` (sinon une photo par type).
-Si une photo ne charge pas (hors-ligne, lien mort), un fond vert sauge prend le relais.
+Si une photo ne charge pas (hors-ligne, lien mort), un fond vert pastel prend le relais.
 
 ## Choix d'éco-conception (Green IT)
 
 - **0 framework, 0 traqueur, 0 dépendance JS** ; icônes en SVG inline.
 - Photos **compressées (q=60, AVIF/WebP)**, **responsives** (`srcset`) et **chargées à la demande**
   (`loading="lazy"`) : seule la photo d'accueil est chargée d'emblée. Elles sont ensuite gardées en cache par le service worker.
-- 2 polices variables **auto-hébergées**, sous-ensemble latin uniquement (~86 ko au total, mises en cache).
+- 2 polices variables **auto-hébergées**, sous-ensemble latin uniquement (~70 ko au total, mises en cache).
 - CSS Tailwind **compilé et purgé** (pas de CDN Tailwind de ~300 ko exécuté sur le téléphone).
-- **Fond lin `#F3EEE4`** (jamais de blanc pur) et **mode sombre** olive, économe sur les écrans OLED.
+- **Fond blanc** (choix de design, à la manière de CopenPay) : sur écran OLED, le blanc consomme plus qu'un fond sombre,
+  d'où le **mode sombre** quasi noir proposé dans l'en-tête (et activé automatiquement si le téléphone est en mode sombre).
 - Contrastes élevés et boutons ≥ 48 px : lisible **en plein soleil, avec des gants**.
 - Quasiment aucune animation (seule la ligne du scanner bouge) ; `prefers-reduced-motion` respecté.
 - Service worker : l'app reste utilisable **hors-ligne** après la première visite.
 
 ## Direction artistique
 
-Objectif : un site qui ressemble à celui d'une station de village, pas à un modèle généré.
-Mise en page calme et pratique (façon panneau d'information ou topo-guide), textes écrits
-simplement, photos légendées, titres de taille raisonnable, pas d'effets (verre dépoli,
-dégradés, animations d'apparition, bandeaux défilants).
-
-Palette « sauge & lin », dans l'esprit des palettes nature très partagées sur Pinterest :
+Inspirée de **CopenPay** (Copenhague) : fond blanc, grands titres gras en noir, un mot clé surligné
+en vert lime comme au feutre, blocs de couleurs pastel, photos aux coins arrondis en grille
+« bento », petites pastilles légèrement inclinées, boutons pilule noirs.
 
 | Rôle | Couleur |
 |---|---|
-| Fond (lin) | `#F3EEE4` · cartes `#FAF7F1` · beige `#EAE2D3` / `#DDD1BB` |
-| Vert sauge clair (encadrés, sections) | `#E5EADC` / `#D2DBC4` / `#B7C4A5` |
-| Vert sauge soutenu (boutons, liens) | `#587349` / `#4B6142` |
-| Texte (olive foncé) | `#2B3427` · secondaire `#5E665A` |
+| Fond | `#FFFFFF` · gris très clair `#F5F5F1` |
+| Texte / boutons | `#121614` (noir doux) · secondaire `#5A605C` |
+| Vert lime (surlignage, accents) | `#D2F58E` / `#BFEF5F` |
+| Vert montagne (grand bloc, liens) | `#16703F` / `#1F8A50` |
+| Sentiers | `#FFE2A6` (or) |
+| Biodiversité | `#D6F2B5` (vert tendre) |
+| Mobilité douce | `#CDE6FF` (bleu ciel) |
+| Propreté | `#FFD3C7` (corail) |
+| Patrimoine & entraide | `#E6DCFF` (lilas) |
 
-Typographies : **Newsreader** (titres, serif éditoriale sobre) et **Source Sans 3** (texte, très lisible au soleil).
+Typographies : **Bricolage Grotesque** (titres, grotesque grasse et expressive) et **Source Sans 3** (texte, très lisible au soleil).
 
 ## Modifier les styles
 

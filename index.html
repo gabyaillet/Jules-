@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Mélèze · Pralognan-la-Vanoise</title>
   <meta name="description" content="Une heure pour la montagne, une expérience en retour. Missions utiles et contreparties locales à Pralognan-la-Vanoise, en toutes saisons.">
-  <meta name="theme-color" content="#F3EEE4">
+  <meta name="theme-color" content="#FFFFFF">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
@@ -18,7 +18,7 @@
       document.documentElement.dataset.theme = t;
     })();
   </script>
-  <link rel="preload" href="fonts/newsreader-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/source-sans-3-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
   <!-- Unique feuille de styles : Tailwind compilé et purgé (voir package.json) -->
@@ -28,20 +28,23 @@
   <a href="#app" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-brand focus:px-4 focus:py-2 focus:font-semibold focus:text-on-brand">Aller au contenu</a>
 
   <!-- ===================== En-tête ===================== -->
-  <header class="sticky top-0 z-40 border-b border-line bg-surface">
-    <div class="mx-auto flex max-w-app items-center justify-between gap-4 px-5 py-2.5 sm:px-8">
+  <header class="sticky top-0 z-40 border-b border-line/70 bg-surface/95 backdrop-blur">
+    <div class="mx-auto flex max-w-app items-center justify-between gap-4 px-5 py-3 sm:px-8">
       <a href="#/" class="flex items-center gap-2" aria-label="Mélèze, accueil">
         <!-- Logo : un mélèze stylisé -->
-        <svg class="h-7 w-7 text-brand" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 2 9 13h4l-6 9h6l-5 6h16l-5-6h6l-6-9h4z"/><path fill="#9A7B52" d="M15 28h2v3h-2z"/></svg>
-        <span class="font-serif text-2xl font-medium leading-none">Mélèze</span>
-        <span id="pro-badge" class="tag ml-1" hidden>Pro</span>
+        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-lime-300"><svg class="h-6 w-6 text-pine-700" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16 2 9 13h4l-6 9h6l-5 6h16l-5-6h6l-6-9h4z"/><path fill="#121614" d="M15 28h2v3h-2z"/></svg></span>
+        <span class="font-display text-[1.6rem] font-extrabold leading-none tracking-[-0.04em]">Mélèze</span>
+        <span id="pro-badge" class="tag ml-1 bg-night text-white" hidden>Pro</span>
       </a>
-      <nav class="hidden items-center gap-2 md:flex" aria-label="Navigation principale">
+      <nav class="hidden items-center gap-1 md:flex" aria-label="Navigation principale">
         <a href="#/" data-nav="" class="nav-link">Accueil</a>
         <a href="#/missions" data-nav="missions" class="nav-link">Missions</a>
         <a href="#/wallet" data-nav="wallet" class="nav-link">Mon espace</a>
       </nav>
-      <button id="theme-toggle" type="button" data-action="theme" class="flex h-10 w-10 items-center justify-center rounded-lg text-muted hover:bg-sunk hover:text-ink" aria-pressed="false"></button>
+      <div class="flex items-center gap-2">
+        <a href="#/missions" class="btn-primary btn-sm hidden md:inline-flex">Participer</a>
+        <button id="theme-toggle" type="button" data-action="theme" class="flex h-10 w-10 items-center justify-center rounded-full bg-sunk text-ink hover:bg-line" aria-pressed="false"></button>
+      </div>
     </div>
   </header>
 
@@ -51,10 +54,10 @@
   </main>
 
   <!-- ===================== Pied de page ===================== -->
-  <footer class="border-t border-line bg-sunk">
+  <footer class="mt-4 border-t border-line">
     <div class="mx-auto grid max-w-app gap-8 px-5 pb-28 pt-10 text-[0.95rem] text-muted sm:grid-cols-3 sm:px-8 md:pb-10">
       <div>
-        <p class="font-serif text-xl text-ink">Mélèze</p>
+        <p class="font-display text-3xl font-extrabold tracking-[-0.04em] text-ink">Mélèze<span class="text-pine-600">.</span></p>
         <p class="mt-2">Des missions utiles et des contreparties locales, à Pralognan-la-Vanoise (Savoie).</p>
       </div>
       <nav aria-label="Pied de page">
@@ -71,8 +74,8 @@
   </footer>
 
   <!-- ===================== Barre d'onglets mobile ===================== -->
-  <nav id="tabbar" class="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] md:hidden" aria-label="Navigation">
-    <div class="flex">
+  <nav id="tabbar" class="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 md:hidden" aria-label="Navigation">
+    <div class="flex gap-1 rounded-full border border-line bg-card p-1.5 shadow-[0_12px_40px_-12px_rgb(0_0_0/0.35)]">
       <a href="#/" data-nav="" class="tab-link"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>Accueil</a>
       <a href="#/missions" data-nav="missions" class="tab-link"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Missions</a>
       <a href="#/wallet" data-nav="wallet" class="tab-link"><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mon espace</a>
@@ -80,7 +83,7 @@
   </nav>
 
   <!-- Notifications (annoncées aux lecteurs d'écran) -->
-  <div id="toast" class="pointer-events-none fixed inset-x-4 bottom-24 z-50 md:bottom-8" role="status" aria-live="polite"></div>
+  <div id="toast" class="pointer-events-none fixed inset-x-4 bottom-28 z-50 md:bottom-8" role="status" aria-live="polite"></div>
 
   <!-- Scripts classiques (pas de modules ES) : l'app s'ouvre même en double-cliquant
        sur index.html, sans serveur. Ordre : données → photos → store → UI → vues → app. -->

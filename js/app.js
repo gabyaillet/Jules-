@@ -89,7 +89,7 @@
     const dark = theme === 'dark';
     btn.setAttribute('aria-pressed', String(dark));
     btn.innerHTML = ui.icon(dark ? 'sun' : 'moon') + '<span class="sr-only">Mode sombre économe en énergie</span>';
-    document.querySelector('meta[name="theme-color"]').content = dark ? '#161A14' : '#F3EEE4';
+    document.querySelector('meta[name="theme-color"]').content = dark ? '#0C0E0D' : '#FFFFFF';
   }
 
   const globalActions = {

@@ -81,9 +81,9 @@ Meleze.ui = (function () {
       d += 'M' + x + ' ' + y + 'h7v7h-7zM' + (x + 1) + ' ' + (y + 1) + 'v5h5v-5z';
       d += 'M' + (x + 2) + ' ' + (y + 2) + 'h3v3h-3z';
     });
-    return '<svg class="' + o.size + ' ' + (o.muted ? 'text-muted opacity-40' : 'text-olive-900') + '" viewBox="-2 -2 ' + (N + 4) + ' ' + (N + 4) +
+    return '<svg class="' + o.size + ' ' + (o.muted ? 'text-muted opacity-40' : 'text-night') + '" viewBox="-2 -2 ' + (N + 4) + ' ' + (N + 4) +
       '" role="img" aria-label="QR code ' + esc(code) + '" shape-rendering="crispEdges">' +
-      '<rect x="-2" y="-2" width="' + (N + 4) + '" height="' + (N + 4) + '" fill="#FAF7F1"/>' +
+      '<rect x="-2" y="-2" width="' + (N + 4) + '" height="' + (N + 4) + '" fill="#FFFFFF"/>' +
       '<path fill="currentColor" fill-rule="evenodd" d="' + d + '"/></svg>';
   }
 
@@ -98,7 +98,7 @@ Meleze.ui = (function () {
     const d = new Date(iso + 'T12:00:00');
     return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
   }
-  const typeOf = (id) => Meleze.data.TYPES.find((t) => t.id === id) || { label: id, icon: 'mountain' };
+  const typeOf = (id) => Meleze.data.TYPES.find((t) => t.id === id) || { label: id, icon: 'mountain', color: 'bg-sunk' };
   const seasonLabel = (id) => (Meleze.data.SEASONS.find((s) => s.id === id) || { label: id }).label;
 
   /** Saison courante d'après la date, pour mettre en avant les bonnes missions. */
@@ -115,9 +115,10 @@ Meleze.ui = (function () {
   function toast(message, tone) {
     const host = document.getElementById('toast');
     if (!host) return;
-    const color = tone === 'error' ? 'text-[#F0B9A6]' : 'text-sage-300';
-    host.innerHTML = '<div class="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-xl bg-olive-900 px-4 py-3 text-sand-50 shadow-lg">' +
-      icon(tone === 'error' ? 'alert' : 'check', 'h-5 w-5 shrink-0 ' + color) + '<span>' + esc(message) + '</span></div>';
+    const dot = tone === 'error' ? 'bg-coral' : 'bg-lime-400';
+    host.innerHTML = '<div class="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-full bg-night py-2 pl-2 pr-5 text-white shadow-xl">' +
+      '<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-night ' + dot + '">' + icon(tone === 'error' ? 'alert' : 'check', 'h-4 w-4') + '</span>' +
+      '<span class="text-[0.95rem]">' + esc(message) + '</span></div>';
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { host.innerHTML = ''; }, 3800);
   }

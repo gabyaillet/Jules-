@@ -31,15 +31,15 @@ Meleze.views.pro = (function () {
   function renderLogin() {
     const demo = Meleze.data.proDemo;
     return '<div class="mx-auto max-w-md px-5 pb-16 pt-8 md:pt-12">' +
-      '<p class="flex items-center gap-2 text-muted">' + icon('lock', 'h-4 w-4') + 'Espace partenaires</p>' +
-      '<h1 id="page-title" tabindex="-1" class="mt-2 text-4xl">Connexion</h1>' +
+      '<span class="tag">' + icon('lock', 'h-3.5 w-3.5') + 'Espace partenaires</span>' +
+      '<h1 id="page-title" tabindex="-1" class="mt-3 text-5xl font-extrabold">Connexion <span class="mark">pro</span></h1>' +
       '<p class="mt-2 text-muted">Pour les commerçants, les référents de mission et l’Office de tourisme : valider les missions, encaisser les bons, publier de nouvelles missions.</p>' +
-      '<form class="card mt-6 space-y-5 p-5 sm:p-6" data-form="login" novalidate>' +
+      '<form class="card mt-6 space-y-5 rounded-4xl p-5 sm:p-7" data-form="login" novalidate>' +
         field('email', 'E-mail professionnel', '<input class="field" id="email" name="email" type="email" autocomplete="username" required value="' + demo.email + '">') +
         field('pin', 'Code PIN', '<input class="field tracking-[0.4em]" id="pin" name="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password" required placeholder="••••">') +
         field('role', 'Je suis', '<select class="field" id="role" name="role">' + ROLES.map((r) => '<option>' + r + '</option>').join('') + '</select>') +
         field('org', 'Structure', '<input class="field" id="org" name="org" required value="Téléphérique du Mont Bochor">') +
-        '<p class="rounded-xl bg-tint px-4 py-3 text-[0.95rem]">Pour la démo : ' + demo.email + ', PIN <strong>' + demo.pin + '</strong></p>' +
+        '<p class="rounded-2xl bg-lime-200 px-4 py-3 text-[0.95rem] text-night">Pour la démo : ' + demo.email + ', PIN <strong>' + demo.pin + '</strong></p>' +
         '<button class="btn-primary w-full">Se connecter</button>' +
       '</form>' +
       '<a href="#/" class="link mt-6">Retour au site</a>' +
@@ -51,16 +51,16 @@ Meleze.views.pro = (function () {
   // ------------------------------------------------------------------------
   function renderShell(pro, tab, inner) {
     const tabLink = (id, label, ic) =>
-      '<a href="#/pro/' + id + '" class="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-lg font-semibold transition-colors ' +
-      (tab === id ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink') + '"' + (tab === id ? ' aria-current="page"' : '') + '>' + icon(ic) + label + '</a>';
+      '<a href="#/pro/' + id + '" class="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-full font-display font-semibold transition-colors ' +
+      (tab === id ? 'bg-ink text-surface' : 'text-muted hover:text-ink') + '"' + (tab === id ? ' aria-current="page"' : '') + '>' + icon(ic) + label + '</a>';
 
     return '<div class="mx-auto max-w-2xl px-5 pb-16 pt-8 sm:px-8 md:pt-12">' +
       '<div class="flex items-start justify-between gap-4">' +
         '<div><p class="text-muted">' + esc(pro.role) + '</p>' +
-        '<h1 id="page-title" tabindex="-1" class="mt-1 text-3xl sm:text-4xl">' + esc(pro.org) + '</h1></div>' +
+        '<h1 id="page-title" tabindex="-1" class="mt-1 text-4xl font-extrabold sm:text-5xl">' + esc(pro.org) + '</h1></div>' +
         '<button type="button" class="btn-secondary btn-sm shrink-0" data-action="logout">' + icon('logout', 'h-4 w-4') + '<span class="hidden sm:inline">Se déconnecter</span><span class="sr-only sm:hidden">Se déconnecter</span></button>' +
       '</div>' +
-      '<nav class="mt-6 flex gap-1 rounded-xl bg-sunk p-1" aria-label="Outils pro">' +
+      '<nav class="mt-6 flex gap-1 rounded-full bg-sunk p-1" aria-label="Outils pro">' +
         tabLink('scan', 'Scanner', 'scan') + tabLink('creer', 'Créer une mission', 'plus') +
       '</nav>' +
       '<div class="mt-8">' + inner + '</div>' +
@@ -85,7 +85,7 @@ Meleze.views.pro = (function () {
         '<span class="scan-corner bottom-5 right-5 rounded-br-xl border-b-[3px] border-r-[3px]"></span>' +
         (scanned
           ? '<div class="absolute inset-0 flex items-center justify-center p-14">' + qr(scanned, { size: 'w-full' }) + '</div>'
-          : '<span class="scan-line"></span><p class="absolute inset-x-0 bottom-9 text-center text-sm text-sand-200">Placez le QR dans le cadre</p>') +
+          : '<span class="scan-line"></span><p class="absolute inset-x-0 bottom-9 text-center text-sm text-white/80">Placez le QR dans le cadre</p>') +
       '</div>' +
 
       '<form class="mt-6 flex gap-2" data-form="scan">' +
@@ -103,7 +103,7 @@ Meleze.views.pro = (function () {
   }
 
   function flashBox() {
-    return '<div class="mb-4 flex items-start gap-3 rounded-xl bg-tint px-4 py-3">' + icon('check', 'mt-0.5 h-5 w-5 shrink-0 text-brand-ink') + '<span>' + flash + '</span></div>';
+    return '<div class="mb-4 flex items-start gap-3 rounded-3xl bg-lime-300 px-4 py-3 text-night">' + icon('check', 'mt-0.5 h-5 w-5 shrink-0') + '<span>' + flash + '</span></div>';
   }
 
   /** Le cœur "intelligent" : l'écran s'adapte à la nature du code lu. */
@@ -117,17 +117,17 @@ Meleze.views.pro = (function () {
     if (r.kind === 'user') {
       const rows = r.items.map(({ participation: p, mission: m }) => {
         const ready = p.status === 'terminee';
-        return '<li class="card p-5">' +
+        return '<li class="card rounded-4xl p-5">' +
           '<p class="text-sm text-muted">' + esc(typeOf(m.type).label) + ' · ' + duration(m.duration) + ' · ' + esc(m.location) + '</p>' +
           '<h3 class="mt-1 text-xl">' + esc(m.title) + '</h3>' +
-          '<p class="mt-2 text-[0.95rem]"><span class="text-muted">Contrepartie :</span> ' + esc(m.reward.title) + '</p>' +
+          '<p class="mt-3 flex items-center gap-2 rounded-2xl px-3 py-2 text-[0.95rem] text-night ' + typeOf(m.type).color + '">' + icon('gift', 'h-4 w-4 shrink-0') + esc(m.reward.title) + '</p>' +
           (ready
             ? '<button type="button" class="btn-primary mt-4 w-full" data-action="validate" data-id="' + esc(p.id) + '">' + icon('check') + 'Valider la mission</button>'
             : '<p class="mt-4 rounded-xl bg-sunk px-4 py-3 text-[0.95rem] text-muted">Le participant n’a pas encore indiqué avoir terminé cette mission.</p>') +
         '</li>';
       }).join('');
       return '<div class="flex items-center gap-3">' +
-          '<span class="flex h-12 w-12 items-center justify-center rounded-full bg-sage-200 font-serif text-xl text-olive-900">' + esc(r.user.firstName[0]) + '</span>' +
+          '<span class="flex h-12 w-12 items-center justify-center rounded-full bg-lime-300 font-display text-xl font-bold text-night">' + esc(r.user.firstName[0]) + '</span>' +
           '<div><p class="text-lg font-semibold">' + esc(r.user.firstName) + '</p><p class="font-mono text-sm text-muted">' + esc(r.user.code) + '</p></div>' +
         '</div>' +
         (rows ? '<ul class="mt-4 space-y-3">' + rows + '</ul>' : '<p class="mt-4 rounded-xl bg-sunk p-4 text-muted">Aucune mission en cours pour ce participant.</p>');
@@ -136,15 +136,15 @@ Meleze.views.pro = (function () {
     // --- Bon de récompense : consommation unique ---------------------------------
     const v = r.voucher;
     const used = v.status === 'consomme';
-    return '<div class="card p-5 ' + (used ? 'bg-sunk' : '') + '">' +
+    return '<div class="card rounded-4xl p-5 ' + (used ? 'bg-sunk' : '') + '">' +
       '<div class="flex flex-wrap items-center justify-between gap-2">' +
-        '<span class="tag ' + (used ? 'bg-danger/10 text-danger' : '') + '">' + (used ? 'Déjà utilisé' : 'Bon valable') + '</span>' +
+        '<span class="tag ' + (used ? 'bg-coral' : 'bg-lime-300') + '">' + (used ? 'Déjà utilisé' : 'Bon valable') + '</span>' +
         '<span class="font-mono text-sm font-semibold">' + esc(v.code) + '</span>' +
       '</div>' +
       '<h3 class="mt-3 text-2xl ' + (used ? 'text-muted line-through decoration-1' : '') + '">' + esc(v.title) + '</h3>' +
       '<p class="text-muted">' + esc(v.partner) + ' · reçu le ' + date(v.issuedAt) + '</p>' +
       (used
-        ? '<button type="button" class="btn mt-5 w-full bg-sand-300 text-olive-700" disabled>Bon utilisé le ' + date(v.usedAt) + '</button>'
+        ? '<button type="button" class="btn mt-5 w-full bg-sunk text-muted" disabled>Bon utilisé le ' + date(v.usedAt) + '</button>'
         : '<button type="button" class="btn-primary mt-5 w-full" data-action="consume" data-id="' + esc(v.id) + '">Consommer le bon</button>') +
     '</div>';
   }
@@ -154,26 +154,26 @@ Meleze.views.pro = (function () {
   // ------------------------------------------------------------------------
   function renderCreate(pro) {
     if (created) {
-      return '<div class="rounded-2xl border border-sage-300 bg-tint p-6 sm:p-8">' +
-        '<p class="flex items-center gap-2 font-semibold text-brand-ink">' + icon('check') + 'Mission publiée</p>' +
+      return '<div class="rounded-4xl bg-lime-300 p-6 text-night sm:p-8">' +
+        '<p class="flex items-center gap-2 font-display font-bold">' + icon('check') + 'Mission publiée</p>' +
         '<h2 class="mt-2 text-3xl">« ' + esc(created.title) + ' »</h2>' +
-        '<p class="mt-2 text-muted">Elle est visible dès maintenant dans le catalogue, avec sa contrepartie : ' + esc(created.reward.title) + '.</p>' +
+        '<p class="mt-2 text-night/75">Elle est visible dès maintenant dans le catalogue, avec sa contrepartie : ' + esc(created.reward.title) + '.</p>' +
         '<div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">' +
           '<a href="#/missions?focus=' + esc(created.id) + '" class="btn-primary">Voir dans le catalogue</a>' +
-          '<button type="button" class="link" data-action="new-mission">Créer une autre mission</button>' +
+          '<button type="button" class="btn-secondary border-night text-night" data-action="new-mission">Créer une autre mission</button>' +
         '</div>' +
       '</div>';
     }
 
     const { SEASONS, TYPES } = Meleze.data;
     return '<form class="space-y-6" data-form="create">' +
-      '<fieldset class="card space-y-5 p-5 sm:p-6">' +
-        '<legend class="float-left mb-1 w-full font-serif text-2xl">La mission</legend>' +
+      '<fieldset class="card space-y-5 rounded-4xl p-5 sm:p-6">' +
+        '<legend class="float-left mb-1 w-full font-display text-2xl font-bold tracking-[-0.02em]">La mission</legend>' +
         field('title', 'Intitulé', '<input class="field" id="title" name="title" required maxlength="80" placeholder="Ex. Nettoyer les berges du Doron">') +
         field('type', 'Type', '<select class="field" id="type" name="type" required>' + TYPES.map((t) => '<option value="' + t.id + '">' + t.label + '</option>').join('') + '</select>') +
         '<div><p class="label" id="seasons-l">Saison(s)</p><div class="grid grid-cols-2 gap-2" role="group" aria-labelledby="seasons-l">' +
-          SEASONS.map((s) => '<label class="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-xl border border-line bg-surface px-4 has-[:checked]:border-brand has-[:checked]:bg-tint">' +
-            '<input type="checkbox" name="seasons" value="' + s.id + '" class="h-5 w-5 accent-[#587349]">' + s.label + '</label>').join('') +
+          SEASONS.map((s) => '<label class="flex min-h-[48px] cursor-pointer items-center gap-3 rounded-2xl border-2 border-transparent bg-sunk px-4 font-semibold has-[:checked]:border-ink has-[:checked]:bg-lime-200">' +
+            '<input type="checkbox" name="seasons" value="' + s.id + '" class="h-5 w-5 accent-[#121614]">' + s.label + '</label>').join('') +
         '</div></div>' +
         '<div class="grid grid-cols-2 gap-4">' +
           field('duration', 'Durée', '<select class="field" id="duration" name="duration">' + DURATIONS.map((d) => '<option value="' + d + '"' + (d === 90 ? ' selected' : '') + '>' + duration(d) + '</option>').join('') + '</select>') +
@@ -185,13 +185,13 @@ Meleze.views.pro = (function () {
       '</fieldset>' +
 
       // Contrepartie : bloc mis en avant, champs obligatoires
-      '<fieldset class="space-y-5 rounded-2xl border border-sage-300 bg-tint p-5 sm:p-6">' +
-        '<legend class="float-left mb-1 w-full font-serif text-2xl">La contrepartie <span class="font-sans text-base font-semibold text-brand-ink">(obligatoire)</span></legend>' +
+      '<fieldset class="space-y-5 rounded-4xl bg-tint p-5 ring-2 ring-lime-400 sm:p-6">' +
+        '<legend class="float-left mb-1 flex w-full flex-wrap items-center gap-2 font-display text-2xl font-bold tracking-[-0.02em]">La contrepartie <span class="tag bg-lime-400">Obligatoire</span></legend>' +
         '<p class="text-muted">Chaque mission doit offrir quelque chose en échange : c’est le principe de Mélèze.</p>' +
         field('rtitle', 'Ce que vous offrez', '<input class="field" id="rtitle" name="rtitle" required maxlength="80" placeholder="Ex. Une descente en luge">') +
         field('rpartner', 'Offert par', '<input class="field" id="rpartner" name="rpartner" required value="' + esc(pro.org) + '">') +
         field('rcat', 'Catégorie', '<select class="field" id="rcat" name="rcat">' + CATEGORIES.map((c) => '<option>' + c + '</option>').join('') + '</select>') +
-        '<label class="flex cursor-pointer items-start gap-3"><input type="checkbox" name="commit" required class="mt-1 h-5 w-5 shrink-0 accent-[#587349]">Je m’engage à offrir cette contrepartie à chaque participant dont la mission est validée.</label>' +
+        '<label class="flex cursor-pointer items-start gap-3"><input type="checkbox" name="commit" required class="mt-1 h-5 w-5 shrink-0 accent-[#121614]">Je m’engage à offrir cette contrepartie à chaque participant dont la mission est validée.</label>' +
       '</fieldset>' +
 
       '<button class="btn-primary w-full">Publier la mission</button>' +

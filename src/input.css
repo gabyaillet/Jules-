@@ -7,15 +7,15 @@
 @tailwind utilities;
 
 /* --------------------------------------------------------------------------
-   0. Polices auto-hébergées (sous-ensemble latin, woff2 variables, ~86 ko)
-   Newsreader : titres · Source Sans 3 : texte courant
+   0. Polices auto-hébergées (sous-ensemble latin, woff2 variables, ~70 ko)
+   Bricolage Grotesque : titres · Source Sans 3 : texte courant
    -------------------------------------------------------------------------- */
 @font-face {
-  font-family: 'Newsreader';
+  font-family: 'Bricolage Grotesque';
   font-style: normal;
   font-weight: 200 800;
   font-display: swap;
-  src: url('../fonts/newsreader-latin-wght-normal.woff2') format('woff2');
+  src: url('../fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Source Sans 3';
@@ -26,40 +26,40 @@
 }
 
 /* --------------------------------------------------------------------------
-   1. Thèmes "sauge & lin" — valeurs RGB nues pour l'opacité Tailwind
+   1. Thèmes — valeurs RGB nues pour l'opacité Tailwind
    -------------------------------------------------------------------------- */
 @layer base {
   :root {
     color-scheme: light;
-    --c-surface: 243 238 228; /* #F3EEE4 lin — jamais de blanc pur */
-    --c-card: 250 247 241; /* #FAF7F1 */
-    --c-sunk: 234 226 211; /* #EAE2D3 beige */
-    --c-tint: 229 234 220; /* #E5EADC sauge très clair */
-    --c-ink: 43 52 39; /* #2B3427 olive foncé — contraste ≈ 11:1 */
-    --c-muted: 94 102 90; /* #5E665A — contraste ≈ 5:1 */
-    --c-line: 220 211 194; /* #DCD3C2 */
-    --c-brand: 88 115 73; /* #587349 vert sauge soutenu */
-    --c-on-brand: 250 247 241;
-    --c-brand-ink: 75 97 66; /* #4B6142 */
-    --c-ok: 75 97 66;
-    --c-danger: 156 64 44;
+    --c-surface: 255 255 255; /* blanc */
+    --c-card: 255 255 255;
+    --c-sunk: 245 245 241; /* #F5F5F1 */
+    --c-tint: 240 250 226; /* #F0FAE2 lime très clair */
+    --c-ink: 18 22 20; /* #121614 — contraste ≈ 18:1 */
+    --c-muted: 90 96 92; /* #5A605C — contraste ≈ 6:1 */
+    --c-line: 230 230 224; /* #E6E6E0 */
+    --c-brand: 18 22 20; /* boutons noirs */
+    --c-on-brand: 255 255 255;
+    --c-brand-ink: 22 112 63; /* #16703F vert lisible */
+    --c-ok: 22 112 63;
+    --c-danger: 190 52 34;
   }
 
-  /* Thème sombre olive : économe sur les écrans OLED */
+  /* Thème sombre : quasi noir, économe sur les écrans OLED */
   :root[data-theme='dark'] {
     color-scheme: dark;
-    --c-surface: 22 26 20;
-    --c-card: 31 37 29;
-    --c-sunk: 26 31 24;
-    --c-tint: 36 44 33;
-    --c-ink: 236 230 217;
-    --c-muted: 172 176 163;
-    --c-line: 52 61 48;
-    --c-brand: 169 188 151; /* sauge clair */
-    --c-on-brand: 29 35 26;
-    --c-brand-ink: 183 196 165;
-    --c-ok: 169 188 151;
-    --c-danger: 226 138 112;
+    --c-surface: 12 14 13;
+    --c-card: 22 26 24;
+    --c-sunk: 28 32 30;
+    --c-tint: 30 44 26;
+    --c-ink: 240 242 238;
+    --c-muted: 168 174 170;
+    --c-line: 48 54 51;
+    --c-brand: 210 245 142; /* lime */
+    --c-on-brand: 18 22 20;
+    --c-brand-ink: 191 239 95;
+    --c-ok: 191 239 95;
+    --c-danger: 255 140 120;
   }
 
   /* L'attribut `hidden` doit toujours l'emporter sur les classes d'affichage */
@@ -73,15 +73,15 @@
     @apply bg-surface font-sans text-[1.0625rem] leading-relaxed text-ink antialiased;
   }
   h1, h2, h3 {
-    @apply font-serif font-medium leading-tight;
-    letter-spacing: -0.01em;
+    @apply font-display font-bold leading-[1.02];
+    letter-spacing: -0.03em;
     text-wrap: balance;
   }
   p { text-wrap: pretty; }
   :focus-visible {
-    @apply outline outline-[3px] outline-offset-2 outline-brand;
+    @apply outline outline-[3px] outline-offset-2 outline-pine-600;
   }
-  ::selection { @apply bg-sage-200 text-olive-900; }
+  ::selection { @apply bg-lime-300 text-night; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -94,61 +94,69 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. Composants — volontairement sobres
+   2. Composants
    -------------------------------------------------------------------------- */
 @layer components {
-  /* Boutons — cibles tactiles ≥ 48px */
+  /* Boutons pilule — cibles tactiles ≥ 48px */
   .btn {
-    @apply inline-flex min-h-[50px] items-center justify-center gap-2 rounded-xl px-5 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full px-6 font-display text-[1.02rem] font-semibold tracking-[-0.01em] transition duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
-  .btn-primary { @apply btn bg-brand text-on-brand hover:bg-sage-700; }
-  .btn-secondary { @apply btn border border-line bg-card text-ink hover:border-muted; }
+  .btn-primary { @apply btn bg-brand text-on-brand hover:opacity-85; }
+  .btn-lime { @apply btn bg-lime-400 text-night hover:bg-lime-300; }
+  .btn-secondary { @apply btn border-2 border-ink/90 bg-transparent text-ink hover:bg-ink hover:text-surface; }
   .btn-sm { @apply min-h-[42px] px-4 text-[0.95rem]; }
 
   /* Lien texte avec flèche */
-  .link { @apply inline-flex items-center gap-1.5 font-semibold text-brand-ink underline decoration-1 underline-offset-4 hover:decoration-2; }
+  .link { @apply inline-flex items-center gap-1.5 font-display font-semibold text-ink underline decoration-lime-400 decoration-[3px] underline-offset-[5px] hover:decoration-pine-600; }
+
+  /* Surligneur façon feutre, derrière un mot */
+  .mark { @apply rounded-[0.35em] bg-lime-300 px-[0.12em] text-night; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
+  /* Pastille "sticker" légèrement inclinée */
+  .sticker { @apply inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-display text-sm font-bold text-night shadow-[0_6px_20px_-8px_rgb(0_0_0/0.35)]; }
 
   /* Filtres */
   .chip {
-    @apply inline-flex min-h-[42px] shrink-0 items-center gap-1.5 rounded-full border border-line bg-card px-4 text-[0.95rem] text-ink transition-colors hover:border-muted;
+    @apply inline-flex min-h-[42px] shrink-0 items-center gap-1.5 rounded-full border-2 border-line bg-card px-4 font-display text-[0.95rem] font-semibold text-ink transition-colors hover:border-ink;
   }
-  .chip[aria-pressed='true'] { @apply border-brand bg-tint font-semibold text-brand-ink; }
+  .chip[aria-pressed='true'] { @apply border-ink bg-ink text-surface; }
 
-  .card { @apply rounded-2xl border border-line bg-card; }
+  .card { @apply rounded-3xl border border-line bg-card; }
 
-  /* Étiquette discrète */
-  .tag { @apply inline-flex items-center gap-1 rounded-md bg-tint px-2 py-0.5 text-sm font-semibold text-brand-ink; }
+  /* Étiquette */
+  .tag { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 font-display text-[0.8rem] font-semibold text-night; }
 
   /* Photos — le conteneur donne la taille et un fond de repli si l'image manque */
-  .ph { @apply relative overflow-hidden bg-sage-300; }
+  .ph { @apply relative overflow-hidden bg-leaf; }
   .ph > img { @apply absolute inset-0 h-full w-full object-cover; }
+  .ph-zoom > img { @apply transition-transform duration-500 ease-out; }
+  .group:hover .ph-zoom > img { transform: scale(1.04); }
 
   /* Formulaires */
-  .label { @apply mb-1.5 block font-semibold text-ink; }
+  .label { @apply mb-1.5 block font-display font-semibold text-ink; }
   .field {
-    @apply block min-h-[50px] w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-ink placeholder:text-muted/70 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25;
+    @apply block min-h-[52px] w-full rounded-2xl border-2 border-transparent bg-sunk px-4 py-2.5 text-ink placeholder:text-muted/80 focus:border-ink focus:bg-card focus:outline-none;
   }
   .hint { @apply mt-1 text-sm text-muted; }
 
   /* Navigation */
-  .nav-link { @apply rounded-lg px-3 py-2 font-semibold text-muted transition-colors hover:text-ink; }
-  .nav-link[aria-current='page'] { @apply text-ink underline decoration-sage-400 decoration-2 underline-offset-8; }
+  .nav-link { @apply rounded-full px-4 py-2 font-display font-semibold text-ink/70 transition-colors hover:text-ink; }
+  .nav-link[aria-current='page'] { @apply bg-sunk text-ink; }
 
-  .tab-link { @apply relative flex min-h-[58px] flex-1 flex-col items-center justify-center gap-0.5 text-[0.8rem] font-semibold text-muted; }
-  .tab-link[aria-current='page'] { @apply text-brand-ink; }
-  .tab-link[aria-current='page']::before { content: ''; @apply absolute inset-x-8 top-0 h-[3px] rounded-b bg-brand; }
+  .tab-link { @apply flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full font-display text-[0.78rem] font-semibold text-muted transition-colors; }
+  .tab-link[aria-current='page'] { @apply bg-lime-300 text-night; }
 
   /* Accordéon natif (<details>) */
   .acc summary { @apply flex cursor-pointer list-none items-center justify-between gap-4; }
   .acc summary::-webkit-details-marker { display: none; }
-  .acc .acc-icon { @apply transition-transform; }
-  .acc[open] .acc-icon { transform: rotate(180deg); }
+  .acc .acc-icon { @apply transition-transform duration-200; }
+  .acc[open] .acc-icon { transform: rotate(45deg); }
 
   /* Viseur du scanner */
-  .scan-frame { @apply relative mx-auto aspect-square w-full max-w-[18rem] overflow-hidden rounded-2xl bg-olive-900; }
-  .scan-corner { @apply absolute h-9 w-9 border-sage-300; }
+  .scan-frame { @apply relative mx-auto aspect-square w-full max-w-[18rem] overflow-hidden rounded-4xl bg-night; }
+  .scan-corner { @apply absolute h-9 w-9 border-lime-400; }
   .scan-line {
-    @apply absolute inset-x-8 h-0.5 bg-sage-300;
+    @apply absolute inset-x-8 h-1 rounded-full bg-lime-400;
     animation: scan 2.4s ease-in-out infinite alternate;
   }
   @keyframes scan { from { top: 14%; } to { top: 86%; } }
