@@ -114,22 +114,45 @@ Meleze.ui = (function () {
   function toast(message, tone) {
     const host = document.getElementById('toast');
     if (!host) return;
-    const color = tone === 'error' ? 'bg-danger text-snow-50' : 'bg-fir-900 text-snow-100';
-    host.innerHTML = '<div class="toast-in pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-2xl px-5 py-4 font-semibold shadow-lg ' + color + '">' +
-      icon(tone === 'error' ? 'alert' : 'check', 'h-5 w-5 shrink-0') + '<span>' + esc(message) + '</span></div>';
+    const dot = tone === 'error' ? 'bg-danger' : 'bg-accent';
+    host.innerHTML = '<div class="toast-in pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-full bg-fir-900/95 py-2 pl-2 pr-5 text-sm font-medium text-snow-100 shadow-2xl backdrop-blur-md">' +
+      '<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-fir-900 ' + dot + '">' + icon(tone === 'error' ? 'alert' : 'check', 'h-4 w-4') + '</span>' +
+      '<span>' + esc(message) + '</span></div>';
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { host.innerHTML = ''; }, 3800);
   }
 
-  // --- Illustration : crêtes de la Vanoise + mélèzes (SVG, < 1 ko) ----------
-  function ridge(cls) {
-    return '<svg class="' + (cls || '') + '" viewBox="0 0 400 140" preserveAspectRatio="none" aria-hidden="true">' +
-      '<path fill="#234A39" d="M0 140V92l38-26 30 18 52-58 34 34 22-16 46 46 40-52 46 40 30-22 62 50v34z"/>' +
-      '<path fill="#E6C27A" opacity=".9" d="m120 26 18 18-8-2-10 8-9-7-8 3zM270 30l17 19-9-3-8 7-10-8-7 2z"/>' +
-      '<path fill="#12261E" d="M0 140v-26l30-10 40 14 50-20 60 22 50-16 60 18 50-14 60 16v16z"/>' +
-      '<g fill="#C8892B"><path d="m52 118 7-22 7 22z"/><path d="m64 122 6-18 6 18z"/><path d="m318 120 7-24 7 24z"/><path d="m332 124 5-16 5 16z"/><path d="m196 126 6-20 6 20z"/></g>' +
-      '</svg>';
+  // --- Photos responsives -------------------------------------------------------
+  // Unsplash sert automatiquement de l'AVIF/WebP compressé (auto=format, q=60)
+  // à la largeur demandée : le téléphone ne télécharge que ce qu'il affiche.
+  const WIDTHS = [480, 800, 1200, 1800];
+  const isLocal = (src) => /^(https?:|\/|\.|img\/)/.test(src);
+  const unsplash = (id, w) => 'https://images.unsplash.com/photo-' + id + '?auto=format&fit=crop&q=60&w=' + w;
+
+  /** Entrée de la photothèque à partir d'une clé ("lake") ou d'une mission. */
+  function photoOf(keyOrMission) {
+    const P = Meleze.photos;
+    if (keyOrMission && typeof keyOrMission === 'object') {
+      return P[keyOrMission.photo] || P[P.byType[keyOrMission.type]] || P.range;
+    }
+    return P[keyOrMission] || P.range;
   }
 
-  return { esc, icon, qr, duration, date, typeOf, seasonLabel, currentSeason, toast, ridge };
+  /**
+   * <img> responsive. À placer dans un conteneur `.ph` (qui donne la taille
+   * et un dégradé de repli si l'image ne charge pas).
+   * @param {string|object} key  clé de la photothèque ou mission
+   * @param {{sizes?:string, eager?:boolean, alt?:string}} opts
+   */
+  function photo(key, opts) {
+    const o = Object.assign({ sizes: '100vw', eager: false }, opts);
+    const p = photoOf(key);
+    const alt = o.alt != null ? o.alt : p.alt;
+    const src = isLocal(p.src) ? p.src : unsplash(p.src, 800);
+    const srcset = isLocal(p.src) ? '' : ' srcset="' + WIDTHS.map((w) => unsplash(p.src, w) + ' ' + w + 'w').join(', ') + '" sizes="' + o.sizes + '"';
+    return '<img src="' + src + '"' + srcset + ' alt="' + esc(alt) + '" ' +
+      (o.eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async">';
+  }
+
+  return { esc, icon, qr, duration, date, typeOf, seasonLabel, currentSeason, toast, photo };
 })();

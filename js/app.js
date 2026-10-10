@@ -69,6 +69,8 @@
       if (a.dataset.nav === route.name) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     });
+    // En-tête transparent posé sur la photo plein écran de l'accueil
+    document.getElementById('site-header').dataset.overlay = String(!!ROUTES[route.name].overlayHeader);
     const isPro = route.name === 'pro';
     document.getElementById('tabbar').hidden = isPro;
     document.getElementById('pro-badge').hidden = !isPro;
@@ -89,7 +91,7 @@
     const dark = theme === 'dark';
     btn.setAttribute('aria-pressed', String(dark));
     btn.innerHTML = ui.icon(dark ? 'sun' : 'moon') + '<span class="sr-only">Mode sombre économe en énergie</span>';
-    document.querySelector('meta[name="theme-color"]').content = dark ? '#09120E' : '#12261E';
+    document.querySelector('meta[name="theme-color"]').content = dark ? '#0A100D' : '#14231C';
   }
 
   const globalActions = {
@@ -115,6 +117,12 @@
     const fn = view.forms && view.forms[form.dataset.form];
     if (fn) fn(form, app);
   });
+
+  // Photo introuvable (hors-ligne, lien mort) : on la masque, le dégradé
+  // "sapin" du conteneur .ph prend le relais. Capture = marche aussi pour <img>.
+  document.addEventListener('error', (e) => {
+    if (e.target.tagName === 'IMG') e.target.style.visibility = 'hidden';
+  }, true);
 
   window.addEventListener('hashchange', () => { route = parse(); render(true); });
   store.subscribe(scheduleRender);

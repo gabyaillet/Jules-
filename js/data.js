@@ -28,6 +28,7 @@ Meleze.data = (function () {
   const missions = [
     {
       id: 'm1',
+      photo: 'lake',
       title: 'Débroussailler le sentier du Lac des Vaches',
       type: 'sentiers',
       seasons: ['ete', 'automne'],
@@ -42,6 +43,7 @@ Meleze.data = (function () {
     },
     {
       id: 'm2',
+      photo: 'meadow',
       title: 'Compter les marmottes aux Prioux',
       type: 'biodiversite',
       seasons: ['printemps', 'ete'],
@@ -56,6 +58,7 @@ Meleze.data = (function () {
     },
     {
       id: 'm3',
+      photo: 'range',
       title: 'Venir en train jusqu’à la station',
       type: 'mobilite',
       seasons: ['printemps', 'ete', 'automne', 'hiver'],
@@ -70,6 +73,7 @@ Meleze.data = (function () {
     },
     {
       id: 'm4',
+      photo: 'sunbeam',
       title: 'Ramasser les déchets à la fonte des neiges',
       type: 'proprete',
       seasons: ['printemps'],
@@ -84,6 +88,7 @@ Meleze.data = (function () {
     },
     {
       id: 'm5',
+      photo: 'stars',
       title: 'Relever les traces de faune dans la neige',
       type: 'biodiversite',
       seasons: ['hiver'],
@@ -98,6 +103,7 @@ Meleze.data = (function () {
     },
     {
       id: 'm6',
+      photo: 'peak',
       title: 'Damer le chemin piéton des Granges',
       type: 'sentiers',
       seasons: ['hiver'],
@@ -112,6 +118,7 @@ Meleze.data = (function () {
     },
     {
       id: 'm7',
+      photo: 'forest',
       title: 'Inventorier les mélèzes remarquables',
       type: 'biodiversite',
       seasons: ['automne'],
@@ -126,6 +133,7 @@ Meleze.data = (function () {
     },
     {
       id: 'm8',
+      photo: 'valley',
       title: 'Restaurer un muret en pierre sèche',
       type: 'patrimoine',
       seasons: ['ete', 'automne'],

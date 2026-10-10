@@ -30,15 +30,15 @@ module.exports = {
         danger: v('danger'),
 
         // Palette brute "Mélèze" (fixe, quel que soit le thème)
-        fir: { 50: '#EEF2EE', 100: '#DDE6DF', 600: '#2F5E49', 700: '#234A39', 800: '#1B3A2D', 900: '#12261E', 950: '#0B1611' },
-        larch: { 100: '#F3E3C0', 300: '#E6C27A', 400: '#D9A441', 500: '#C8892B', 600: '#A86E1C', 700: '#8A5A14' },
+        fir: { 50: '#EEF2EE', 100: '#DDE6DF', 600: '#2F5E49', 700: '#234A39', 800: '#1B3A2D', 900: '#14231C', 950: '#0B1611' },
+        larch: { 100: '#F3E3C0', 300: '#E6C27A', 400: '#D6A045', 500: '#C8892B', 600: '#A86E1C', 700: '#8A5A14' },
         snow: { 50: '#FAF8F3', 100: '#F4F1EA', 200: '#EBE7DD' },
         mineral: { 300: '#C9CBC5', 500: '#7A7F7B', 700: '#4A4F4C' },
       },
       fontFamily: {
-        // Polices système uniquement : 0 octet téléchargé.
-        serif: ['"Iowan Old Style"', '"Palatino Linotype"', 'Palatino', 'Georgia', 'ui-serif', 'serif'],
-        sans: ['system-ui', '-apple-system', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+        // Polices auto-hébergées (voir fonts/ et src/input.css), repli système.
+        serif: ['"Instrument Serif"', 'Georgia', 'ui-serif', 'serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       borderRadius: { '4xl': '2rem' },
       maxWidth: { app: '72rem' },
