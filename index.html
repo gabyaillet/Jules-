@@ -1,21 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Coach Up</title>
-  <link rel="stylesheet" href="css/index.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mélèze · Pralognan-la-Vanoise</title>
+  <meta name="description" content="Une heure pour la montagne, une expérience en retour. Missions utiles et récompenses locales à Pralognan-la-Vanoise, en toutes saisons.">
+  <meta name="theme-color" content="#12261E">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <!-- Thème appliqué avant le premier rendu (évite le flash clair → sombre) -->
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('meleze:theme'); } catch (e) {}
+      if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
+  <!-- Unique feuille de styles : Tailwind compilé et purgé (voir package.json) -->
+  <link rel="stylesheet" href="dist/styles.css">
 </head>
-<body>
-  <div class="grid">
-    <div class="titre">MY COACH UP</div>
-    <div class="club"><a href="connection.html">CLUB</a></div>
-    <div class="particulier"><a href="connection.html">PARTICULIER</a></div>
-  </div>
+<body class="min-h-screen">
+  <a href="#app" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:font-semibold focus:text-on-accent">Aller au contenu</a>
+
+  <!-- ===================== En-tête ===================== -->
+  <header class="bg-fir-900 text-snow-100">
+    <div class="mx-auto flex max-w-app items-center justify-between gap-4 px-4 py-3 sm:px-8">
+      <a href="#/" class="flex items-center gap-2.5" aria-label="Mélèze, accueil">
+        <!-- Logo : un mélèze stylisé -->
+        <svg class="h-8 w-8" viewBox="0 0 32 32" aria-hidden="true"><path fill="#D9A441" d="M16 2 9 13h4l-6 9h6l-5 6h16l-5-6h6l-6-9h4z"/><path fill="#F4F1EA" d="M15 28h2v3h-2z"/></svg>
+        <span class="font-serif text-2xl tracking-tight">Mélèze</span>
+        <span id="pro-badge" class="badge bg-larch-400 text-fir-900" hidden>Pro</span>
+      </a>
+      <nav class="hidden items-center gap-1 md:flex" aria-label="Navigation principale">
+        <a href="#/" data-nav="" class="rounded-full px-4 py-2 font-semibold text-snow-200 hover:text-snow-50 aria-[current=page]:bg-snow-100/10 aria-[current=page]:text-larch-300">Accueil</a>
+        <a href="#/missions" data-nav="missions" class="rounded-full px-4 py-2 font-semibold text-snow-200 hover:text-snow-50 aria-[current=page]:bg-snow-100/10 aria-[current=page]:text-larch-300">Missions</a>
+        <a href="#/wallet" data-nav="wallet" class="rounded-full px-4 py-2 font-semibold text-snow-200 hover:text-snow-50 aria-[current=page]:bg-snow-100/10 aria-[current=page]:text-larch-300">Mon wallet</a>
+      </nav>
+      <button id="theme-toggle" type="button" data-action="theme" class="flex h-11 w-11 items-center justify-center rounded-full border border-snow-100/30 text-snow-100 hover:bg-snow-100/10" aria-pressed="false"></button>
+    </div>
+  </header>
+
+  <!-- ===================== Contenu (rendu par js/app.js) ===================== -->
+  <main id="app" class="pb-28 md:pb-0">
+    <noscript><p class="p-8 text-center">Mélèze a besoin de JavaScript pour fonctionner.</p></noscript>
+  </main>
+
+  <!-- ===================== Pied de page ===================== -->
+  <footer class="mx-auto max-w-app px-4 pb-32 pt-8 text-sm text-muted sm:px-8 md:pb-10">
+    <div class="flex flex-col gap-4 border-t border-line pt-6 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="font-serif text-lg text-ink">Mélèze · Pralognan-la-Vanoise</p>
+        <p class="mt-1 max-w-md">Application éco-conçue&nbsp;: aucune image, aucune police téléchargée, aucun traqueur. Fonctionne hors-ligne.</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <span>© <span id="year"></span></span>
+        <!-- Accès discret à l'espace pro -->
+        <a href="#/pro" class="text-xs text-muted/70 underline-offset-4 hover:text-ink hover:underline">Espace partenaires</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== Barre d'onglets mobile ===================== -->
+  <nav id="tabbar" class="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card/95 pb-[env(safe-area-inset-bottom)] md:hidden" aria-label="Navigation">
+    <div class="flex">
+      <a href="#/" data-nav="" class="tab-link"><span class="tab-dot h-1 w-6 rounded-full"></span><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>Accueil</a>
+      <a href="#/missions" data-nav="missions" class="tab-link"><span class="tab-dot h-1 w-6 rounded-full"></span><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Missions</a>
+      <a href="#/wallet" data-nav="wallet" class="tab-link"><span class="tab-dot h-1 w-6 rounded-full"></span><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>Wallet</a>
+    </div>
+  </nav>
+
+  <!-- Notifications (annoncées aux lecteurs d'écran) -->
+  <div id="toast" class="pointer-events-none fixed inset-x-4 bottom-24 z-30 md:bottom-8" role="status" aria-live="polite"></div>
+
+  <!-- Scripts classiques (pas de modules ES) : l'app s'ouvre même en double-cliquant
+       sur index.html, sans serveur. Ordre : données → store → UI → vues → app. -->
+  <script src="js/data.js" defer></script>
+  <script src="js/store.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/views/home.js" defer></script>
+  <script src="js/views/catalogue.js" defer></script>
+  <script src="js/views/wallet.js" defer></script>
+  <script src="js/views/pro.js" defer></script>
+  <script src="js/app.js" defer></script>
 </body>
 </html>

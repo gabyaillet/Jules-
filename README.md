@@ -1,93 +1,91 @@
-# g x j
+# Mélèze — V1
 
+> « Une heure pour la montagne, une expérience en retour. »
+> Application web éco-conçue (PWA, mobile first) pour **Pralognan-la-Vanoise**, inspirée de CopenPay.
 
+Les touristes réalisent des missions utiles de 1 à 2 h (sentiers, comptages naturalistes, arrivée en train…).
+En échange, les commerçants leur offrent une expérience ou un produit local (téléphérique, patinoire, Beaufort…).
 
-## Getting started
+## Lancer l'application
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Pas de build requis pour tester : le CSS compilé est déjà dans `dist/`.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- **Le plus simple** : double-cliquer sur `index.html` (fonctionne en `file://`, sans le mode hors-ligne).
+- **Mode PWA complet** (service worker, installation sur l'écran d'accueil) :
+  ```bash
+  python3 -m http.server 5173   # ou : npm run serve
+  # → http://localhost:5173
+  ```
 
-## Add your files
+## Parcours de test
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+| Rôle | Étapes |
+|---|---|
+| **Touriste** | Accueil → *Découvrir les missions* → filtrer (Saison / Type) → *Je participe* → **Wallet** → *J'ai terminé ma mission* |
+| **Pro** | Pied de page → lien discret **Espace partenaires** → `pro@meleze.demo` / PIN **`1234`** |
+| **Scanner** | Puce *QR de Camille* → **Valider la mission** (le bon apparaît dans le wallet) · Puce *Bon PT42* → **Consommer le bon** (il est grisé, impossible de le réutiliser) · un code inconnu affiche une erreur |
+| **Création** | Onglet *Créer une mission* → mission + **contrepartie obligatoire** → *Publier* → visible aussitôt dans le catalogue avec le badge « Nouveau » |
+
+Les données de démonstration sont stockées dans `localStorage`. Pour repartir de zéro, utilisez le lien
+*Réinitialiser les données de démo* en bas du wallet.
+
+## Architecture
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.univ-nantes.fr/E255544Q/g-x-j.git
-git branch -M main
-git push -uf origin main
+Jules-/
+├── index.html            Coquille : en-tête, <main id="app">, pied de page, barre d'onglets mobile
+├── src/input.css         Source Tailwind + jetons de couleur (thèmes clair / sombre) + composants
+├── dist/styles.css       CSS compilé et purgé (≈ 26 ko, ≈ 6 ko gzip)
+├── tailwind.config.js    Palette Mélèze (sapin, or du mélèze, neige, minéral)
+├── js/
+│   ├── data.js           Données de démonstration (missions, touriste, bons, identifiants pro)
+│   ├── store.js          État + persistance + règles métier (inscrire, valider, consommer, créer)
+│   ├── ui.js             Icônes SVG, QR simulé, toasts, formatage
+│   ├── views/            home · catalogue · wallet · pro  → render() + actions + forms
+│   └── app.js            Routeur par hash, délégation d'événements, thème, service worker
+├── sw.js                 Cache hors-ligne (couverture réseau aléatoire en altitude)
+└── manifest.webmanifest  Installation PWA
 ```
 
-## Integrate with your tools
+- **JavaScript natif, sans framework** : les vues sont des fonctions `render(state) → HTML`, un seul écouteur
+  `click` et un seul `submit` pour toute l'app (attributs `data-action` / `data-form`).
+- **Scripts classiques** (pas de modules ES) pour que l'app s'ouvre sans serveur.
+- Toutes les saisies des pros passent par `ui.esc()` avant affichage (pas d'injection HTML).
+- Pour brancher une vraie API en V2, il suffit de réécrire `store.js` en gardant les mêmes fonctions.
 
-- [ ] [Set up project integrations](https://gitlab.univ-nantes.fr/E255544Q/g-x-j/-/settings/integrations)
+## Choix d'éco-conception (Green IT)
 
-## Collaborate with your team
+- **0 image bitmap, 0 police téléchargée, 0 traqueur, 0 dépendance JS** : illustrations en SVG inline, polices système.
+- CSS Tailwind **compilé et purgé** (pas de CDN Tailwind de ~300 ko exécuté sur le téléphone).
+- **Fonds neige doux `#F4F1EA`** (jamais de blanc pur) et **mode sombre** quasi noir, économe sur les écrans OLED
+  (bouton lune / soleil, sinon préférence système).
+- Contrastes élevés (texte sapin `#12261E` sur neige ≈ 14:1) et boutons ≥ 48 px : lisible **en plein soleil, avec des gants**.
+- `prefers-reduced-motion` respecté ; la seule animation est la ligne du scanner.
+- Service worker : l'app reste utilisable **hors-ligne** après la première visite.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## Direction artistique
 
-## Test and Deploy
+Inspirée d'accordion.net.au : grands titres éditoriaux en serif, beaucoup d'espace, boutons en pilule,
+sections empilées aux coins très arrondis, étapes numérotées en grands chiffres et FAQ en accordéon
+(`<details>` natif, sans JavaScript).
 
-Use the built-in continuous integration in GitLab.
+| Jeton | Couleur |
+|---|---|
+| Vert sapin profond | `#12261E` / `#1B3A2D` |
+| Or d'automne (mélézin) | `#D9A441` / `#C8892B` (texte : `#8A5A14`) |
+| Blanc neige (doux) | `#F4F1EA` / `#FAF8F3` |
+| Gris minéral | `#4A4F4C` / `#7A7F7B` / `#C9CBC5` |
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+## Modifier les styles
 
-***
+```bash
+npm install
+npm run dev     # recompile dist/styles.css à chaque modification
+npm run build   # version minifiée avant mise en ligne
+```
 
-# Editing this README
+## Limites connues de la V1
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- Le **QR code est simulé** : le motif est unique par code, mais une caméra ne peut pas le lire.
+  En V2 : un encodeur QR (ex. `qrcode-generator`) et un vrai scan caméra (`BarcodeDetector` / `getUserMedia`).
+- **Connexion pro simulée** : pas de comptes réels. Les données restent dans le navigateur, sans synchronisation entre appareils.
