@@ -1,0 +1,14 @@
+{
+  "name": "Mélèze · Pralognan-la-Vanoise",
+  "short_name": "Mélèze",
+  "description": "Une heure pour la montagne, une expérience en retour.",
+  "lang": "fr",
+  "start_url": "./index.html#/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4F1EA",
+  "theme_color": "#12261E",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
