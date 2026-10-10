@@ -1,6 +1,7 @@
 /* ==========================================================================
    Vue : Mon espace (profil / wallet du touriste)
    QR personnel · missions en cours · bons de récompense
+   Pas d'icônes décoratives : la typographie et la couleur du type portent l'info.
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 Meleze.views = Meleze.views || {};
@@ -10,45 +11,59 @@ Meleze.views.wallet = (function () {
   const { esc, icon, qr, photo, duration, date, typeOf, toast } = Meleze.ui;
   const store = Meleze.store;
 
+  // Sur fond gris (bg-sunk), l'étiquette "Inscrit·e" passe en blanc pour rester visible.
   const STATUS = {
-    inscrite: { label: 'Inscrit·e', cls: 'tag' },
+    inscrite: { label: 'Inscrit·e', cls: 'tag bg-surface' },
     terminee: { label: 'À faire valider', cls: 'tag bg-lime-300' },
   };
 
+  /** Ligne "mission en cours" : vignette, statut, titre, infos, contrepartie, actions. */
   function participationRow({ participation: p, mission: m }) {
-    const s = STATUS[p.status];
-    const t = typeOf(m.type);
-    const actions = p.status === 'inscrite'
+    const s = STATUS[p.status] || STATUS.inscrite;
+    const meta = [m.duration ? duration(m.duration) : '', m.location ? esc(m.location) : ''].filter(Boolean).join(' · ');
+    const next = p.status === 'inscrite'
       ? '<div class="mt-4 flex flex-wrap gap-2">' +
           '<button type="button" class="btn-primary btn-sm" data-action="done" data-id="' + esc(p.id) + '">J’ai terminé</button>' +
           '<button type="button" class="btn-secondary btn-sm" data-action="cancel" data-id="' + esc(p.id) + '">Me désinscrire</button>' +
         '</div>'
-      : '<p class="mt-4 flex items-start gap-2.5 rounded-2xl bg-tint px-4 py-3 text-[0.95rem]">' + icon('scan', 'mt-0.5 h-5 w-5 shrink-0') + '<span>Montrez votre QR au référent pour recevoir : <strong>' + esc(m.reward.title) + '</strong>.</span></p>';
+      : '<p class="mt-1 text-[0.95rem] text-muted">Montrez votre QR au référent pour le recevoir.</p>';
 
-    return '<li class="rounded-4xl border border-line bg-card p-3 sm:p-4">' +
-      '<div class="flex gap-4">' +
-        '<div class="ph aspect-square w-20 shrink-0 rounded-3xl sm:w-24">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
+    return '<li class="rounded-3xl bg-sunk p-4 sm:p-5">' +
+      '<div class="flex items-start gap-4 sm:gap-5">' +
+        '<div class="ph aspect-square w-20 shrink-0 rounded-2xl sm:w-24">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
         '<div class="min-w-0 flex-1">' +
           '<span class="' + s.cls + '">' + s.label + '</span>' +
-          '<h3 class="mt-2 text-xl">' + esc(m.title) + '</h3>' +
-          '<p class="mt-0.5 text-sm text-muted">' + esc(t.label) + ' · ' + duration(m.duration) + ' · ' + esc(m.location) + '</p>' +
+          '<h3 class="mt-2 text-xl sm:text-2xl">' + esc(m.title) + '</h3>' +
+          (meta ? '<p class="mt-1.5 text-sm text-muted">' + meta + '</p>' : '') +
         '</div>' +
       '</div>' +
-      actions +
+      '<div class="mt-4 sm:ml-[7.25rem]">' +
+        '<p class="text-[0.95rem]"><span class="text-muted">En échange :</span> <span class="font-semibold">' + esc(m.reward.title) + '</span></p>' +
+        next +
+      '</div>' +
     '</li>';
   }
 
+  /** Bon façon ticket : partenaire + contrepartie en haut, code et QR en bas. */
   function voucherCard(v) {
     const used = v.status === 'consomme';
     const m = store.getMission(v.missionId);
-    const color = used ? 'bg-sunk text-muted' : (m ? typeOf(m.type).color : 'bg-leaf') + ' text-night';
-    return '<li class="flex gap-4 rounded-4xl p-4 ' + color + '">' +
-      '<div class="shrink-0 self-start rounded-2xl bg-white p-1.5">' + qr(v.code, { size: 'w-20', muted: used }) + '</div>' +
-      '<div class="min-w-0">' +
-        '<p class="text-sm opacity-75">' + esc(v.partner) + '</p>' +
-        '<h3 class="mt-0.5 text-xl ' + (used ? 'line-through decoration-2' : '') + '">' + esc(v.title) + '</h3>' +
-        '<p class="mt-2 font-mono text-[0.95rem] font-semibold tracking-wide">' + esc(v.code) + '</p>' +
-        '<p class="mt-1 text-sm">' + (used ? 'Utilisé le ' + date(v.usedAt) : '<span class="tag bg-white">Valable</span> <span class="opacity-75">reçu le ' + date(v.issuedAt) + '</span>') + '</p>' +
+    const surface = used ? 'bg-sunk text-muted' : (m ? typeOf(m.type).color : 'bg-leaf') + ' text-night';
+    const soft = used ? 'text-muted' : 'text-night/60';
+    const softer = used ? 'text-muted' : 'text-night/70';
+    return '<li class="flex flex-col justify-between gap-8 rounded-3xl p-5 sm:p-6 ' + surface + '">' +
+      '<div>' +
+        '<p class="text-sm ' + soft + '">' + esc(v.partner) + '</p>' +
+        '<h3 class="mt-1.5 text-2xl' + (used ? ' line-through decoration-2' : '') + '">' + esc(v.title) + '</h3>' +
+      '</div>' +
+      '<div class="flex items-end justify-between gap-4">' +
+        '<div class="min-w-0">' +
+          '<p class="font-mono text-[0.95rem] font-semibold tracking-wide">' + esc(v.code) + '</p>' +
+          '<p class="mt-1 text-sm ' + softer + '">' +
+            (used ? 'Utilisé le ' + date(v.usedAt) : '<span class="font-semibold text-night">Valable</span> · reçu le ' + date(v.issuedAt)) +
+          '</p>' +
+        '</div>' +
+        '<div class="shrink-0 rounded-2xl bg-white p-2' + (used ? ' opacity-60' : '') + '">' + qr(v.code, { size: 'w-24', muted: used }) + '</div>' +
       '</div>' +
     '</li>';
   }
@@ -64,45 +79,53 @@ Meleze.views.wallet = (function () {
     const vouchers = state.vouchers.slice().sort((a, b) => (a.status === b.status ? 0 : a.status === 'actif' ? -1 : 1));
     const activeCount = vouchers.filter((v) => v.status === 'actif').length;
     const plural = (n, word) => n + ' ' + word + (n > 1 ? 's' : '');
+    const H2 = 'text-4xl sm:text-5xl';
 
-    return '<div class="mx-auto max-w-app px-5 pb-16 pt-8 sm:px-8 md:pt-12">' +
-      '<h1 id="page-title" tabindex="-1" class="text-5xl font-extrabold sm:text-7xl">Bonjour <span class="mark">' + esc(u.firstName) + '</span></h1>' +
-      '<p class="mt-4 max-w-2xl text-lg text-muted">' +
+    return '<div class="mx-auto max-w-app px-5 pb-16 pt-8 sm:px-8 lg:pb-24 lg:pt-14">' +
+      '<h1 id="page-title" tabindex="-1" class="text-5xl font-extrabold sm:text-6xl lg:text-7xl">Bonjour <span class="mark">' + esc(u.firstName) + '</span></h1>' +
+      '<p class="mt-4 max-w-xl text-lg text-muted">' +
         (validated.length
           ? 'Vous avez déjà donné ' + duration(minutes) + ' à la montagne (' + plural(validated.length, 'mission') + ' validée' + (validated.length > 1 ? 's' : '') + '). Merci !'
           : 'Vos missions et vos bons apparaîtront ici.') +
         (activeCount ? ' Il vous reste ' + plural(activeCount, 'bon') + ' à utiliser.' : '') +
       '</p>' +
 
-      '<div class="mt-8 grid gap-10 lg:grid-cols-[20rem_1fr] lg:gap-14">' +
+      '<div class="mt-10 grid gap-16 lg:mt-14 lg:grid-cols-[20rem_1fr] lg:gap-16">' +
         // ---- QR personnel ------------------------------------------------------------
         '<section aria-labelledby="myqr" class="lg:sticky lg:top-24 lg:self-start">' +
-          '<div class="rounded-4xl bg-lime-300 p-6 text-center text-night">' +
-            '<h2 id="myqr" class="text-3xl">Mon QR</h2>' +
-            '<p class="mt-1 text-[0.95rem] text-night/70">À montrer au référent à la fin de chaque mission.</p>' +
-            '<div class="mx-auto mt-5 w-fit rounded-3xl bg-white p-3">' + qr(u.code, { size: 'w-48' }) + '</div>' +
-            '<p class="mt-4 font-mono text-lg font-bold tracking-[0.18em]">' + esc(u.code) + '</p>' +
-            '<p class="mt-1 text-sm text-night/70">Astuce : montez la luminosité de l’écran.</p>' +
+          '<div class="rounded-4xl bg-lime-300 p-6 text-center text-night sm:p-8">' +
+            '<h2 id="myqr" class="text-3xl sm:text-4xl">Mon QR</h2>' +
+            '<p class="mx-auto mt-2 max-w-[16rem] text-[0.95rem] leading-snug text-night/70">À montrer au référent à la fin de chaque mission.</p>' +
+            '<div class="mx-auto mt-6 w-fit rounded-3xl bg-white p-3">' + qr(u.code, { size: 'w-48 sm:w-52' }) + '</div>' +
+            '<p class="mt-5 font-mono text-lg font-bold tracking-[0.18em]">' + esc(u.code) + '</p>' +
+            '<p class="mt-1 text-sm text-night/60">Pensez à monter la luminosité de l’écran.</p>' +
           '</div>' +
         '</section>' +
 
-        '<div class="space-y-12">' +
+        '<div class="min-w-0 space-y-16 lg:space-y-20">' +
+          // ---- Missions en cours -------------------------------------------------------
           '<section aria-labelledby="ongoing">' +
-            '<h2 id="ongoing" class="text-4xl">Mes missions</h2>' +
+            '<h2 id="ongoing" class="' + H2 + '">Mes missions</h2>' +
             (active.length
-              ? '<ul class="mt-4 space-y-3">' + active.map(participationRow).join('') + '</ul>'
-              : '<div class="mt-4 rounded-4xl bg-sunk p-6"><p class="text-muted">Aucune mission en cours.</p><a href="#/missions" class="link mt-2">Trouver une mission ' + icon('arrow', 'h-4 w-4') + '</a></div>') +
+              ? '<ul class="mt-8 space-y-4">' + active.map(participationRow).join('') + '</ul>'
+              : '<div class="mt-8 rounded-3xl bg-sunk p-6 sm:p-8">' +
+                  '<p class="text-lg text-muted">Aucune mission en cours.</p>' +
+                  '<a href="#/missions" class="link mt-3">Trouver une mission ' + icon('arrow', 'h-4 w-4') + '</a>' +
+                '</div>') +
           '</section>' +
 
+          // ---- Bons de récompense (h2 → p → ul) ------------------------------------------
           '<section aria-labelledby="rewards">' +
-            '<h2 id="rewards" class="text-4xl">Mes bons</h2>' +
-            '<p class="mt-1 text-muted">Le commerçant scanne le QR du bon, et c’est tout.</p>' +
+            '<h2 id="rewards" class="' + H2 + '">Mes bons</h2>' +
+            '<p class="mt-4 max-w-xl text-lg text-muted">Le commerçant scanne le QR du bon, et c’est tout.</p>' +
             (vouchers.length
-              ? '<ul class="mt-4 grid gap-3 xl:grid-cols-2">' + vouchers.map(voucherCard).join('') + '</ul>'
-              : '<p class="mt-4 rounded-4xl bg-sunk p-6 text-muted">Vos bons apparaîtront ici.</p>') +
+              ? '<ul class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">' + vouchers.map(voucherCard).join('') + '</ul>'
+              : '<p class="mt-8 rounded-3xl bg-sunk p-6 text-muted sm:p-8">Vos bons apparaîtront ici après validation d’une mission.</p>') +
           '</section>' +
 
-          '<button type="button" class="text-sm text-muted underline underline-offset-4 hover:text-ink" data-action="reset">Réinitialiser les données de démo</button>' +
+          '<div class="border-t border-line pt-8">' +
+            '<button type="button" class="text-sm text-muted underline underline-offset-4 hover:text-ink" data-action="reset">Réinitialiser les données de démo</button>' +
+          '</div>' +
         '</div>' +
       '</div>' +
     '</div>';

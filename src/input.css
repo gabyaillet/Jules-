@@ -71,6 +71,7 @@
   }
   body {
     @apply bg-surface font-sans text-[1.0625rem] leading-relaxed text-ink antialiased;
+    overflow-x: clip; /* aucun défilement horizontal parasite sur mobile */
   }
   h1, h2, h3 {
     @apply font-display font-bold leading-[1.02];
@@ -104,16 +105,16 @@
   .btn-primary { @apply btn bg-brand text-on-brand hover:opacity-85; }
   .btn-lime { @apply btn bg-lime-400 text-night hover:bg-lime-300; }
   .btn-secondary { @apply btn border-2 border-ink/90 bg-transparent text-ink hover:bg-ink hover:text-surface; }
-  .btn-sm { @apply min-h-[42px] px-4 text-[0.95rem]; }
+  .btn-sm { @apply min-h-[44px] px-4 text-[0.95rem]; }
 
-  /* Lien texte avec flèche */
-  .link { @apply inline-flex items-center gap-1.5 font-display font-semibold text-ink underline decoration-lime-400 decoration-[3px] underline-offset-[5px] hover:decoration-pine-600; }
+  /* Lien texte souligné au feutre lime */
+  .link { @apply inline-flex items-center gap-1.5 font-display font-semibold text-ink underline decoration-lime-400 decoration-[3px] underline-offset-[5px] transition-colors hover:decoration-pine-600; }
 
   /* Surligneur façon feutre, derrière un mot */
   .mark { @apply rounded-[0.35em] bg-lime-300 px-[0.12em] text-night; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 
-  /* Pastille "sticker" légèrement inclinée */
-  .sticker { @apply inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-display text-sm font-bold text-night shadow-[0_6px_20px_-8px_rgb(0_0_0/0.35)]; }
+  /* Pastille posée sur une photo : simple, sans ombre ni inclinaison */
+  .sticker { @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-display text-[0.85rem] font-semibold leading-snug text-night; }
 
   /* Filtres */
   .chip {
@@ -123,8 +124,12 @@
 
   .card { @apply rounded-3xl border border-line bg-card; }
 
-  /* Étiquette */
-  .tag { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 font-display text-[0.8rem] font-semibold text-night; }
+  /* Étiquette — texte foncé sur les fonds pastel/lime, lisible aussi en mode sombre */
+  .tag { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 font-display text-[0.8rem] font-semibold leading-snug text-ink; }
+  .tag:where([class*='bg-sun'], [class*='bg-leaf'], [class*='bg-sky'], [class*='bg-coral'], [class*='bg-lilac'], [class*='bg-white'], [class*='bg-lime']) { @apply text-night; }
+
+  /* Numéro d'étape (01, 02…) en tête de bloc, à la place d'une icône */
+  .eyebrow-num { @apply inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-full bg-lime-300 px-2.5 font-display text-sm font-bold tabular-nums text-night; }
 
   /* Photos — le conteneur donne la taille et un fond de repli si l'image manque */
   .ph { @apply relative overflow-hidden bg-leaf; }
@@ -143,8 +148,9 @@
   .nav-link { @apply rounded-full px-4 py-2 font-display font-semibold text-ink/70 transition-colors hover:text-ink; }
   .nav-link[aria-current='page'] { @apply bg-sunk text-ink; }
 
-  .tab-link { @apply flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full font-display text-[0.78rem] font-semibold text-muted transition-colors; }
-  .tab-link[aria-current='page'] { @apply bg-lime-300 text-night; }
+  /* Onglets mobiles : texte seul, cible tactile ≥ 48px */
+  .tab-link { @apply flex min-h-[48px] flex-1 items-center justify-center whitespace-nowrap rounded-full px-2 text-center font-display text-[0.95rem] font-semibold leading-none tracking-[-0.01em] text-muted transition-colors hover:text-ink; }
+  .tab-link[aria-current='page'] { @apply bg-lime-300 text-night hover:text-night; }
 
   /* Accordéon natif (<details>) */
   .acc summary { @apply flex cursor-pointer list-none items-center justify-between gap-4; }
