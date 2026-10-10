@@ -30,7 +30,7 @@ Meleze.views.wallet = (function () {
 
     return '<li class="py-6">' +
       '<div class="flex items-start gap-4 sm:gap-5">' +
-        '<div class="ph aspect-square w-16 shrink-0 sm:w-24">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
+        '<div class="ph ph-sm aspect-square w-16 shrink-0 sm:w-24">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
         '<div class="min-w-0 flex-1">' +
           '<span class="' + s.cls + '">' + s.label + '</span>' +
           '<h3 class="mt-2 text-lg leading-tight sm:text-2xl">' + esc(m.title) + '</h3>' +
@@ -51,7 +51,7 @@ Meleze.views.wallet = (function () {
     const surface = used ? 'bg-sunk text-muted' : (m ? typeOf(m.type).color : 'bg-leaf') + ' text-night';
     const soft = used ? 'text-muted' : 'text-night/60';
     const softer = used ? 'text-muted' : 'text-night/70';
-    return '<li class="flex flex-col justify-between gap-8 rounded-xl p-5 sm:p-6 ' + surface + '">' +
+    return '<li class="flex flex-col justify-between gap-8 p-5 sm:p-6 ' + surface + '">' +
       '<div>' +
         '<p class="text-sm ' + soft + '">' + esc(v.partner) + '</p>' +
         '<h3 class="mt-1.5 text-2xl' + (used ? ' line-through decoration-2' : '') + '">' + esc(v.title) + '</h3>' +
@@ -63,7 +63,7 @@ Meleze.views.wallet = (function () {
             (used ? 'Utilisé le ' + date(v.usedAt) : '<span class="font-semibold text-night">Valable</span> · reçu le ' + date(v.issuedAt)) +
           '</p>' +
         '</div>' +
-        '<div class="shrink-0 rounded-lg bg-white p-2' + (used ? ' opacity-60' : '') + '">' + qr(v.code, { size: 'w-24', muted: used }) + '</div>' +
+        '<div class="shrink-0 bg-white p-2' + (used ? ' opacity-60' : '') + '">' + qr(v.code, { size: 'w-24', muted: used }) + '</div>' +
       '</div>' +
     '</li>';
   }
@@ -93,10 +93,10 @@ Meleze.views.wallet = (function () {
       '<div class="mt-10 grid gap-16 lg:mt-14 lg:grid-cols-[20rem_1fr] lg:gap-16">' +
         // ---- QR personnel ------------------------------------------------------------
         '<section aria-labelledby="myqr" class="lg:sticky lg:top-24 lg:self-start">' +
-          '<div class="rounded-xl bg-lime-300 p-6 text-center text-night sm:p-8">' +
+          '<div class="bg-lime-300 p-6 text-center text-night sm:p-8">' +
             '<h2 id="myqr" class="text-3xl sm:text-4xl">Mon QR</h2>' +
             '<p class="mx-auto mt-2 max-w-[16rem] text-[0.95rem] leading-snug text-night/70">À montrer au référent à la fin de chaque mission.</p>' +
-            '<div class="mx-auto mt-6 w-fit rounded-lg bg-white p-3">' + qr(u.code, { size: 'w-48 sm:w-52' }) + '</div>' +
+            '<div class="mx-auto mt-6 w-fit bg-white p-3">' + qr(u.code, { size: 'w-48 sm:w-52' }) + '</div>' +
             '<p class="mt-5 font-mono text-lg font-bold tracking-[0.18em]">' + esc(u.code) + '</p>' +
             '<p class="mt-1 text-sm text-night/60">Pensez à monter la luminosité de l’écran.</p>' +
           '</div>' +
@@ -108,7 +108,7 @@ Meleze.views.wallet = (function () {
             '<h2 id="ongoing" class="' + H2 + '">Mes missions</h2>' +
             (active.length
               ? '<ul class="mt-8 divide-y divide-line border-y border-line">' + active.map(participationRow).join('') + '</ul>'
-              : '<div class="mt-8 rounded-xl bg-sunk p-6 sm:p-8">' +
+              : '<div class="mt-8 bg-sunk p-6 sm:p-8">' +
                   '<p class="text-lg text-muted">Aucune mission en cours.</p>' +
                   '<a href="#/missions" class="link mt-3">Trouver une mission ' + icon('arrow', 'h-4 w-4') + '</a>' +
                 '</div>') +
@@ -120,7 +120,7 @@ Meleze.views.wallet = (function () {
             '<p class="mt-4 max-w-xl text-lg text-muted">Le commerçant scanne le QR du bon, et c’est tout.</p>' +
             (vouchers.length
               ? '<ul class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">' + vouchers.map(voucherCard).join('') + '</ul>'
-              : '<p class="mt-8 rounded-xl bg-sunk p-6 text-muted sm:p-8">Vos bons apparaîtront ici après validation d’une mission.</p>') +
+              : '<p class="mt-8 bg-sunk p-6 text-muted sm:p-8">Vos bons apparaîtront ici après validation d’une mission.</p>') +
           '</section>' +
 
           '<div class="border-t border-line pt-8">' +

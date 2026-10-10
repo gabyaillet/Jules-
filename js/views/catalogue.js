@@ -62,7 +62,7 @@ Meleze.views.catalogue = (function () {
       // s'alignent d'une carte à l'autre sur une même rangée.
       '<div class="mt-auto pt-6">' +
         // Contrepartie : dans la couleur du type de mission
-        '<div class="rounded-xl p-5 text-night ' + t.color + '">' +
+        '<div class="p-5 text-night ' + t.color + '">' +
           '<p class="text-sm text-night/60">En échange</p>' +
           '<p class="mt-1 font-display text-xl font-bold leading-tight tracking-[-0.02em]">' + esc(m.reward.title) + '</p>' +
           '<p class="mt-1.5 text-sm text-night/70">offert par ' + esc(m.reward.partner) + '</p>' +
@@ -115,7 +115,7 @@ Meleze.views.catalogue = (function () {
       '</div>' +
       (list.length
         ? '<ul class="mt-6 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">' + list.map((m) => card(m, params.focus)).join('') + '</ul>'
-        : '<div class="mt-6 rounded-xl bg-sunk px-6 py-14 text-center sm:py-20">' +
+        : '<div class="mt-6 bg-sunk px-6 py-14 text-center sm:py-20">' +
             '<p class="mx-auto max-w-md font-display text-2xl font-bold leading-tight tracking-[-0.02em] sm:text-3xl">Aucune mission ne correspond à ces filtres pour l’instant.</p>' +
             '<p class="mt-3 text-muted">Essayez une autre saison ou un autre type.</p>' +
             '<button type="button" class="btn-secondary btn-sm mt-6" data-action="clear-filters">Voir toutes les missions</button>' +

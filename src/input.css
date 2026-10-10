@@ -101,9 +101,10 @@
    2. Composants
    -------------------------------------------------------------------------- */
 @layer components {
-  /* Arrondis dosés : pilules pour les boutons, filtres et étiquettes ;
-     arrondi léger (12px) pour les photos, cartes et tuiles ; les grands
-     blocs pleine largeur, la FAQ et la barre d'onglets restent droits. */
+  /* Système d'arrondis : seules les PHOTOS sont arrondies (24px, 32px pour les
+     grandes, 16px pour les vignettes) et les petits contrôles (boutons,
+     filtres, étiquettes) sont en pilule. Tout le reste — tuiles de couleur,
+     cartes, encadrés, formulaires — est carré : photos douces, blocs graphiques. */
   /* Boutons pilule — cibles tactiles ≥ 48px */
   .btn {
     @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full px-6 font-display text-[1.02rem] font-semibold tracking-[-0.01em] transition duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
@@ -117,7 +118,7 @@
   .link { @apply inline-flex items-center gap-1.5 font-display font-semibold text-ink underline decoration-lime-400 decoration-[3px] underline-offset-[5px] transition-colors hover:decoration-pine-600; }
 
   /* Surligneur façon feutre, derrière un mot */
-  .mark { @apply rounded-[0.2em] bg-lime-300 px-[0.12em] text-night; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .mark { @apply bg-lime-300 px-[0.12em] text-night; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 
   /* Filtres */
   .chip {
@@ -125,15 +126,17 @@
   }
   .chip[aria-pressed='true'] { @apply border-ink bg-ink text-surface; }
 
-  .card { @apply rounded-xl border border-line bg-card; }
+  .card { @apply border border-line bg-card; }
 
   /* Étiquette — texte foncé sur les fonds pastel/lime, lisible aussi en mode sombre */
   .tag { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 font-display text-[0.8rem] font-semibold leading-snug text-ink; }
   .tag:where([class*='bg-sun'], [class*='bg-leaf'], [class*='bg-sky'], [class*='bg-coral'], [class*='bg-lilac'], [class*='bg-white'], [class*='bg-lime']) { @apply text-night; }
 
-  /* Photos — arrondi léger ; le conteneur donne la taille et un fond neutre
+  /* Photos — seuls éléments arrondis (avec les contrôles) ; le conteneur donne la taille et un fond neutre
      de repli tant que l'image n'est pas chargée */
-  .ph { @apply relative overflow-hidden rounded-xl bg-sunk; }
+  .ph { @apply relative overflow-hidden rounded-3xl bg-sunk; }
+  .ph-lg { @apply rounded-4xl; } /* grandes photos */
+  .ph-sm { @apply rounded-2xl; } /* vignettes */
   .ph > img { @apply absolute inset-0 h-full w-full object-cover; }
   .ph-zoom > img { @apply transition-transform duration-500 ease-out; }
   .group:hover .ph-zoom > img { transform: scale(1.04); }
@@ -144,7 +147,7 @@
   /* Formulaires */
   .label { @apply mb-1.5 block font-display font-semibold text-ink; }
   .field {
-    @apply block min-h-[52px] w-full rounded-md border-2 border-transparent bg-sunk px-4 py-2.5 text-ink placeholder:text-muted/80 focus:border-ink focus:bg-card focus:outline-none;
+    @apply block min-h-[52px] w-full border-2 border-transparent bg-sunk px-4 py-2.5 text-ink placeholder:text-muted/80 focus:border-ink focus:bg-card focus:outline-none;
   }
   .hint { @apply mt-1 text-sm text-muted; }
 
@@ -164,7 +167,7 @@
   .acc[open] .acc-icon { transform: rotate(45deg); }
 
   /* Viseur du scanner */
-  .scan-frame { @apply relative mx-auto aspect-square w-full max-w-[18rem] overflow-hidden rounded-xl bg-night; }
+  .scan-frame { @apply relative mx-auto aspect-square w-full max-w-[18rem] overflow-hidden bg-night; }
   .scan-corner { @apply absolute h-9 w-9 border-lime-400; }
   .scan-line {
     @apply absolute inset-x-8 h-1 bg-lime-400;

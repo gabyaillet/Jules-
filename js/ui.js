@@ -100,8 +100,8 @@ Meleze.ui = (function () {
     const host = document.getElementById('toast');
     if (!host) return;
     const error = tone === 'error';
-    host.innerHTML = '<div class="pointer-events-auto mx-auto flex w-fit max-w-md items-center gap-3 rounded-md bg-night py-3 pl-3 pr-5 text-white shadow-lg ring-1 ring-white/10">' +
-      '<span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-night ' + (error ? 'bg-coral' : 'bg-lime-400') + '">' +
+    host.innerHTML = '<div class="pointer-events-auto mx-auto flex w-fit max-w-md items-center gap-3 bg-night py-3 pl-3 pr-5 text-white shadow-lg ring-1 ring-white/10">' +
+      '<span class="flex h-7 w-7 shrink-0 items-center justify-center text-night ' + (error ? 'bg-coral' : 'bg-lime-400') + '">' +
       icon(error ? 'alert' : 'check', 'h-4 w-4') + '</span>' +
       '<span class="font-display text-[0.95rem] font-semibold leading-snug">' + esc(message) + '</span></div>';
     clearTimeout(toastTimer);
