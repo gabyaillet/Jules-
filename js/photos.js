@@ -18,11 +18,16 @@ Meleze.photos = {
   meadow:  { src: '1472214103451-9374bd1c798e', alt: 'Prairie verdoyante et collines au soleil' },
   valley:  { src: '1426604966848-d7adac402bff', alt: 'Vallée de montagne, forêt et falaises' },
   sunbeam: { src: '1469474968028-56623f02e42e', alt: 'Rayons de soleil sur une vallée' },
+
+  // Photos des 3 missions (fichiers locaux fournis par le client, dossier img/)
+  sentiers:    { src: 'img/sentiers.webp', alt: 'Randonneur au bord d’un lac de montagne gelé, sous des sommets enneigés' },
+  covoiturage: { src: 'img/covoiturage.webp', alt: 'Quatre randonneurs sac au dos face à un lac de montagne' },
+  marche:      { src: 'img/marche.webp', alt: 'Étal de fruits et légumes d’un marché vu du dessus' },
 };
 
 /** Photo par défaut selon le type (missions créées par les pros). */
 Meleze.photos.byType = {
-  mobilite: 'range',
-  village: 'meadow',
-  nature: 'forest',
+  mobilite: 'covoiturage',
+  village: 'marche',
+  nature: 'sentiers',
 };

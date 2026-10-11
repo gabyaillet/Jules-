@@ -31,7 +31,7 @@ Pas de build requis pour tester : le CSS compilé est déjà dans `dist/`.
 | **Touriste** | Accueil → *Voir les missions* → filtrer (Saison / Type) → *Je participe* → **Mon espace** : la carte de la mission affiche **son QR code** (à montrer au référent). Pour la mission transport : *Envoyer mon justificatif* (photo du billet ou de la réservation), puis *Remplacer la photo* si besoin |
 | **Pro** | Pied de page → lien discret **Espace partenaires** → `pro@meleze.demo` / PIN **`1234`** |
 | **Scanner** | *Activer la caméra* et présenter le QR d’une mission (sur un autre écran), ou utiliser les puces de démo : puce *QR · Sentiers* → **Valider la mission** (le bon apparaît dans « Mon espace » ; un second scan affiche « Mission déjà validée ») · puce *Bon PT42* → **Consommer le bon** (il est grisé, impossible de le réutiliser) · un code inconnu affiche une erreur |
-| **Justificatifs** | Onglet *Justificatifs* (pastille = nombre en attente) → le billet de démo de Camille → **Valider** (le bon patinoire part dans « Mon espace ») ou **Refuser** avec un motif (le touriste voit le motif et peut renvoyer une photo) |
+| **Justificatifs** | Onglet *Justificatifs* (pastille = nombre en attente) → le billet de démo de Gab → **Valider** (le bon patinoire part dans « Mon espace ») ou **Refuser** avec un motif (le touriste voit le motif et peut renvoyer une photo) |
 | **Création** | Onglet *Créer une mission* → mission + mode de validation (QR code sur place ou justificatif photo) + **contrepartie obligatoire** → *Publier* → visible aussitôt dans le catalogue avec le badge « Nouveau » |
 
 La caméra du navigateur n’est accessible qu’en **https** (ou sur `localhost`) : en `file://` ou sur une adresse

@@ -40,7 +40,7 @@ Meleze.data = (function () {
   const missions = [
     {
       id: 'm-transport',
-      photo: 'valley',
+      photo: 'covoiturage',
       title: 'Venir en transport en commun ou en covoiturage',
       type: 'mobilite',
       proof: 'photo',
@@ -57,7 +57,7 @@ Meleze.data = (function () {
     },
     {
       id: 'm-marche',
-      photo: 'sunbeam',
+      photo: 'marche',
       title: 'Aider à monter le marché du village',
       type: 'village',
       proof: 'qr',
@@ -73,7 +73,7 @@ Meleze.data = (function () {
     },
     {
       id: 'm-sentiers',
-      photo: 'lake',
+      photo: 'sentiers',
       title: 'Nettoyer les sentiers avec les gardes du Parc',
       type: 'nature',
       proof: 'qr',
@@ -90,7 +90,7 @@ Meleze.data = (function () {
   ];
 
   /** Le touriste de démonstration (plus de QR personnel : un QR par mission). */
-  const user = { firstName: 'Camille', since: '2026-10-04' };
+  const user = { firstName: 'Gab', since: '2026-10-04' };
 
   /**
    * Justificatif de démonstration : un billet de train générique dessiné en

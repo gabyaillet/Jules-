@@ -14,9 +14,10 @@ window.Meleze = window.Meleze || {};
 Meleze.store = (function () {
   'use strict';
 
-  // v2 : nouveau modèle (un QR par participation). L'ancien état v1 est ignoré.
-  const KEY = 'meleze:state:v2';
-  const OLD_KEYS = ['meleze:state:v1'];
+  // v3 : nouvelles photos de missions + prénom de démo « Gab ». Les anciens états
+  // (v1, v2) sont ignorés et effacés : la démo repart des nouvelles données.
+  const KEY = 'meleze:state:v3';
+  const OLD_KEYS = ['meleze:state:v1', 'meleze:state:v2'];
   const SESSION_KEY = 'meleze:pro';
   const listeners = new Set();
   let memPro = null;
