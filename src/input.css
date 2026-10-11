@@ -37,11 +37,12 @@
     --c-ink: 15 20 18; /* #0F1412 quasi noir — contraste ≈ 19:1 */
     --c-muted: 94 99 96; /* #5E6360 gris — contraste ≈ 6:1 */
     --c-line: 228 229 228; /* #E4E5E4 */
-    --c-brand: 14 90 58; /* #0E5A3A vert forêt — boutons principaux */
+    --c-brand: 23 131 80; /* #178350 vert Mélèze — boutons principaux (blanc dessus 4,8:1) */
+    --c-brand-hover: 18 107 65; /* #126B41 survol / appui */
     --c-on-brand: 255 255 255;
-    --c-brand-ink: 14 90 58; /* vert forêt en texte — 8,3:1 sur blanc */
-    --c-accent: 14 90 58;
-    --c-ok: 14 90 58;
+    --c-brand-ink: 23 131 80; /* vert en texte — 4,8:1 sur blanc (jamais sur le gris --c-sunk) */
+    --c-accent: 23 131 80;
+    --c-ok: 23 131 80;
     --c-danger: 180 35 24; /* #B42318 */
   }
 
@@ -54,7 +55,8 @@
     --c-ink: 242 243 241;
     --c-muted: 163 169 165;
     --c-line: 46 51 48;
-    --c-brand: 92 203 147; /* #5CCB93 */
+    --c-brand: 92 203 147; /* #5CCB93 — 9,5:1 sur le fond sombre */
+    --c-brand-hover: 126 216 170; /* #7ED8AA */
     --c-on-brand: 15 20 18;
     --c-brand-ink: 92 203 147;
     --c-accent: 92 203 147;
@@ -109,15 +111,15 @@
   .btn {
     @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full px-6 font-display text-[1.02rem] font-semibold tracking-[-0.01em] transition duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
-  .btn-primary { @apply btn bg-brand text-on-brand hover:opacity-85; }
+  .btn-primary { @apply btn bg-brand text-on-brand hover:bg-brand-hover active:bg-brand-hover; }
   .btn-light { @apply btn bg-white text-night hover:bg-white/90; } /* sur les bandeaux sombres */
   .btn-secondary { @apply btn border-2 border-ink/90 bg-transparent text-ink hover:bg-ink hover:text-surface; }
   .btn-sm { @apply min-h-[44px] px-4 text-[0.95rem]; }
 
-  /* Lien texte souligné d'un trait vert forêt */
+  /* Lien texte souligné d'un trait vert */
   .link { @apply inline-flex items-center gap-1.5 font-display font-semibold text-ink underline decoration-accent decoration-2 underline-offset-[6px] transition-colors hover:text-brand-ink; }
 
-  /* Mot mis en avant : simplement en vert forêt (plus de surligneur pastel) */
+  /* Mot mis en avant : simplement en vert (plus de surligneur pastel) */
   .mark { @apply text-brand-ink; }
 
   /* Filtres */

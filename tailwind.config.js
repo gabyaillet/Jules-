@@ -2,7 +2,8 @@
  * Mélèze — configuration Tailwind
  *
  * Concept A « Typo-photo » : base blanche, typographie grasse quasi noire,
- * gris neutres et UNE seule couleur d'accent saturée (vert forêt #0E5A3A).
+ * gris neutres et UNE seule couleur d'accent : un vert franc #178350
+ * (4,8:1 sur blanc, texte blanc lisible dessus), #126B41 au survol/appui.
  * Aucune couleur pastel. Les couleurs sémantiques (surface, ink, accent…)
  * pointent vers des variables CSS (src/input.css) : un seul jeu de classes
  * sert aux thèmes clair et sombre.
@@ -22,7 +23,8 @@ module.exports = {
         ink: v('ink'), // texte principal (quasi noir)
         muted: v('muted'), // texte secondaire (gris)
         line: v('line'), // bordures
-        brand: v('brand'), // boutons principaux (vert forêt)
+        brand: v('brand'), // boutons principaux (vert Mélèze)
+        'brand-hover': v('brand-hover'), // survol / appui des boutons verts
         'on-brand': v('on-brand'),
         'brand-ink': v('brand-ink'), // vert lisible en texte (liens, accents)
         accent: v('accent'), // l'accent unique
@@ -30,7 +32,8 @@ module.exports = {
         danger: v('danger'),
 
         // Couleurs fixes, quel que soit le thème
-        forest: '#0E5A3A', // vert forêt : l'unique accent (8,3:1 sur blanc)
+        forest: '#178350', // vert Mélèze : l'unique accent (4,8:1 sur blanc, blanc dessus 4,8:1)
+        'forest-dark': '#126B41', // survol / appui (6,5:1 sur blanc)
         night: '#0F1412', // quasi noir
       },
       fontFamily: {
