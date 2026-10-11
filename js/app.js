@@ -4,7 +4,10 @@
      #/              Accueil touriste
      #/missions      Catalogue (?focus=<id> pour cibler une mission)
      #/wallet        Profil / wallet
-     #/pro           Espace partenaire (#/pro/scan, #/pro/creer)
+     #/pro           Espace partenaire (#/pro/scan, #/pro/justificatifs, #/pro/creer)
+
+   Contrat d'une vue : { title, render(state, params, sub), actions?, forms?,
+   changes?, mounted?(root, params, sub, app), unmount?() }.
    ========================================================================== */
 (function () {
   'use strict';
@@ -53,7 +56,7 @@
       const again = root.querySelector(key);
       if (again) again.focus({ preventScroll: true });
     }
-    if (view.mounted) view.mounted(root, route.params);
+    if (view.mounted) view.mounted(root, route.params, route.sub, app);
   }
 
   /** Regroupe les rendus déclenchés dans la même frame (store + action). */
@@ -107,6 +110,15 @@
     if (fn) { e.preventDefault(); fn(el, app); }
   });
 
+  // Champs (ex. envoi d'une photo) : <input data-change="proof"> → view.changes.proof(el, app)
+  document.addEventListener('change', (e) => {
+    const el = e.target.closest && e.target.closest('[data-change]');
+    if (!el) return;
+    const view = ROUTES[route.name];
+    const fn = view.changes && view.changes[el.dataset.change];
+    if (fn) fn(el, app);
+  });
+
   document.addEventListener('submit', (e) => {
     const form = e.target.closest('form[data-form]');
     if (!form) return;
@@ -122,7 +134,15 @@
     if (e.target.tagName === 'IMG') e.target.style.visibility = 'hidden';
   }, true);
 
-  window.addEventListener('hashchange', () => { route = parse(); render(true); });
+  // Changement de page : la vue quittée libère ses ressources (ex. caméra du scanner).
+  window.addEventListener('hashchange', () => {
+    const previous = ROUTES[route.name];
+    route = parse();
+    if (previous && typeof previous.unmount === 'function') {
+      try { previous.unmount(); } catch (e) { /* la navigation ne doit jamais bloquer */ }
+    }
+    render(true);
+  });
   store.subscribe(scheduleRender);
 
   // ------------------------------------------------------------------------

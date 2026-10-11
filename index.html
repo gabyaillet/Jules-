@@ -90,11 +90,14 @@
   <div id="toast" class="pointer-events-none fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 md:bottom-8" role="status" aria-live="polite"></div>
 
   <!-- Scripts classiques (pas de modules ES) : l'app s'ouvre même en double-cliquant
-       sur index.html, sans serveur. Ordre : données → photos → store → UI → vues → app. -->
+       sur index.html, sans serveur. Ordre : données → photos → store → encodeur QR → UI
+       → scanner → vues → app. Le décodeur jsQR n'est chargé qu'au premier scan (scanner.js). -->
   <script src="js/data.js" defer></script>
   <script src="js/photos.js" defer></script>
   <script src="js/store.js" defer></script>
+  <script src="js/vendor/qrcode.min.js" defer></script>
   <script src="js/ui.js" defer></script>
+  <script src="js/scanner.js" defer></script>
   <script src="js/views/home.js" defer></script>
   <script src="js/views/catalogue.js" defer></script>
   <script src="js/views/wallet.js" defer></script>

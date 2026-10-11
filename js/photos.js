@@ -22,9 +22,7 @@ Meleze.photos = {
 
 /** Photo par défaut selon le type (missions créées par les pros). */
 Meleze.photos.byType = {
-  sentiers: 'lake',
-  biodiversite: 'forest',
   mobilite: 'range',
-  proprete: 'sunbeam',
-  patrimoine: 'valley',
+  village: 'meadow',
+  nature: 'forest',
 };

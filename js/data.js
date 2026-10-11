@@ -18,150 +18,130 @@ Meleze.data = (function () {
 
   /** `color` : fond pastel associé au type (cartes, étiquettes, bons). */
   const TYPES = [
-    { id: 'sentiers', label: 'Sentiers', color: 'bg-sun' },
-    { id: 'biodiversite', label: 'Biodiversité', color: 'bg-leaf' },
     { id: 'mobilite', label: 'Mobilité douce', color: 'bg-sky' },
-    { id: 'proprete', label: 'Propreté', color: 'bg-coral' },
-    { id: 'patrimoine', label: 'Patrimoine & entraide', color: 'bg-lilac' },
+    { id: 'village', label: 'Vie du village', color: 'bg-sun' },
+    { id: 'nature', label: 'Sentiers & nature', color: 'bg-leaf' },
   ];
 
-  /** Catalogue initial des missions. `reward` est obligatoire. */
+  /**
+   * Façons de valider une mission :
+   * - `qr`    → le référent scanne le QR de la participation, sur place ;
+   * - `photo` → le touriste envoie un justificatif, vérifié par un pro.
+   */
+  const PROOFS = [
+    { id: 'qr', label: 'QR code scanné sur place' },
+    { id: 'photo', label: 'Justificatif photo' },
+  ];
+
+  /**
+   * Catalogue initial des missions. `reward` est obligatoire.
+   * `duration` en minutes (0 = variable : on affiche alors `durationLabel`).
+   */
   const missions = [
     {
-      id: 'm1',
-      photo: 'lake',
-      title: 'Débroussailler le sentier du Lac des Vaches',
-      type: 'sentiers',
-      seasons: ['ete', 'automne'],
-      duration: 120,
-      location: 'Parking des Fontanettes',
-      schedule: 'Mardi & jeudi · 9h00',
-      spots: 12,
-      host: 'Service sentiers de la commune',
+      id: 'm-transport',
+      photo: 'valley',
+      title: 'Venir en transport en commun ou en covoiturage',
+      type: 'mobilite',
+      proof: 'photo',
+      seasons: ['printemps', 'ete', 'automne', 'hiver'],
+      duration: 0,
+      durationLabel: 'Le temps du trajet',
+      location: 'Votre trajet jusqu’à Pralognan',
+      schedule: 'Justificatif à envoyer dans les 48 h après votre arrivée',
+      spots: null,
+      host: 'Office de tourisme',
       description:
-        "Avec l'équipe des sentiers, on dégage la végétation et on remet en place les marches de pierre avant l'arrivée des randonneurs. Gants et outils fournis, prévoir de bonnes chaussures.",
-      reward: { title: 'Aller-retour au téléphérique du Mont Bochor', partner: 'Téléphérique du Mont Bochor', category: 'Expérience' },
+        'Train jusqu’à Moûtiers puis car, ou covoiturage : laissez la voiture individuelle au garage. Depuis votre espace, envoyez une photo de votre billet de train ou de car, de votre réservation de covoiturage, ou une photo de vous à deux (ou plus) dans la voiture.',
+      reward: { title: 'Entrée patinoire + location de patins', partner: 'Patinoire de Pralognan', category: 'Expérience' },
     },
     {
-      id: 'm2',
-      photo: 'meadow',
-      title: 'Compter les marmottes aux Prioux',
-      type: 'biodiversite',
-      seasons: ['printemps', 'ete'],
+      id: 'm-marche',
+      photo: 'sunbeam',
+      title: 'Aider à monter le marché du village',
+      type: 'village',
+      proof: 'qr',
+      seasons: ['ete', 'hiver'],
       duration: 90,
-      location: 'Hameau des Prioux',
-      schedule: 'Tous les matins · 7h30',
-      spots: 8,
-      host: 'Garde-moniteur du Parc national',
+      location: 'Place du village',
+      schedule: 'Jour de marché · 7h00',
+      spots: 6,
+      host: 'Les commerçants du marché',
       description:
-        "Jumelles en main, vous participez au suivi scientifique des terriers avec un garde du Parc national de la Vanoise. Silence et patience : les marmottes sortent tôt !",
+        'Avec les commerçants, on monte les tentes, on installe les tables et les stands avant l’arrivée des visiteurs. Aucune expérience demandée, juste de l’énergie le matin.',
       reward: { title: 'Morceau de Beaufort d’alpage (250 g)', partner: 'Fromagerie du Grand Marchet', category: 'Produit local' },
     },
     {
-      id: 'm3',
-      photo: 'range',
-      title: 'Venir en train jusqu’à la station',
-      type: 'mobilite',
-      seasons: ['printemps', 'ete', 'automne', 'hiver'],
-      duration: 60,
-      location: 'Gare de Moûtiers → Office de tourisme',
-      schedule: 'À votre arrivée',
-      spots: 200,
-      host: 'Office de tourisme',
-      description:
-        "Vous êtes venu en train jusqu'à Moûtiers, puis en navette ? Passez à l'Office de tourisme avec votre billet dans les 48 h qui suivent votre arrivée.",
-      reward: { title: 'Entrée patinoire + location de patins', partner: 'Patinoire olympique de Pralognan', category: 'Expérience' },
-    },
-    {
-      id: 'm4',
-      photo: 'sunbeam',
-      title: 'Ramasser les déchets à la fonte des neiges',
-      type: 'proprete',
-      seasons: ['printemps'],
-      duration: 90,
-      location: 'Sommet du Mont Bochor',
-      schedule: 'Samedi · 10h00',
-      spots: 20,
-      host: 'Association Vanoise Propre',
-      description:
-        "La neige fond et révèle ce que l'hiver a caché. Sacs, pinces et gants fournis ; la montée en téléphérique est offerte aux participants.",
-      reward: { title: 'Crêpe + chocolat chaud', partner: 'Buvette du Bochor', category: 'Gourmandise' },
-    },
-    {
-      id: 'm5',
-      photo: 'stars',
-      title: 'Relever les traces de faune dans la neige',
-      type: 'biodiversite',
-      seasons: ['hiver'],
+      id: 'm-sentiers',
+      photo: 'lake',
+      title: 'Nettoyer les sentiers avec les gardes du Parc',
+      type: 'nature',
+      proof: 'qr',
+      seasons: ['printemps', 'ete', 'automne'],
       duration: 120,
-      location: 'Bois de la Glière',
-      schedule: 'Mercredi · 9h30',
-      spots: 10,
-      host: 'Guides du Grand Marchet',
+      location: 'Parking des Fontanettes',
+      schedule: 'Mardi et jeudi · 9h00',
+      spots: 12,
+      host: 'Gardes du Parc national de la Vanoise',
       description:
-        "En raquettes, apprenez à reconnaître les empreintes de lièvre variable, de renard ou de tétras-lyre, et notez-les sur la fiche d'inventaire du Parc.",
-      reward: { title: 'Sortie raquettes à la lanterne (1 place)', partner: 'Guides du Grand Marchet', category: 'Expérience' },
-    },
-    {
-      id: 'm6',
-      photo: 'peak',
-      title: 'Damer le chemin piéton des Granges',
-      type: 'sentiers',
-      seasons: ['hiver'],
-      duration: 60,
-      location: 'Chemin des Granges',
-      schedule: 'Après chaque chute de neige',
-      spots: 6,
-      host: 'Service sentiers de la commune',
-      description:
-        "Raquettes aux pieds, on tasse la neige fraîche pour que le chemin reste praticable pour les familles et les poussettes.",
-      reward: { title: 'Demi-journée de location de skis de fond', partner: 'Vanoise Sports', category: 'Équipement' },
-    },
-    {
-      id: 'm7',
-      photo: 'forest',
-      title: 'Inventorier les mélèzes remarquables',
-      type: 'biodiversite',
-      seasons: ['automne'],
-      duration: 90,
-      location: 'Forêt des Fontanettes',
-      schedule: 'Vendredi · 14h00',
-      spots: 10,
-      host: 'Office national des forêts',
-      description:
-        "Quand les mélèzes virent à l'or, on mesure, photographie et géolocalise les plus beaux sujets pour l'atlas forestier de la commune.",
-      reward: { title: 'Pot de miel de montagne', partner: 'Rucher du Petit Mont Blanc', category: 'Produit local' },
-    },
-    {
-      id: 'm8',
-      photo: 'valley',
-      title: 'Restaurer un muret en pierre sèche',
-      type: 'patrimoine',
-      seasons: ['ete', 'automne'],
-      duration: 120,
-      location: 'Hameau des Granges',
-      schedule: 'Samedi · 9h00',
-      spots: 8,
-      host: 'Association Patrimoine de Pralognan',
-      description:
-        "Un artisan murailler vous montre comment remonter un muret en pierres sèches. Petit groupe, aucune expérience demandée.",
-      reward: { title: 'Une tartiflette offerte', partner: 'Restaurant La Grange', category: 'Gourmandise' },
+        'Avec les gardes du Parc national, on ramasse les déchets, on dégage les branches tombées et on remet en place les marches de pierre. Gants et sacs fournis, prévoyez de bonnes chaussures.',
+      reward: { title: 'Aller-retour au téléphérique du Mont Bochor', partner: 'Téléphérique du Mont Bochor', category: 'Expérience' },
     },
   ];
 
-  /** Le touriste de démonstration. */
-  const user = { firstName: 'Camille', code: 'MLZ-U-7F3K', since: '2026-10-04' };
+  /** Le touriste de démonstration (plus de QR personnel : un QR par mission). */
+  const user = { firstName: 'Camille', since: '2026-10-04' };
 
   /**
-   * Participations (missions en cours) :
-   * - `inscrite`  → le touriste s'est inscrit
-   * - `terminee`  → il a déclaré avoir fini, attend la validation d'un pro
-   * - `validee`   → un pro a validé, un bon a été émis
+   * Justificatif de démonstration : un billet de train générique dessiné en
+   * SVG (aucun logo ni marque réelle), encodé en data URL comme une photo envoyée.
+   */
+  const DEMO_TICKET = (function () {
+    const bars = [3, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 2, 1, 3, 1, 2, 1, 1, 2, 3, 1, 2, 1, 3, 2, 1, 1, 2, 3, 1]
+      .reduce((acc, w, i) => {
+        if (i % 2 === 0) acc.d += 'M' + acc.x + ' 300h' + w * 3 + 'v56h-' + w * 3 + 'z';
+        acc.x += w * 3 + 3;
+        return acc;
+      }, { x: 40, d: '' }).d;
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">' +
+      '<rect width="640" height="400" fill="#E9ECE8"/>' +
+      '<rect x="20" y="20" width="600" height="360" fill="#FFFFFF" stroke="#C9CFC9" stroke-width="2"/>' +
+      '<rect x="20" y="20" width="600" height="64" fill="#121614"/>' +
+      '<g font-family="Helvetica, Arial, sans-serif" fill="#121614">' +
+      '<text x="40" y="61" font-size="26" font-weight="700" fill="#FFFFFF">Billet de train</text>' +
+      '<text x="600" y="61" font-size="18" text-anchor="end" fill="#BFEF5F">2de classe</text>' +
+      '<text x="40" y="132" font-size="16" fill="#5B635D">Trajet</text>' +
+      '<text x="40" y="168" font-size="30" font-weight="700">Moûtiers → Pralognan (car)</text>' +
+      '<text x="40" y="214" font-size="16" fill="#5B635D">Date</text>' +
+      '<text x="40" y="242" font-size="22" font-weight="700">04/10/2026 · 10h12</text>' +
+      '<text x="330" y="214" font-size="16" fill="#5B635D">Voyageur</text>' +
+      '<text x="330" y="242" font-size="22" font-weight="700">1 adulte</text>' +
+      '<text x="600" y="342" font-size="14" text-anchor="end" fill="#5B635D">Réf. DEMO-48271</text>' +
+      '</g>' +
+      '<path fill="#121614" d="' + bars + '"/>' +
+      '</svg>';
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  })();
+
+  /**
+   * Participations : chacune a son propre code (et donc son propre QR).
+   * - `inscrite` → le touriste s'est inscrit (mission QR : il montre le QR au référent)
+   * - `preuve`   → justificatif photo envoyé, en attente de vérification par un pro
+   * - `refusee`  → justificatif refusé : le touriste peut en renvoyer un
+   * - `validee`  → un pro a validé, un bon a été émis
    */
   const participations = [
-    { id: 'p1', missionId: 'm1', status: 'terminee', date: '2026-10-09' },
-    { id: 'p2', missionId: 'm7', status: 'inscrite', date: '2026-10-11' },
-    { id: 'p0', missionId: 'm3', status: 'validee', date: '2026-10-04' },
+    { id: 'p1', missionId: 'm-sentiers', code: 'MLZ-P-S7K4', status: 'inscrite', date: '2026-10-09' },
+    {
+      id: 'p2',
+      missionId: 'm-transport',
+      code: 'MLZ-P-T3R8',
+      status: 'preuve',
+      date: '2026-10-04',
+      proof: { image: DEMO_TICKET, sentAt: '2026-10-04' },
+    },
+    { id: 'p0', missionId: 'm-marche', code: 'MLZ-P-M2C9', status: 'validee', date: '2026-10-03', validatedAt: '2026-10-03' },
   ];
 
   /** Bons de récompense : `actif` ou `consomme`. */
@@ -169,27 +149,27 @@ Meleze.data = (function () {
     {
       id: 'v1',
       code: 'MLZ-B-PT42',
-      missionId: 'm3',
-      title: 'Entrée patinoire + location de patins',
-      partner: 'Patinoire olympique de Pralognan',
+      missionId: 'm-marche',
+      title: 'Morceau de Beaufort d’alpage (250 g)',
+      partner: 'Fromagerie du Grand Marchet',
       status: 'actif',
-      issuedAt: '2026-10-04',
+      issuedAt: '2026-10-03',
       usedAt: null,
     },
     {
       id: 'v0',
       code: 'MLZ-B-SF19',
-      missionId: 'm6',
-      title: 'Demi-journée de location de skis de fond',
-      partner: 'Vanoise Sports',
+      missionId: 'm-sentiers',
+      title: 'Aller-retour au téléphérique du Mont Bochor',
+      partner: 'Téléphérique du Mont Bochor',
       status: 'consomme',
-      issuedAt: '2026-02-14',
-      usedAt: '2026-02-15',
+      issuedAt: '2026-08-14',
+      usedAt: '2026-08-15',
     },
   ];
 
   /** Identifiants de démonstration de l'espace pro. */
   const proDemo = { email: 'pro@meleze.demo', pin: '1234' };
 
-  return { SEASONS, TYPES, missions, user, participations, vouchers, proDemo };
+  return { SEASONS, TYPES, PROOFS, missions, user, participations, vouchers, proDemo };
 })();

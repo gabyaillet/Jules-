@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Mélèze — utilitaires d'interface partagés (icônes, QR simulé, toasts…)
+   Mélèze — utilitaires d'interface partagés (icônes, QR codes, photos, toasts…)
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 
@@ -30,53 +30,128 @@ Meleze.ui = (function () {
       'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (PATHS[name] || '') + '</svg>';
   }
 
-  // --- QR code simulé ---------------------------------------------------------
-  // Motif déterministe (même code → même dessin) avec les 3 repères d'un vrai QR.
-  // Il n'est pas lisible par une caméra : en V2, remplacer par un encodeur QR
-  // (ex. "qrcode-generator", ~20 ko) sans changer la signature de la fonction.
-  function hash(str) {
-    let h = 2166136261;
-    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
-    return h >>> 0;
-  }
-  function rng(seed) { // mulberry32
-    return function () {
-      seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
+  // --- QR code réel ------------------------------------------------------------
+  // Encodeur « qrcode-generator » (js/vendor/qrcode.min.js, global `qrcode`),
+  // niveau de correction M. Rendu en SVG : un seul <path> (modules noirs
+  // regroupés par lignes), marge blanche de 4 modules pour la lecture caméra.
+  const qrCache = new Map(); // code → { n, d } (les vues se re-rendent souvent)
 
-  function qr(code, opts) {
-    const o = Object.assign({ size: 'w-40', muted: false }, opts);
-    const N = 25;
-    const rand = rng(hash(code));
-    const finders = [[0, 0], [N - 7, 0], [0, N - 7]];
-    const inFinder = (x, y) => finders.some(([fx, fy]) => x >= fx - 1 && x <= fx + 7 && y >= fy - 1 && y <= fy + 7);
+  function qrMatrix(code) {
+    if (qrCache.has(code)) return qrCache.get(code);
+    const q = window.qrcode(0, 'M'); // 0 = version (taille) automatique
+    q.addData(code);
+    q.make();
+    const n = q.getModuleCount();
     let d = '';
-    for (let y = 0; y < N; y++) {
-      for (let x = 0; x < N; x++) {
-        if (!inFinder(x, y) && rand() > 0.52) d += 'M' + x + ' ' + y + 'h1v1h-1z';
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        if (!q.isDark(y, x)) continue;
+        let run = 1;
+        while (x + run < n && q.isDark(y, x + run)) run++;
+        d += 'M' + x + ' ' + y + 'h' + run + 'v1h-' + run + 'z';
+        x += run - 1;
       }
     }
-    // Repères : carré 7×7, anneau blanc, cœur 3×3 (via fill-rule evenodd)
-    finders.forEach(([x, y]) => {
-      d += 'M' + x + ' ' + y + 'h7v7h-7zM' + (x + 1) + ' ' + (y + 1) + 'v5h5v-5z';
-      d += 'M' + (x + 2) + ' ' + (y + 2) + 'h3v3h-3z';
+    const out = { n, d };
+    if (qrCache.size > 50) qrCache.clear();
+    qrCache.set(code, out);
+    return out;
+  }
+
+  /**
+   * QR code lisible par une caméra.
+   * @param {string} code
+   * @param {{size?:string, muted?:boolean}} opts  size : classes de largeur (ex. "w-44")
+   */
+  function qr(code, opts) {
+    const o = Object.assign({ size: 'w-40', muted: false }, opts);
+    const text = String(code == null ? '' : code);
+    const tone = o.muted ? 'text-muted opacity-40' : 'text-night';
+    let m = null;
+    if (typeof window.qrcode === 'function') {
+      try { m = qrMatrix(text); } catch (e) { m = null; }
+    }
+    if (!m) {
+      // Repli (encodeur absent) : un carré blanc avec le code en clair.
+      return '<div class="' + o.size + ' ' + tone + ' flex aspect-square items-center justify-center bg-white p-2 text-center font-mono text-xs font-semibold" role="img" aria-label="QR code ' + esc(text) + '">' + esc(text) + '</div>';
+    }
+    const Q = 4; // marge (quiet zone) en modules
+    const box = m.n + Q * 2;
+    return '<svg class="' + o.size + ' ' + tone + '" viewBox="' + (-Q) + ' ' + (-Q) + ' ' + box + ' ' + box +
+      '" role="img" aria-label="QR code ' + esc(text) + '" shape-rendering="crispEdges">' +
+      '<rect x="' + (-Q) + '" y="' + (-Q) + '" width="' + box + '" height="' + box + '" fill="#FFFFFF"/>' +
+      '<path fill="currentColor" d="' + m.d + '"/></svg>';
+  }
+
+  // --- Photos envoyées par le touriste (justificatifs) -------------------------
+  /**
+   * Réduit et ré-encode une photo en JPEG avant de la stocker : ~100-300 ko au
+   * lieu de plusieurs Mo, et le ré-encodage supprime les métadonnées EXIF
+   * (dont la position GPS) de la photo d'origine.
+   * @param {File|Blob} file
+   * @param {{max?:number, quality?:number}} opts  max : plus grand côté en px
+   * @returns {Promise<string>} data URL "data:image/jpeg;base64,…"
+   */
+  function compressImage(file, opts) {
+    const o = Object.assign({ max: 1280, quality: 0.72 }, opts);
+    const notImage = () => new Error('Ce fichier n’est pas une image.');
+    if (!file || (file.type && !/^image\//i.test(file.type))) return Promise.reject(notImage());
+
+    // Décodage : createImageBitmap si possible (orientation EXIF appliquée),
+    // sinon <img> chargé via une URL d'objet (ou FileReader en dernier recours).
+    function viaImage() {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const objectUrl = window.URL && typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : null;
+        const done = () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+        img.onload = () => { done(); resolve(img); };
+        img.onerror = () => { done(); reject(notImage()); };
+        if (objectUrl) { img.src = objectUrl; return; }
+        const reader = new FileReader();
+        reader.onerror = () => reject(notImage());
+        reader.onload = () => { img.src = reader.result; };
+        reader.readAsDataURL(file);
+      });
+    }
+    const decode = typeof window.createImageBitmap === 'function'
+      ? window.createImageBitmap(file, { imageOrientation: 'from-image' }).catch(viaImage)
+      : viaImage();
+
+    return decode.then((src) => {
+      try {
+        const w0 = src.naturalWidth || src.width, h0 = src.naturalHeight || src.height;
+        if (!w0 || !h0) throw notImage();
+        const scale = Math.min(1, o.max / Math.max(w0, h0));
+        const w = Math.max(1, Math.round(w0 * scale)), h = Math.max(1, Math.round(h0 * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Impossible de préparer la photo sur cet appareil.');
+        ctx.fillStyle = '#FFFFFF'; // les PNG transparents ne deviennent pas noirs en JPEG
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(src, 0, 0, w, h);
+        const url = canvas.toDataURL('image/jpeg', o.quality);
+        if (!/^data:image\//.test(url)) throw new Error('Impossible de préparer la photo sur cet appareil.');
+        return url;
+      } finally {
+        if (typeof src.close === 'function') src.close(); // libère l'ImageBitmap
+      }
     });
-    return '<svg class="' + o.size + ' ' + (o.muted ? 'text-muted opacity-40' : 'text-night') + '" viewBox="-2 -2 ' + (N + 4) + ' ' + (N + 4) +
-      '" role="img" aria-label="QR code ' + esc(code) + '" shape-rendering="crispEdges">' +
-      '<rect x="-2" y="-2" width="' + (N + 4) + '" height="' + (N + 4) + '" fill="#FFFFFF"/>' +
-      '<path fill="currentColor" fill-rule="evenodd" d="' + d + '"/></svg>';
   }
 
   // --- Formatage -------------------------------------------------------------
+  /** Durée en minutes → "45 min", "1 h 30" ; 0 ou vide → "" (durée variable). */
   function duration(min) {
-    const h = Math.floor(min / 60), m = min % 60;
+    const total = Math.max(0, Math.round(Number(min) || 0));
+    if (!total) return '';
+    const h = Math.floor(total / 60), m = total % 60;
     if (!h) return m + ' min';
     return h + ' h' + (m ? ' ' + String(m).padStart(2, '0') : '');
   }
+  /** Durée affichée d'une mission : libellé libre (ex. "Le temps du trajet") sinon minutes. */
+  const missionDuration = (m) => (m && m.durationLabel) || duration(m && m.duration);
+
   function date(iso) {
     if (!iso) return '';
     const d = new Date(iso + 'T12:00:00');
@@ -140,5 +215,5 @@ Meleze.ui = (function () {
       (o.eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async">';
   }
 
-  return { esc, icon, qr, duration, date, typeOf, seasonLabel, currentSeason, toast, photo };
+  return { esc, icon, qr, compressImage, duration, missionDuration, date, typeOf, seasonLabel, currentSeason, toast, photo };
 })();
