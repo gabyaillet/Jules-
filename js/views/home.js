@@ -26,7 +26,8 @@ Meleze.views.home = (function () {
    */
   function photoWord(text, key, y, cls) {
     const url = (w) => esc(photoUrl(key, w));
-    return '<span class="photo-word ' + cls + '" style="--ph-sm:url(&quot;' + url(1200) + '&quot;);--ph-lg:url(&quot;' + url(1800) + '&quot;);--ph-y:' + y + '">' + text + '</span>';
+    // Photo haute définition : le mot fait toute la largeur de l'écran.
+    return '<span class="photo-word ' + cls + '" style="--ph-sm:url(&quot;' + url(1600) + '&quot;);--ph-lg:url(&quot;' + url(2400) + '&quot;);--ph-y:' + y + '">' + text + '</span>';
   }
 
   /** Trois repères chiffrés sous la photo du hero. */
@@ -112,7 +113,7 @@ Meleze.views.home = (function () {
         '<h1 id="page-title" tabindex="-1" class="mt-7 font-extrabold sm:mt-10" aria-label="Une heure pour la montagne, une expérience en retour.">' +
           '<span class="block ' + HERO_LINE + '">Une heure pour la </span>' +
           // Bande basse des sommets : roche au soleil, neige, éboulis bleutés
-          photoWord('montagne', 'sentiers', '30%', 'mb-1.5 mt-2 sm:mb-1 sm:mt-4') +
+          photoWord('montagne', 'stars', '55%', 'mb-1.5 mt-2 sm:mb-1 sm:mt-4') +
           '<span class="sr-only">, </span>' +
           '<span class="block ' + HERO_LINE + ' md:text-right">une expérience en retour.</span>' +
         '</h1>' +
@@ -211,7 +212,7 @@ Meleze.views.home = (function () {
             '<span class="block ' + HERO_LINE + '">Prêt·e à donner une heure à la</span>' +
             // Même photo, cadrée un peu plus haut : le sommet et la neige, en écho au hero
             // (pas plus haut : le ciel, éclairci sur le fond noir, virerait au bleu pâle)
-            photoWord('Vanoise&nbsp;?', 'sentiers', '28%', 'photo-word-short on-dark mt-2.5 sm:mt-4') +
+            photoWord('Vanoise&nbsp;?', 'peak', '45%', 'photo-word-short on-dark mt-2.5 sm:mt-4') +
           '</h2>' +
           '<div class="mt-10 grid gap-8 border-t border-white/15 pt-8 md:mt-14 md:grid-cols-[1fr_auto] md:items-end md:gap-12">' +
             '<p class="max-w-md text-lg text-white/70">Une mission, un local pour vous guider, un commerçant pour vous remercier.</p>' +

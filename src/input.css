@@ -174,17 +174,15 @@
   /* ---- Typo-photo : un mot géant rempli par une photo (background-clip: text)
      La taille suit la largeur du conteneur (unités cqi, repli vw) : le mot
      occupe toute la ligne, du téléphone au grand écran.
-     Photo : img/sentiers.webp (photo du client, 533 × 800). Le mot étant
-     toujours sur une ligne, la bande visible fait ~11 % de la hauteur de la
-     photo (12 % pour « Vanoise ? ») : avec --ph-y entre 28 et 35 %, on ne
-     montre que les sommets (lignes 24–38 %), jamais le © en bas à droite
-     (93–98 %). Pas plus haut que 28 % : le ciel, éclairci (screen) sur le
-     fond noir, deviendrait un aplat bleu pâle au lieu d'une photo.
-     Lisibilité : la photo est « multipliée » sur un gris moyen (#8C969A) et
-     ravivée (saturate) : la neige ne remonte jamais au-dessus de ce gris
-     (3:1 sur blanc), roches au soleil et éboulis restent en couleurs.
+     Photos haute définition (Unsplash, 1600/2400 px) : « Montagne » = sommet
+     enneigé sous un ciel étoilé (bleu nuit, très lisible sur blanc) ;
+     « Vanoise ? » = sommet enneigé sous ciel bleu (lumineux, lisible sur noir).
+     --ph-y règle la bande de photo visible dans les lettres.
+     Lisibilité sur blanc : la photo est légèrement « multipliée » sur un gris
+     clair (#B4BCC0) : la neige la plus claire ne disparaît pas dans le fond,
+     sans assombrir ni ternir le reste de l'image.
      Replis : vert plein si le navigateur ne sait pas découper le fond au texte ;
-     gris moyen uni (3:1, découpé lui aussi) si la photo ne charge pas. */
+     gris uni (découpé lui aussi) si la photo ne charge pas. */
   .typo-hero { container-type: inline-size; }
   .photo-word {
     @apply block font-display font-extrabold uppercase text-brand-ink;
@@ -202,14 +200,14 @@
       /* Le gris est un calque (dégradé uni) sous la photo : c'est le fond de
          fusion ET le repli uni (3:1 sur blanc) si la photo ne charge pas.
          (Chrome ignore la fusion avec background-color sous background-clip: text.) */
-      --ph-tint: linear-gradient(#8C969A, #8C969A);
+      --ph-tint: linear-gradient(#B4BCC0, #B4BCC0);
       background-color: transparent;
       background-image: var(--ph-sm, none), var(--ph-tint);
       background-blend-mode: multiply, normal;
       background-size: cover;
       background-repeat: no-repeat;
       background-position: center var(--ph-y, 30%);
-      filter: saturate(1.5) contrast(1.05);
+      filter: saturate(1.15) contrast(1.05);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
