@@ -33,9 +33,9 @@ Meleze.views.pro = (function () {
 
   const STATUS = {
     inscrite: { label: 'Inscrit·e', color: 'bg-sunk' },
-    preuve: { label: 'Justificatif à vérifier', color: 'bg-lime-200' },
-    refusee: { label: 'Justificatif refusé', color: 'bg-coral' },
-    validee: { label: 'Déjà validée', color: 'bg-coral' },
+    preuve: { label: 'Justificatif à vérifier', color: 'bg-forest text-white' },
+    refusee: { label: 'Justificatif refusé', color: 'bg-danger text-white' },
+    validee: { label: 'Déjà validée', color: 'bg-danger text-white' },
   };
 
   // Conteneur commun : même rythme vertical que les autres pages
@@ -89,18 +89,18 @@ Meleze.views.pro = (function () {
   /** Bloc "En échange" dans la couleur du type de mission. */
   function rewardBlock(m) {
     if (!m.reward) return '';
-    return '<div class="mt-4 px-4 py-3 text-night ' + esc(typeOf(m.type).color) + '">' +
-      '<p class="text-sm text-night/60">En échange</p>' +
+    return '<div class="mt-4 border-2 border-ink px-4 py-3">' +
+      '<p class="text-sm font-semibold text-brand-ink">En échange</p>' +
       '<p class="font-display font-bold leading-snug">' + esc(m.reward.title) + '</p>' +
-      (m.reward.partner ? '<p class="text-sm text-night/70">' + esc(m.reward.partner) + '</p>' : '') +
+      (m.reward.partner ? '<p class="text-sm text-muted">' + esc(m.reward.partner) + '</p>' : '') +
     '</div>';
   }
 
   function flashBox(tab) {
     if (!flash || flash.tab !== tab) return '';
-    return '<div id="pro-flash" tabindex="-1" class="bg-lime-300 px-5 py-4 text-night">' +
+    return '<div id="pro-flash" tabindex="-1" class="border-l-4 border-accent bg-sunk px-5 py-4">' +
       '<p class="font-display font-bold">' + flash.title + '</p>' +
-      '<p class="mt-1 text-night/75">' + flash.html + '</p>' +
+      '<p class="mt-1 text-muted">' + flash.html + '</p>' +
     '</div>';
   }
 
@@ -187,7 +187,7 @@ Meleze.views.pro = (function () {
         field('pin', 'Code PIN', '<input class="field tracking-[0.4em]" id="pin" name="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password" required placeholder="••••">') +
         field('role', 'Je suis', '<select class="field" id="role" name="role">' + ROLES.map((r) => '<option>' + esc(r) + '</option>').join('') + '</select>') +
         field('org', 'Structure', '<input class="field" id="org" name="org" required value="Téléphérique du Mont Bochor">') +
-        '<p class="bg-lime-200 px-4 py-3 text-[0.95rem] text-night">Pour la démo : ' + esc(demo.email) + ', PIN <strong>' + esc(demo.pin) + '</strong></p>' +
+        '<p class="bg-sunk px-4 py-3 text-[0.95rem]">Pour la démo : ' + esc(demo.email) + ', PIN <strong>' + esc(demo.pin) + '</strong></p>' +
         '<button class="btn-primary w-full">Se connecter</button>' +
       '</form>' +
       '<a href="#/" class="link mt-8">Retour au site</a>' +
@@ -202,7 +202,7 @@ Meleze.views.pro = (function () {
       '<a href="#/pro/' + id + '" class="flex min-h-[48px] flex-1 items-center justify-center gap-1.5 px-2 py-1.5 text-center font-display text-[0.95rem] font-semibold leading-tight transition-colors ' +
       (tab === id ? 'bg-ink text-surface' : 'text-muted hover:text-ink') + '"' + (tab === id ? ' aria-current="page"' : '') + '>' + label + (extra || '') + '</a>';
     const count = pending
-      ? '<span class="inline-flex min-w-[1.375rem] shrink-0 items-center justify-center rounded-full bg-lime-400 px-1.5 text-xs font-bold leading-[1.375rem] text-night">' + pending + '<span class="sr-only"> en attente</span></span>'
+      ? '<span class="inline-flex min-w-[1.375rem] shrink-0 items-center justify-center rounded-full bg-forest px-1.5 text-xs font-bold leading-[1.375rem] text-white">' + pending + '<span class="sr-only"> en attente</span></span>'
       : '';
 
     return '<div class="' + WRAP + ' max-w-2xl">' +
@@ -372,7 +372,7 @@ Meleze.views.pro = (function () {
     const isPhoto = m.proof === 'photo';
     const name = firstName(r.user);
     const justValidated = p.status === 'validee' && flash && flash.pid === p.id;
-    const st = justValidated ? { label: 'Validée', color: 'bg-lime-300' } : (STATUS[p.status] || { label: p.status, color: 'bg-sunk' });
+    const st = justValidated ? { label: 'Validée', color: 'bg-forest text-white' } : (STATUS[p.status] || { label: p.status, color: 'bg-sunk' });
     const meta = [missionDuration(m), m.location].filter(Boolean).map(esc).join(' · ');
     const row = (k, v) => '<dt class="text-muted">' + k + '</dt><dd class="min-w-0 break-words">' + v + '</dd>';
     const past = history(p);
@@ -426,7 +426,7 @@ Meleze.views.pro = (function () {
     const used = v.status === 'consomme';
     return '<div class="p-5 sm:p-6 ' + (used ? 'bg-sunk' : 'card') + '">' +
       '<div class="flex flex-wrap items-center justify-between gap-2">' +
-        '<span class="tag ' + (used ? 'bg-coral' : 'bg-lime-300') + '">' + (used ? 'Déjà utilisé' : 'Bon valable') + '</span>' +
+        '<span class="tag ' + (used ? 'bg-danger text-white' : 'bg-forest text-white') + '">' + (used ? 'Déjà utilisé' : 'Bon valable') + '</span>' +
         '<span class="font-mono text-sm font-semibold">' + esc(v.code) + '</span>' +
       '</div>' +
       '<h3 class="mt-4 text-2xl ' + (used ? 'text-muted line-through decoration-1' : '') + '">' + esc(v.title) + '</h3>' +
@@ -481,15 +481,15 @@ Meleze.views.pro = (function () {
     const { SEASONS, TYPES, PROOFS } = Meleze.data;
     if (created) {
       const proof = PROOFS.find((x) => x.id === created.proof);
-      // Bloc lime : boutons en noir explicite (lisibles aussi en mode sombre)
-      return '<div class="bg-lime-300 p-6 text-night sm:p-8">' +
+      // Bloc vert forêt : boutons blancs explicites (lisibles aussi en mode sombre)
+      return '<div class="bg-forest p-6 text-white sm:p-8">' +
         '<p class="font-display font-bold">Mission publiée</p>' +
-        '<h2 class="mt-2 text-3xl text-night sm:text-4xl">« ' + esc(created.title) + ' »</h2>' +
-        '<p class="mt-3 max-w-xl text-night/75">Elle est visible dès maintenant dans le catalogue, avec sa contrepartie : ' + esc(created.reward.title) + '.' +
+        '<h2 class="mt-2 text-3xl text-white sm:text-4xl">« ' + esc(created.title) + ' »</h2>' +
+        '<p class="mt-3 max-w-xl text-white/80">Elle est visible dès maintenant dans le catalogue, avec sa contrepartie : ' + esc(created.reward.title) + '.' +
           (proof ? ' Validation : ' + esc(proof.label.charAt(0).toLowerCase() + proof.label.slice(1)) + '.' : '') + '</p>' +
         '<div class="mt-8 flex flex-wrap items-center gap-3">' +
-          '<a href="#/missions?focus=' + esc(created.id) + '" class="btn bg-night text-white hover:opacity-85">Voir dans le catalogue' + icon('arrow', 'h-5 w-5') + '</a>' +
-          '<button type="button" class="btn border-2 border-night bg-transparent text-night hover:bg-night hover:text-white" data-action="new-mission">Créer une autre mission</button>' +
+          '<a href="#/missions?focus=' + esc(created.id) + '" class="btn-light">Voir dans le catalogue' + icon('arrow', 'h-5 w-5') + '</a>' +
+          '<button type="button" class="btn border-2 border-white bg-transparent text-white hover:bg-white hover:text-night" data-action="new-mission">Créer une autre mission</button>' +
         '</div>' +
       '</div>';
     }
@@ -498,7 +498,7 @@ Meleze.views.pro = (function () {
       qr: 'Le référent scanne le QR du participant à la fin de la mission.',
       photo: 'Le participant envoie une photo (billet, réservation…), vérifiée dans l’onglet Justificatifs.',
     };
-    const OPTION = 'flex min-h-[52px] cursor-pointer items-start gap-3 border-2 border-transparent bg-sunk px-4 py-3 transition-colors has-[:checked]:border-night has-[:checked]:bg-lime-200 has-[:checked]:text-night';
+    const OPTION = 'flex min-h-[52px] cursor-pointer items-start gap-3 border-2 border-transparent bg-sunk px-4 py-3 transition-colors has-[:checked]:border-ink has-[:checked]:bg-card';
 
     return '<form class="space-y-6" data-form="create">' +
       '<fieldset class="card space-y-5 p-5 sm:p-7">' +
@@ -513,7 +513,7 @@ Meleze.views.pro = (function () {
             '</span></label>').join('') +
         '</div></div>' +
         '<div><p class="label" id="seasons-l">Saison(s)</p><div class="grid grid-cols-2 gap-2" role="group" aria-labelledby="seasons-l">' +
-          SEASONS.map((s) => '<label class="flex min-h-[52px] cursor-pointer items-center gap-3 border-2 border-transparent bg-sunk px-4 font-semibold transition-colors has-[:checked]:border-night has-[:checked]:bg-lime-200 has-[:checked]:text-night">' +
+          SEASONS.map((s) => '<label class="flex min-h-[52px] cursor-pointer items-center gap-3 border-2 border-transparent bg-sunk px-4 font-semibold transition-colors has-[:checked]:border-ink has-[:checked]:bg-card">' +
             '<input type="checkbox" name="seasons" value="' + esc(s.id) + '" class="h-5 w-5 shrink-0 accent-[#121614]">' + esc(s.label) + '</label>').join('') +
         '</div></div>' +
         '<div class="grid grid-cols-2 gap-4">' +
@@ -529,8 +529,8 @@ Meleze.views.pro = (function () {
       '</fieldset>' +
 
       // Contrepartie : bloc mis en avant, champs obligatoires
-      '<fieldset class="space-y-5 bg-tint p-5 sm:p-7 [&_.field]:bg-card">' +
-        '<legend class="' + LEGEND + ' flex flex-wrap items-center gap-3">La contrepartie <span class="tag bg-lime-400">Obligatoire</span></legend>' +
+      '<fieldset class="space-y-5 border-2 border-ink p-5 sm:p-7">' +
+        '<legend class="' + LEGEND + ' flex flex-wrap items-center gap-3">La contrepartie <span class="tag bg-forest text-white">Obligatoire</span></legend>' +
         '<p class="text-muted">Chaque mission offre quelque chose en échange : c’est le principe de Mélèze.</p>' +
         field('rtitle', 'Ce que vous offrez', '<input class="field" id="rtitle" name="rtitle" required maxlength="80" placeholder="Ex. Une descente en luge">') +
         field('rpartner', 'Offert par', '<input class="field" id="rpartner" name="rpartner" required value="' + esc(pro.org) + '">') +

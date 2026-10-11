@@ -16,11 +16,15 @@ Meleze.data = (function () {
     { id: 'hiver', label: 'Hiver' },
   ];
 
-  /** `color` : fond pastel associé au type (cartes, étiquettes, bons). */
+  /**
+   * `color` : pastille du type (sur les photos et en étiquette). Plus de
+   * fond pastel : une pastille quasi noire, le type se distingue par son nom
+   * et par son numéro (`num`).
+   */
   const TYPES = [
-    { id: 'mobilite', label: 'Mobilité douce', color: 'bg-sky' },
-    { id: 'village', label: 'Vie du village', color: 'bg-sun' },
-    { id: 'nature', label: 'Sentiers & nature', color: 'bg-leaf' },
+    { id: 'mobilite', num: '01', label: 'Mobilité douce', color: 'bg-ink text-surface' },
+    { id: 'village', num: '02', label: 'Vie du village', color: 'bg-ink text-surface' },
+    { id: 'nature', num: '03', label: 'Sentiers & nature', color: 'bg-ink text-surface' },
   ];
 
   /**
@@ -110,7 +114,7 @@ Meleze.data = (function () {
       '<rect x="20" y="20" width="600" height="64" fill="#121614"/>' +
       '<g font-family="Helvetica, Arial, sans-serif" fill="#121614">' +
       '<text x="40" y="61" font-size="26" font-weight="700" fill="#FFFFFF">Billet de train</text>' +
-      '<text x="600" y="61" font-size="18" text-anchor="end" fill="#BFEF5F">2de classe</text>' +
+      '<text x="600" y="61" font-size="18" text-anchor="end" fill="#FFFFFF">2de classe</text>' +
       '<text x="40" y="132" font-size="16" fill="#5B635D">Trajet</text>' +
       '<text x="40" y="168" font-size="30" font-weight="700">Moûtiers → Pralognan (car)</text>' +
       '<text x="40" y="214" font-size="16" fill="#5B635D">Date</text>' +

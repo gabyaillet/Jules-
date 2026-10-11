@@ -2,7 +2,7 @@
    Vue : Catalogue des missions (filtres Saison + Type)
    Fiches sans icônes décoratives : photo, titre, infos pratiques en
    typographie simple (dont le mode de validation : QR code sur place ou
-   justificatif photo), contrepartie dans la couleur du type de mission.
+   justificatif photo), contrepartie dans un cadre noir carré (aucun pastel).
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 Meleze.views = Meleze.views || {};
@@ -15,7 +15,7 @@ Meleze.views.catalogue = (function () {
   /** Conteneur commun : même largeur et mêmes marges que les autres pages. */
   const WRAP = 'mx-auto max-w-app px-5 sm:px-8';
   /** Pastille posée sur la photo (type, nouveauté) : texte seul, jamais inclinée. */
-  const PILL = 'rounded-full px-3 py-1 font-display text-sm font-semibold leading-snug text-night';
+  const PILL = 'rounded-full px-3 py-1 font-display text-sm font-semibold leading-snug';
 
   // Filtres conservés pendant la navigation (pas besoin de les persister)
   const filters = { season: 'all', type: 'all' };
@@ -63,7 +63,7 @@ Meleze.views.catalogue = (function () {
       '<div class="ph ph-zoom aspect-[4/3]">' + photo(m, { sizes: '(min-width:1024px) 30vw, (min-width:640px) 45vw, 100vw' }) +
         '<div class="absolute inset-x-3 top-3 flex items-start justify-between gap-2">' +
           '<span class="' + PILL + ' ' + t.color + '">' + esc(t.label) + '</span>' +
-          (m.isNew ? '<span class="sticker rotate-3 bg-lime-300">Nouveau</span>' : '') +
+          (m.isNew ? '<span class="sticker rotate-3 bg-forest text-white">Nouveau</span>' : '') +
         '</div>' +
       '</div>' +
 
@@ -81,11 +81,11 @@ Meleze.views.catalogue = (function () {
       // Bas de fiche (contrepartie, détails, bouton) calé en bas : les blocs
       // s'alignent d'une carte à l'autre sur une même rangée.
       '<div class="mt-auto pt-6">' +
-        // Contrepartie : dans la couleur du type de mission
-        '<div class="p-5 text-night sm:min-h-[8.75rem] ' + t.color + '">' +
-          '<p class="text-sm text-night/60">En échange</p>' +
+        // Contrepartie : cadre noir carré, libellé vert forêt
+        '<div class="border-2 border-ink p-5 sm:min-h-[8.75rem]">' +
+          '<p class="font-display text-sm font-semibold text-brand-ink">En échange</p>' +
           '<p class="mt-1 font-display text-xl font-bold leading-tight tracking-[-0.02em]">' + esc(m.reward.title) + '</p>' +
-          '<p class="mt-1.5 text-sm text-night/70">offert par ' + esc(m.reward.partner) + '</p>' +
+          '<p class="mt-1.5 text-sm text-muted">offert par ' + esc(m.reward.partner) + '</p>' +
         '</div>' +
 
         '<details class="acc mt-3"' + (focusId === m.id ? ' open' : '') + '>' +
@@ -142,7 +142,7 @@ Meleze.views.catalogue = (function () {
           SEASONS.map((s) => chip('season', s.id, esc(s.label), filters.season === s.id)).join('')) +
         chipRow('Type de mission',
           chip('type', 'all', 'Tous les types', filters.type === 'all') +
-          TYPES.map((t) => chip('type', t.id, '<span class="h-2.5 w-2.5 rounded-full ' + t.color + '" aria-hidden="true"></span>' + esc(t.label), filters.type === t.id)).join('')) +
+          TYPES.map((t) => chip('type', t.id, esc(t.label), filters.type === t.id)).join('')) +
       '</div>' +
     '</div>' +
 

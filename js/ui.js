@@ -160,7 +160,7 @@ Meleze.ui = (function () {
     const d = new Date(iso + 'T12:00:00');
     return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
   }
-  const typeOf = (id) => Meleze.data.TYPES.find((t) => t.id === id) || { label: id, color: 'bg-sunk' };
+  const typeOf = (id) => Meleze.data.TYPES.find((t) => t.id === id) || { label: id, num: '', color: 'bg-ink text-surface' };
   const seasonLabel = (id) => (Meleze.data.SEASONS.find((s) => s.id === id) || { label: id }).label;
 
   /** Saison courante d'après la date, pour mettre en avant les bonnes missions. */
@@ -179,7 +179,7 @@ Meleze.ui = (function () {
     if (!host) return;
     const error = tone === 'error';
     host.innerHTML = '<div class="pointer-events-auto mx-auto flex w-fit max-w-md items-center gap-3 bg-night py-3 pl-3 pr-5 text-white shadow-lg ring-1 ring-white/10">' +
-      '<span class="flex h-7 w-7 shrink-0 items-center justify-center text-night ' + (error ? 'bg-coral' : 'bg-lime-400') + '">' +
+      '<span class="flex h-7 w-7 shrink-0 items-center justify-center text-white ' + (error ? 'bg-danger' : 'bg-forest') + '">' +
       icon(error ? 'alert' : 'check', 'h-4 w-4') + '</span>' +
       '<span class="font-display text-[0.95rem] font-semibold leading-snug">' + esc(message) + '</span></div>';
     clearTimeout(toastTimer);
@@ -203,6 +203,16 @@ Meleze.ui = (function () {
   }
 
   /**
+   * URL d'une photo de la photothèque (pour un fond CSS : mot rempli par une photo…).
+   * @param {string|object} key  clé de la photothèque ou mission
+   * @param {number} w  largeur demandée (Unsplash)
+   */
+  function photoUrl(key, w) {
+    const p = photoOf(key);
+    return isLocal(p.src) ? p.src : unsplash(p.src, w || 1200);
+  }
+
+  /**
    * <img> responsive. À placer dans un conteneur `.ph` (qui donne la taille
    * et un dégradé de repli si l'image ne charge pas).
    * @param {string|object} key  clé de la photothèque ou mission
@@ -218,5 +228,5 @@ Meleze.ui = (function () {
       (o.eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async">';
   }
 
-  return { esc, icon, qr, compressImage, duration, missionDuration, date, typeOf, seasonLabel, currentSeason, toast, photo };
+  return { esc, icon, qr, compressImage, duration, missionDuration, date, typeOf, seasonLabel, currentSeason, toast, photo, photoUrl };
 })();

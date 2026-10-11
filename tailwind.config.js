@@ -1,10 +1,11 @@
 /**
  * Mélèze — configuration Tailwind
  *
- * Style "CopenPay" : fond blanc, typographie grasse noire, touches de vert
- * lime vif et une couleur pastel par type de mission. Les couleurs
- * sémantiques (surface, ink, brand…) pointent vers des variables CSS
- * (src/input.css) : un seul jeu de classes sert aux thèmes clair et sombre.
+ * Concept A « Typo-photo » : base blanche, typographie grasse quasi noire,
+ * gris neutres et UNE seule couleur d'accent saturée (vert forêt #0E5A3A).
+ * Aucune couleur pastel. Les couleurs sémantiques (surface, ink, accent…)
+ * pointent vers des variables CSS (src/input.css) : un seul jeu de classes
+ * sert aux thèmes clair et sombre.
  */
 const v = (name) => `rgb(var(--c-${name}) / <alpha-value>)`;
 
@@ -17,27 +18,20 @@ module.exports = {
         // Jetons sémantiques (suivent le thème)
         surface: v('surface'), // fond de page (blanc)
         card: v('card'), // cartes
-        sunk: v('sunk'), // gris très clair (sections, champs)
-        tint: v('tint'), // vert lime très clair (encadrés "récompense")
+        sunk: v('sunk'), // gris neutre très clair (champs, encadrés)
         ink: v('ink'), // texte principal (quasi noir)
-        muted: v('muted'), // texte secondaire
+        muted: v('muted'), // texte secondaire (gris)
         line: v('line'), // bordures
-        brand: v('brand'), // boutons principaux (noir)
+        brand: v('brand'), // boutons principaux (vert forêt)
         'on-brand': v('on-brand'),
-        'brand-ink': v('brand-ink'), // vert lisible en texte (liens)
+        'brand-ink': v('brand-ink'), // vert lisible en texte (liens, accents)
+        accent: v('accent'), // l'accent unique
         ok: v('ok'),
         danger: v('danger'),
 
-        // Palette vive (fixe, quel que soit le thème)
-        lime: { 200: '#E4FBB8', 300: '#D2F58E', 400: '#BFEF5F' }, // surlignage, accents
-        pine: { 600: '#1F8A50', 700: '#16703F', 900: '#0F2A1B' }, // vert montagne
-        // Une couleur pastel par type de mission
-        sun: '#FFE2A6', // vie du village
-        leaf: '#D6F2B5', // sentiers & nature
-        sky: '#CDE6FF', // mobilité douce
-        coral: '#FFD3C7', // alertes (refus, bon déjà utilisé)
-        lilac: '#E6DCFF', // patrimoine
-        night: '#121614', // noir doux
+        // Couleurs fixes, quel que soit le thème
+        forest: '#0E5A3A', // vert forêt : l'unique accent (8,3:1 sur blanc)
+        night: '#0F1412', // quasi noir
       },
       fontFamily: {
         // Polices auto-hébergées (fonts/), repli système.

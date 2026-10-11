@@ -22,7 +22,7 @@ Meleze.views.wallet = (function () {
    * L'input déclenche view.changes.proof via data-change.
    */
   function uploadControl(p, text, cls) {
-    return '<label class="' + cls + ' cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-pine-600">' +
+    return '<label class="' + cls + ' cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">' +
       '<span data-upload-text>' + text + '</span>' +
       '<input type="file" accept="image/*" class="sr-only" data-change="proof" data-id="' + esc(p.id) + '">' +
     '</label>';
@@ -52,13 +52,13 @@ Meleze.views.wallet = (function () {
 
   /** Mission validée par QR : le QR propre à cette participation. */
   function qrBlock(p) {
-    return '<div class="mt-5 flex flex-col items-center gap-5 bg-lime-300 p-5 text-center text-night sm:flex-row sm:p-6 sm:text-left">' +
+    return '<div class="mt-5 flex flex-col items-center gap-5 border-2 border-ink p-5 text-center sm:flex-row sm:p-6 sm:text-left">' +
         '<div class="shrink-0 bg-white p-2">' + qr(p.code, { size: 'w-44' }) + '</div>' +
         '<div class="min-w-0">' +
           '<p class="font-display text-xl font-bold leading-tight">Le QR de cette mission</p>' +
           '<p class="mt-2 font-mono text-lg font-bold tracking-[0.18em]">' + esc(p.code) + '</p>' +
-          '<p class="mt-2 text-[0.95rem] leading-snug text-night/70">À montrer au référent à la fin de la mission.</p>' +
-          '<p class="mt-1 text-sm text-night/60">Pensez à monter la luminosité de l’écran.</p>' +
+          '<p class="mt-2 text-[0.95rem] leading-snug text-muted">À montrer au référent à la fin de la mission.</p>' +
+          '<p class="mt-1 text-sm text-muted">Pensez à monter la luminosité de l’écran.</p>' +
         '</div>' +
       '</div>' +
       '<div class="mt-4">' + cancelButton(p, 'btn-sm') + '</div>';
@@ -86,7 +86,7 @@ Meleze.views.wallet = (function () {
     }
 
     const refused = p.status === 'refusee'
-      ? '<div class="mt-5 bg-coral p-4 text-night sm:p-5" role="status">' +
+      ? '<div class="mt-5 border-l-4 border-danger bg-sunk p-4 sm:p-5" role="status">' +
           '<p class="font-display font-bold">Justificatif refusé' + (p.refusedAt ? ' le ' + esc(date(p.refusedAt)) : '') + '</p>' +
           '<p class="mt-1 text-[0.95rem] leading-snug">' + esc(String(p.refusedReason || 'Justificatif illisible ou non conforme').replace(/[\s.]+$/, '')) + '. Vous pouvez en envoyer un autre.</p>' +
         '</div>'
@@ -129,9 +129,10 @@ Meleze.views.wallet = (function () {
   function voucherCard(v) {
     const used = v.status === 'consomme';
     const m = store.getMission(v.missionId);
-    const surface = used ? 'bg-sunk text-muted' : (m ? typeOf(m.type).color : 'bg-leaf') + ' text-night';
-    const soft = used ? 'text-muted' : 'text-night/60';
-    const softer = used ? 'text-muted' : 'text-night/70';
+    // Bon valable : bloc vert forêt plein ; bon utilisé : gris neutre.
+    const surface = used ? 'bg-sunk text-muted' : 'bg-forest text-white';
+    const soft = used ? 'text-muted' : 'text-white/75';
+    const softer = used ? 'text-muted' : 'text-white/80';
     return '<li class="flex flex-col justify-between gap-8 p-5 sm:p-6 ' + esc(surface) + '">' +
       '<div>' +
         '<p class="text-sm ' + soft + '">' + esc(v.partner) + '</p>' +
@@ -141,7 +142,7 @@ Meleze.views.wallet = (function () {
         '<div class="min-w-0">' +
           '<p class="font-mono text-[0.95rem] font-semibold tracking-wide">' + esc(v.code) + '</p>' +
           '<p class="mt-1 text-sm ' + softer + '">' +
-            (used ? 'Utilisé le ' + esc(date(v.usedAt)) : '<span class="font-semibold text-night">Valable</span> · reçu le ' + esc(date(v.issuedAt))) +
+            (used ? 'Utilisé le ' + esc(date(v.usedAt)) : '<span class="font-semibold text-white">Valable</span> · reçu le ' + esc(date(v.issuedAt))) +
           '</p>' +
         '</div>' +
         '<div class="shrink-0 bg-white p-1' + (used ? ' opacity-60' : '') + '">' + qr(v.code, { size: 'w-28', muted: used }) + '</div>' +

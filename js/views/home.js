@@ -1,25 +1,35 @@
 /* ==========================================================================
-   Vue : Accueil touriste
-   Grands titres gras, fond blanc, blocs pastel carrés par type de mission,
-   photos arrondies et quelques étiquettes inclinées. Pas d'icônes décoratives : la typographie porte
-   l'information.
+   Vue : Accueil touriste — concept A « Typo-photo »
+   Base blanche, titres gras quasi noirs, un seul accent vert forêt. Le mot
+   « montagne » du titre est rempli par une photo (background-clip: text).
+   Photos arrondies ; tous les autres blocs sont carrés. Aucune couleur pastel,
+   pas d'icônes décoratives : la typographie porte l'information.
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 Meleze.views = Meleze.views || {};
 
 Meleze.views.home = (function () {
   'use strict';
-  const { esc, icon, photo, missionDuration, typeOf, currentSeason, seasonLabel } = Meleze.ui;
+  const { esc, icon, photo, photoUrl, missionDuration, typeOf, currentSeason, seasonLabel } = Meleze.ui;
 
   /** Conteneur commun : même largeur et mêmes marges sur toute la page. */
   const WRAP = 'mx-auto max-w-app px-5 sm:px-8';
   const H2 = 'text-4xl sm:text-5xl lg:text-6xl';
   const INTRO = 'mt-4 max-w-xl text-lg text-muted';
+  /** Lignes du titre qui encadrent le mot-photo géant. */
+  const HERO_LINE = 'text-[2.1rem] leading-[0.98] tracking-[-0.035em] sm:text-6xl lg:text-[4.75rem]';
+
+  /** Trois repères chiffrés sous la photo du hero. */
+  const FACTS = [
+    ['1 à 2\u00a0h', 'sur place, encadré par un local'],
+    ['0\u00a0€', 'gratuit, sans carte bancaire'],
+    ['3', 'missions, encadrées par des gens d’ici'],
+  ];
 
   const STEPS = [
-    { color: 'bg-sun', title: 'Choisissez une mission', text: 'Marché du village, sentiers du Parc ou trajet sans voiture : inscrivez-vous, la mission arrive dans « Mon espace ». Chaque fiche indique la durée, le rendez-vous et ce que vous recevez.' },
-    { color: 'bg-leaf', title: 'Faites-la avec un local', text: 'Les commerçants du marché ou les gardes du Parc vous accueillent, le matériel est fourni. Vous venez en train ou en covoiturage ? Gardez votre billet.' },
-    { color: 'bg-sky', title: 'Recevez votre bon', text: 'Le référent scanne le QR de votre mission, ou vous envoyez votre billet : votre bon arrive dans votre espace, prêt à montrer au commerçant.' },
+    { title: 'Choisissez une mission', text: 'Marché du village, sentiers du Parc ou trajet sans voiture : inscrivez-vous, la mission arrive dans « Mon espace ». Chaque fiche indique la durée, le rendez-vous et ce que vous recevez.' },
+    { title: 'Faites-la avec un local', text: 'Les commerçants du marché ou les gardes du Parc vous accueillent, le matériel est fourni. Vous venez en train ou en covoiturage ? Gardez votre billet.' },
+    { title: 'Recevez votre bon', text: 'Le référent scanne le QR de votre mission, ou vous envoyez votre billet : votre bon arrive dans votre espace, prêt à montrer au commerçant.' },
   ];
 
   const FAQ = [
@@ -50,22 +60,25 @@ Meleze.views.home = (function () {
     return '<li class="w-[82%] shrink-0 snap-start sm:w-[46%] lg:w-auto">' +
       '<a href="#/missions?focus=' + esc(m.id) + '" class="group block">' +
         '<div class="ph ph-zoom aspect-[4/3]">' + photo(m, { sizes: '(min-width:1024px) 30vw, 82vw', alt: '' }) +
-          '<span class="absolute left-3 top-3 rounded-full px-3 py-1 font-display text-sm font-semibold text-night ' + t.color + '">' + esc(t.label) + '</span>' +
+          '<span class="absolute left-3 top-3 rounded-full px-3 py-1 font-display text-sm font-semibold ' + t.color + '">' + esc(t.label) + '</span>' +
         '</div>' +
-        '<h3 class="mt-5 text-2xl group-hover:underline group-hover:decoration-lime-400 group-hover:decoration-[3px] group-hover:underline-offset-4">' + esc(m.title) + '</h3>' +
+        '<h3 class="mt-5 text-2xl group-hover:underline group-hover:decoration-accent group-hover:decoration-2 group-hover:underline-offset-4">' + esc(m.title) + '</h3>' +
         '<p class="mt-2 text-muted">' + meta + '</p>' +
         '<p class="mt-1 text-sm text-muted">' + when + '</p>' +
-        '<p class="mt-3 text-ink"><span class="text-muted">En échange :</span> <span class="font-semibold">' + esc(m.reward.title) + '</span></p>' +
+        '<p class="mt-4 border-t border-line pt-3 text-ink"><span class="text-muted">En échange :</span> <span class="font-semibold text-brand-ink">' + esc(m.reward.title) + '</span></p>' +
       '</a></li>';
   }
 
-  /** Tuile "contrepartie" dans le bloc vert. */
-  function rewardTile(m) {
+  /** Tuile "contrepartie" : carré blanc posé sur le bandeau vert forêt. */
+  function rewardTile(m, i) {
     const t = typeOf(m.type);
-    return '<li class="flex min-h-[9rem] flex-col justify-between gap-6 p-5 text-night sm:min-h-[12rem] sm:p-6 ' + t.color + '">' +
-      '<p class="text-sm text-night/60">' + esc(m.reward.category || t.label) + '</p>' +
-      '<div><p class="break-words font-display text-xl font-bold leading-tight tracking-[-0.02em] lg:text-2xl">' + esc(m.reward.title) + '</p>' +
-      '<p class="mt-1.5 text-sm text-night/70">' + esc(m.reward.partner) + '</p></div>' +
+    return '<li class="flex min-h-[10rem] flex-col justify-between gap-8 bg-white p-5 text-night sm:min-h-[13rem] sm:p-6">' +
+      '<div class="flex items-baseline justify-between gap-4">' +
+        '<p class="font-display text-sm font-semibold text-forest">' + esc(m.reward.category || t.label) + '</p>' +
+        '<p class="font-display text-sm font-semibold text-night/45" aria-hidden="true">' + String(i + 1).padStart(2, '0') + '</p>' +
+      '</div>' +
+      '<div><p class="break-words font-display text-[1.6rem] font-bold leading-[1.05] tracking-[-0.025em] lg:text-[1.85rem]">' + esc(m.reward.title) + '</p>' +
+      '<p class="mt-2 text-sm text-night/65">' + esc(m.reward.partner) + '</p></div>' +
     '</li>';
   }
 
@@ -81,40 +94,45 @@ Meleze.views.home = (function () {
     const more = state.missions.length > picks.length;
 
     return (
-      // ---- Hero : titre + grille de photos -------------------------------------------
-      '<section class="' + WRAP + ' grid gap-10 pb-16 pt-8 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16 lg:pb-24 lg:pt-14">' +
-        '<div>' +
-          '<span class="tag text-ink">Pralognan-la-Vanoise · 4 saisons</span>' +
-          '<h1 id="page-title" tabindex="-1" class="mt-5 text-[2.75rem] font-extrabold sm:text-7xl lg:text-[4.6rem]">Une heure pour la <span class="mark">montagne</span>, une expérience en retour.</h1>' +
-          '<p class="mt-6 max-w-lg text-lg text-muted">Venez sans votre voiture, aidez à monter le marché ou nettoyez les sentiers avec les gardes du Parc. Les commerçants du village vous remercient : téléphérique, patinoire, Beaufort d’alpage…</p>' +
-          '<div class="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">' +
+      // ---- Hero « Typo-photo » : le mot montagne rempli par une photo -----------------------
+      '<section class="typo-hero ' + WRAP + ' pb-14 pt-8 sm:pt-12 lg:pb-24 lg:pt-16">' +
+        '<p class="flex items-center gap-3 font-display text-[0.95rem] font-semibold tracking-[-0.005em] text-ink">' +
+          '<span class="h-[2px] w-8 bg-accent" aria-hidden="true"></span>Pralognan-la-Vanoise · 4 saisons</p>' +
+        '<h1 id="page-title" tabindex="-1" class="mt-7 font-extrabold sm:mt-10">' +
+          '<span class="block ' + HERO_LINE + '">Une heure pour la</span>' +
+          '<span class="photo-word mb-1.5 mt-2 sm:mb-1 sm:mt-4" style="--ph-sm:url(&quot;' + esc(photoUrl('peak', 1200)) + '&quot;);--ph-lg:url(&quot;' + esc(photoUrl('peak', 1800)) + '&quot;)">montagne</span>' +
+          '<span class="sr-only">,</span>' +
+          '<span class="block ' + HERO_LINE + ' md:text-right">une expérience en retour.</span>' +
+        '</h1>' +
+        '<div class="mt-8 grid gap-7 border-t border-line pt-7 md:mt-14 md:grid-cols-[1fr_auto] md:items-end md:gap-12 md:pt-8">' +
+          '<p class="max-w-xl text-lg text-muted">Venez sans votre voiture, aidez à monter le marché ou nettoyez les sentiers avec les gardes du Parc. Les commerçants du village vous remercient : téléphérique, patinoire, Beaufort d’alpage…</p>' +
+          '<div class="flex flex-col gap-3 sm:flex-row">' +
             '<a href="#/missions" class="btn-primary">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>' +
             '<a href="#/wallet" class="btn-secondary">Mon espace</a>' +
           '</div>' +
         '</div>' +
-        '<div class="grid grid-cols-2 gap-3 sm:gap-4">' +
-          '<div class="ph ph-lg col-span-2 aspect-[16/10]">' + photo('hero', { eager: true, sizes: '(min-width:1024px) 45vw, 100vw' }) +
-            '<span class="sticker absolute left-4 top-4 -rotate-3 bg-lime-300">Téléphérique offert</span></div>' +
-          '<div class="ph ph-lg aspect-square">' + photo('meadow', { sizes: '(min-width:1024px) 22vw, 48vw', alt: 'Prairie d’alpage' }) +
-            '<span class="sticker absolute bottom-4 left-4 rotate-2 bg-white">Avec les gardes du Parc</span></div>' +
-          '<div class="flex aspect-square flex-col justify-between bg-sky p-5 text-night sm:p-6">' +
-            '<p class="font-display text-sm font-semibold text-night/60">Sur place</p>' +
-            '<div><p class="font-display text-[2.5rem] font-bold leading-none tracking-[-0.04em] sm:text-6xl">1 à 2\u00a0h</p>' +
-            '<p class="mt-2 text-sm leading-snug text-night/70 sm:text-base">Matériel fourni, encadré par un local.</p></div>' +
-          '</div>' +
+        '<div class="relative mt-12 lg:mt-16">' +
+          '<div class="ph ph-lg aspect-[4/3] sm:aspect-[21/9]">' + photo('hero', { eager: true, sizes: '(min-width:1216px) 1152px, 100vw' }) + '</div>' +
+          '<span class="sticker absolute -top-4 right-5 -rotate-3 bg-forest px-4 py-2 text-white sm:right-10">Téléphérique offert</span>' +
         '</div>' +
+        '<ul class="mt-8 grid grid-cols-3 gap-4 sm:gap-8">' +
+          FACTS.map(([k, v]) =>
+            '<li class="border-t-2 border-ink pt-3">' +
+              '<p class="font-display text-[1.65rem] font-bold leading-none tracking-[-0.04em] sm:text-5xl">' + k + '</p>' +
+              '<p class="mt-2 text-sm leading-snug text-muted sm:text-base">' + v + '</p></li>').join('') +
+        '</ul>' +
       '</section>' +
 
-      // ---- Comment ça marche --------------------------------------------------------------
+      // ---- Comment ça marche : trois colonnes éditoriales, numéros vert forêt -----------
       '<section class="' + WRAP + ' pb-16 lg:pb-24" aria-labelledby="how">' +
         '<h2 id="how" class="' + H2 + '">Comment ça marche</h2>' +
         '<p class="' + INTRO + '">Trois étapes, de la fiche mission au bon cadeau.</p>' +
-        '<ol class="mt-10 grid gap-4 md:grid-cols-3 lg:gap-6">' +
+        '<ol class="mt-10 grid gap-8 md:grid-cols-3 md:gap-8 lg:gap-12">' +
           STEPS.map((s, i) =>
-            '<li class="flex flex-col p-6 text-night sm:p-8 md:min-h-[14rem] ' + s.color + '">' +
-              '<span class="font-display text-5xl font-bold leading-none tracking-[-0.05em] md:text-6xl" aria-hidden="true">' + (i + 1) + '</span>' +
-              '<h3 class="mt-auto pt-6 text-2xl md:pt-10">' + s.title + '</h3>' +
-              '<p class="mt-2 text-night/75">' + s.text + '</p>' +
+            '<li class="border-t-2 border-ink pt-5">' +
+              '<span class="font-display text-5xl font-extrabold leading-none tracking-[-0.05em] text-brand-ink md:text-7xl" aria-hidden="true">' + String(i + 1).padStart(2, '0') + '</span>' +
+              '<h3 class="mt-4 text-2xl md:mt-10">' + s.title + '</h3>' +
+              '<p class="mt-2 text-muted">' + s.text + '</p>' +
             '</li>').join('') +
         '</ol>' +
       '</section>' +
@@ -131,11 +149,13 @@ Meleze.views.home = (function () {
         '</ul>' +
       '</section>' +
 
-      // ---- Contreparties (bloc vert) -------------------------------------------------------------
-      '<section class="bg-pine-700 py-16 text-white lg:py-24" aria-labelledby="gifts">' +
+      // ---- Contreparties : bandeau vert forêt plein, tuiles blanches carrées ------------------
+      '<section class="bg-forest py-16 text-white lg:py-24" aria-labelledby="gifts">' +
         '<div class="' + WRAP + '">' +
-          '<h2 id="gifts" class="max-w-3xl ' + H2 + '">Ce que les commerçants vous <span class="mark">offrent</span></h2>' +
-          '<p class="mt-4 max-w-xl text-lg text-white/80">Une contrepartie par mission, offerte par un commerce ou un service de la station.</p>' +
+          '<div class="grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-end lg:gap-16">' +
+            '<h2 id="gifts" class="max-w-3xl ' + H2 + '">Ce que les commerçants vous offrent</h2>' +
+            '<p class="max-w-md text-lg text-white/80">Une contrepartie par mission, offerte par un commerce ou un service de la station.</p>' +
+          '</div>' +
           '<ul class="mt-10 grid gap-3 sm:grid-cols-3 sm:gap-4">' + picks.map(rewardTile).join('') + '</ul>' +
         '</div>' +
       '</section>' +
@@ -152,7 +172,7 @@ Meleze.views.home = (function () {
         '</div>' +
         '<div class="relative lg:order-first">' +
           '<div class="ph ph-lg aspect-[4/3] lg:aspect-[5/4]">' + photo('forest', { sizes: '(min-width:1024px) 45vw, 100vw', alt: 'Lumière dorée dans une forêt' }) + '</div>' +
-          '<span class="sticker absolute -bottom-4 left-6 -rotate-2 bg-sun px-5 py-2.5 text-base">Les mélèzes dorent en octobre</span>' +
+          '<span class="sticker absolute -bottom-4 left-6 -rotate-2 bg-ink px-5 py-2.5 text-base text-surface">Les mélèzes dorent en octobre</span>' +
         '</div>' +
       '</section>' +
 
@@ -172,15 +192,17 @@ Meleze.views.home = (function () {
         '</div>' +
       '</section>' +
 
-      // ---- Appel final (bloc noir) ------------------------------------------------------------------------
-      '<section class="border-y border-white/10 bg-night py-16 text-white lg:py-24">' +
-        '<div class="' + WRAP + ' grid items-center gap-10 lg:grid-cols-[1.4fr_1fr] lg:gap-16">' +
-          '<div>' +
-            '<h2 class="' + H2 + '">Prêt·e à donner <span class="mark whitespace-nowrap">une heure</span> à la Vanoise&nbsp;?</h2>' +
-            '<p class="mt-4 max-w-md text-lg text-white/70">Une mission, un local pour vous guider, un commerçant pour vous remercier.</p>' +
-            '<a href="#/missions" class="btn-lime mt-8">Je choisis ma mission ' + icon('arrow', 'h-5 w-5') + '</a>' +
+      // ---- Appel final (bloc quasi noir) : le titre répond au hero, « Vanoise » rempli d'une photo ----
+      '<section class="bg-night py-16 text-white lg:py-24">' +
+        '<div class="typo-hero ' + WRAP + '">' +
+          '<h2 class="font-extrabold">' +
+            '<span class="block ' + HERO_LINE + '">Prêt·e à donner une heure à la</span>' +
+            '<span class="photo-word photo-word-short on-dark mt-2.5 sm:mt-4" style="--ph-sm:url(&quot;' + esc(photoUrl('hero', 1200)) + '&quot;);--ph-lg:url(&quot;' + esc(photoUrl('hero', 1800)) + '&quot;);--ph-y:58%">Vanoise&nbsp;?</span>' +
+          '</h2>' +
+          '<div class="mt-10 grid gap-8 border-t border-white/15 pt-8 md:mt-14 md:grid-cols-[1fr_auto] md:items-end md:gap-12">' +
+            '<p class="max-w-md text-lg text-white/70">Une mission, un local pour vous guider, un commerçant pour vous remercier.</p>' +
+            '<a href="#/missions" class="btn-light">Je choisis ma mission ' + icon('arrow', 'h-5 w-5') + '</a>' +
           '</div>' +
-          '<div class="ph ph-lg hidden aspect-[4/3] bg-white/10 lg:block">' + photo('stars', { sizes: '30vw', alt: '' }) + '</div>' +
         '</div>' +
       '</section>'
     );

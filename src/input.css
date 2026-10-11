@@ -31,35 +31,35 @@
 @layer base {
   :root {
     color-scheme: light;
-    --c-surface: 255 255 255; /* blanc */
+    --c-surface: 255 255 255; /* blanc pur */
     --c-card: 255 255 255;
-    --c-sunk: 245 245 245; /* #F5F5F5 gris neutre */
-    --c-tint: 240 250 226; /* #F0FAE2 lime très clair */
-    --c-ink: 18 22 20; /* #121614 — contraste ≈ 18:1 */
-    --c-muted: 88 92 96; /* #585C60 — contraste ≈ 6,5:1 */
-    --c-line: 229 229 229; /* #E5E5E5 */
-    --c-brand: 18 22 20; /* boutons noirs */
+    --c-sunk: 244 244 243; /* #F4F4F3 gris neutre (champs, encadrés) */
+    --c-ink: 15 20 18; /* #0F1412 quasi noir — contraste ≈ 19:1 */
+    --c-muted: 94 99 96; /* #5E6360 gris — contraste ≈ 6:1 */
+    --c-line: 228 229 228; /* #E4E5E4 */
+    --c-brand: 14 90 58; /* #0E5A3A vert forêt — boutons principaux */
     --c-on-brand: 255 255 255;
-    --c-brand-ink: 22 112 63; /* #16703F vert lisible */
-    --c-ok: 22 112 63;
-    --c-danger: 190 52 34;
+    --c-brand-ink: 14 90 58; /* vert forêt en texte — 8,3:1 sur blanc */
+    --c-accent: 14 90 58;
+    --c-ok: 14 90 58;
+    --c-danger: 180 35 24; /* #B42318 */
   }
 
-  /* Thème sombre : quasi noir, économe sur les écrans OLED */
+  /* Thème sombre : simple inversion, l'accent passe en vert plus lumineux */
   :root[data-theme='dark'] {
     color-scheme: dark;
-    --c-surface: 12 14 13;
-    --c-card: 22 26 24;
-    --c-sunk: 28 32 30;
-    --c-tint: 30 44 26;
-    --c-ink: 240 242 238;
-    --c-muted: 168 174 170;
-    --c-line: 48 54 51;
-    --c-brand: 210 245 142; /* lime */
-    --c-on-brand: 18 22 20;
-    --c-brand-ink: 191 239 95;
-    --c-ok: 191 239 95;
-    --c-danger: 255 140 120;
+    --c-surface: 13 16 15;
+    --c-card: 21 25 23;
+    --c-sunk: 27 31 29;
+    --c-ink: 242 243 241;
+    --c-muted: 163 169 165;
+    --c-line: 46 51 48;
+    --c-brand: 92 203 147; /* #5CCB93 */
+    --c-on-brand: 15 20 18;
+    --c-brand-ink: 92 203 147;
+    --c-accent: 92 203 147;
+    --c-ok: 92 203 147;
+    --c-danger: 255 128 110;
   }
 
   /* L'attribut `hidden` doit toujours l'emporter sur les classes d'affichage */
@@ -80,12 +80,12 @@
   }
   p { text-wrap: pretty; }
   :focus-visible {
-    @apply outline outline-[3px] outline-offset-2 outline-pine-600;
+    @apply outline outline-[3px] outline-offset-2 outline-accent;
   }
   /* Le titre reçoit le focus à chaque changement de page (lecteurs d'écran) :
      ce n'est pas un contrôle, inutile d'afficher le contour. */
   #page-title:focus { outline: none; }
-  ::selection { @apply bg-lime-300 text-night; }
+  ::selection { @apply bg-accent text-on-brand; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -110,15 +110,15 @@
     @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full px-6 font-display text-[1.02rem] font-semibold tracking-[-0.01em] transition duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary { @apply btn bg-brand text-on-brand hover:opacity-85; }
-  .btn-lime { @apply btn bg-lime-400 text-night hover:bg-lime-300; }
+  .btn-light { @apply btn bg-white text-night hover:bg-white/90; } /* sur les bandeaux sombres */
   .btn-secondary { @apply btn border-2 border-ink/90 bg-transparent text-ink hover:bg-ink hover:text-surface; }
   .btn-sm { @apply min-h-[44px] px-4 text-[0.95rem]; }
 
-  /* Lien texte souligné au feutre lime */
-  .link { @apply inline-flex items-center gap-1.5 font-display font-semibold text-ink underline decoration-lime-400 decoration-[3px] underline-offset-[5px] transition-colors hover:decoration-pine-600; }
+  /* Lien texte souligné d'un trait vert forêt */
+  .link { @apply inline-flex items-center gap-1.5 font-display font-semibold text-ink underline decoration-accent decoration-2 underline-offset-[6px] transition-colors hover:text-brand-ink; }
 
-  /* Surligneur façon feutre, derrière un mot */
-  .mark { @apply bg-lime-300 px-[0.12em] text-night; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  /* Mot mis en avant : simplement en vert forêt (plus de surligneur pastel) */
+  .mark { @apply text-brand-ink; }
 
   /* Filtres */
   .chip {
@@ -128,9 +128,9 @@
 
   .card { @apply border border-line bg-card; }
 
-  /* Étiquette — texte foncé sur les fonds pastel/lime, lisible aussi en mode sombre */
+  /* Étiquette — gris neutre par défaut ; texte foncé sur fond blanc fixe */
   .tag { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 font-display text-[0.8rem] font-semibold leading-snug text-ink; }
-  .tag:where([class~='bg-sun'], [class~='bg-leaf'], [class~='bg-sky'], [class~='bg-coral'], [class~='bg-lilac'], [class*='bg-white'], [class*='bg-lime']) { @apply text-night; }
+  .tag:where([class*='bg-white']) { @apply text-night; }
 
   /* Photos — seuls éléments arrondis (avec les contrôles) ; le conteneur donne la taille et un fond neutre
      de repli tant que l'image n'est pas chargée */
@@ -153,12 +153,12 @@
 
   /* Navigation */
   .nav-link { @apply px-3 py-2 font-display font-semibold text-ink/70 transition-colors hover:text-ink; }
-  .nav-link[aria-current='page'] { @apply text-ink underline decoration-lime-400 decoration-[3px] underline-offset-[10px]; }
+  .nav-link[aria-current='page'] { @apply text-ink underline decoration-accent decoration-2 underline-offset-[10px]; }
 
-  /* Barre d'onglets mobile : texte seul, onglet actif marqué d'un trait lime */
+  /* Barre d'onglets mobile : texte seul, onglet actif marqué d'un trait vert */
   .tab-link { @apply relative flex min-h-[56px] flex-1 items-center justify-center whitespace-nowrap px-2 font-display text-[0.95rem] font-semibold leading-none tracking-[-0.01em] text-muted transition-colors hover:text-ink; }
   .tab-link[aria-current='page'] { @apply font-bold text-ink; }
-  .tab-link[aria-current='page']::before { content: ''; @apply absolute inset-x-4 top-0 h-[3px] bg-lime-400; }
+  .tab-link[aria-current='page']::before { content: ''; @apply absolute inset-x-4 top-0 h-[3px] bg-accent; }
 
   /* Accordéon natif (<details>) */
   .acc summary { @apply flex cursor-pointer list-none items-center justify-between gap-4; }
@@ -166,11 +166,60 @@
   .acc .acc-icon { @apply transition-transform duration-200; }
   .acc[open] .acc-icon { transform: rotate(45deg); }
 
+  /* ---- Typo-photo : un mot géant rempli par une photo (background-clip: text)
+     La taille suit la largeur du conteneur (unités cqi, repli vw) : le mot
+     occupe toute la ligne, du téléphone au grand écran. Replis : texte vert
+     forêt plein si le navigateur ne sait pas découper le fond au texte ; gris
+     moyen (le voile, découpé lui aussi) si la photo ne charge pas. */
+  .typo-hero { container-type: inline-size; }
+  .photo-word {
+    @apply block font-display font-extrabold uppercase text-brand-ink;
+    white-space: nowrap;
+    font-size: clamp(3.5rem, 16.6vw, 13.25rem);
+    font-size: 18.2cqi;
+    line-height: 0.84;
+    letter-spacing: -0.045em;
+    margin-left: -0.035em; /* aligne optiquement le M sur la marge */
+    padding-bottom: 0.04em;
+  }
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    /* La photo est « multipliée » sur un gris moyen : les neiges et le ciel
+       clair ne descendent jamais sous 3:1 sur le blanc, quelle que soit la photo. */
+    .photo-word {
+      --ph-tint: linear-gradient(#8C969A, #8C969A);
+      background-color: rgb(var(--c-accent));
+      background-image: var(--ph-sm, none), var(--ph-tint);
+      background-blend-mode: multiply, normal;
+      background-size: cover;
+      background-position: center var(--ph-y, 30%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+    @media (min-width: 768px) {
+      .photo-word { background-image: var(--ph-lg, var(--ph-sm, none)), var(--ph-tint); }
+    }
+    /* Sur fond sombre (bandeau final, thème sombre) : la photo est « éclaircie »
+       (screen) pour que ses ombres restent lisibles sur le quasi noir. */
+    .photo-word.on-dark, :root[data-theme='dark'] .photo-word {
+      --ph-tint: linear-gradient(#4A5055, #4A5055);
+      background-color: #fff;
+      background-blend-mode: screen, normal;
+    }
+  }
+  /* Mot court (« Vanoise ? ») : un peu plus grand pour occuper toute la ligne */
+  .photo-word-short { font-size: clamp(3.5rem, 19vw, 15.5rem); font-size: 21.2cqi; }
+  .photo-word.on-dark { @apply text-white; }
+  @media (forced-colors: active) {
+    .photo-word { background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
+  }
+
   /* Viseur du scanner */
   .scan-frame { @apply relative mx-auto aspect-square w-full max-w-[18rem] overflow-hidden bg-night; }
-  .scan-corner { @apply absolute h-9 w-9 border-lime-400; }
+  .scan-corner { @apply absolute h-9 w-9 border-white; }
   .scan-line {
-    @apply absolute inset-x-8 h-1 bg-lime-400;
+    @apply absolute inset-x-8 h-1 bg-white;
     animation: scan 2.4s ease-in-out infinite alternate;
   }
   @keyframes scan { from { top: 14%; } to { top: 86%; } }
