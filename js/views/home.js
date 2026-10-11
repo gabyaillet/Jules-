@@ -99,7 +99,7 @@ Meleze.views.home = (function () {
             '<span class="sticker absolute bottom-4 left-4 rotate-2 bg-white">Avec les gardes du Parc</span></div>' +
           '<div class="flex aspect-square flex-col justify-between bg-sky p-5 text-night sm:p-6">' +
             '<p class="font-display text-sm font-semibold text-night/60">Sur place</p>' +
-            '<div><p class="font-display text-[2.5rem] font-bold leading-none tracking-[-0.04em] sm:text-6xl">1 à 2 h</p>' +
+            '<div><p class="font-display text-[2.5rem] font-bold leading-none tracking-[-0.04em] sm:text-6xl">1 à 2\u00a0h</p>' +
             '<p class="mt-2 text-sm leading-snug text-night/70 sm:text-base">Matériel fourni, encadré par un local.</p></div>' +
           '</div>' +
         '</div>' +

@@ -235,8 +235,11 @@ Meleze.scanner = (function () {
     }
   }
 
-  // On ne laisse jamais la caméra allumée quand la page est quittée.
+  // On ne laisse jamais la caméra allumée quand la page est quittée, ni quand
+  // elle passe en arrière-plan (autre onglet, autre appli, téléphone verrouillé) :
+  // batterie, voyant de la caméra. L'espace pro propose alors de la réactiver.
   window.addEventListener('pagehide', stop);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
 
   return { available, start, stop, isActive };
 })();

@@ -28,6 +28,25 @@ Meleze.views.wallet = (function () {
     '</label>';
   }
 
+  /**
+   * Qui vérifie le justificatif : l'organisateur de la mission (l'Office de
+   * tourisme pour le transport). Texte brut : à échapper avant affichage.
+   */
+  function checker(m) {
+    const host = String((m && m.host) || '').trim();
+    if (!host) return 'l’organisateur';
+    if (/^(l[’']\s*)?office de tourisme$/i.test(host)) return 'l’Office de tourisme';
+    return 'l’organisateur (' + host + ')';
+  }
+
+  /** Ce qu'il faut photographier : billet ou covoiturage pour la mobilité douce. */
+  function proofHint(m) {
+    if (m.type === 'mobilite') {
+      return 'Votre billet de train ou de car, votre réservation de covoiturage, ou une photo de vous à deux (ou plus) dans la voiture. Vérifiez que la date et le trajet sont lisibles.';
+    }
+    return 'Envoyez une photo qui montre la mission réalisée, en suivant les consignes de la mission.';
+  }
+
   const cancelButton = (p, cls) =>
     '<button type="button" class="btn-secondary ' + cls + '" data-action="cancel" data-id="' + esc(p.id) + '">Me désinscrire</button>';
 
@@ -59,7 +78,7 @@ Meleze.views.wallet = (function () {
             '<p class="font-display text-lg font-bold leading-tight">Justificatif envoyé</p>' +
             '<p class="mt-1 text-[0.95rem] leading-snug text-muted">' +
               (proof.sentAt ? 'Envoyé le ' + esc(date(proof.sentAt)) + ', en' : 'En') +
-              ' cours de vérification par l’Office de tourisme. Votre bon arrivera ici.' +
+              ' cours de vérification par ' + esc(checker(m)) + '. Votre bon arrivera ici.' +
             '</p>' +
           '</div>' +
         '</div>' +
@@ -76,7 +95,7 @@ Meleze.views.wallet = (function () {
     return refused +
       '<div class="' + (refused ? 'mt-3' : 'mt-5') + ' bg-sunk p-4 sm:p-5">' +
         '<p class="font-display text-lg font-bold leading-tight">Pour valider : une photo suffit</p>' +
-        '<p class="mt-1 text-[0.95rem] leading-snug text-muted">Votre billet de train ou de car, votre réservation de covoiturage, ou une photo de vous à deux (ou plus) dans la voiture. Vérifiez que la date et le trajet sont lisibles.</p>' +
+        '<p class="mt-1 text-[0.95rem] leading-snug text-muted">' + proofHint(m) + '</p>' +
         (m.schedule ? '<p class="mt-2 text-sm text-muted">' + esc(m.schedule) + '.</p>' : '') +
       '</div>' +
       '<div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">' +
@@ -191,7 +210,8 @@ Meleze.views.wallet = (function () {
             '</section>'
           : '') +
 
-        '<div class="border-t border-line pt-8">' +
+        // Pas de second filet si la liste « Missions validées » (déjà bordée) précède
+        '<div' + (validated.length ? '' : ' class="border-t border-line pt-8"') + '>' +
           '<button type="button" class="text-sm text-muted underline underline-offset-4 hover:text-ink" data-action="reset">Réinitialiser les données de démo</button>' +
         '</div>' +
       '</div>' +
@@ -231,13 +251,15 @@ Meleze.views.wallet = (function () {
 
       compressImage(file)
         .then((dataUrl) => {
-          const res = store.submitProof(input.dataset.id, dataUrl);
+          const id = input.dataset.id;
+          const res = store.submitProof(id, dataUrl);
           if (!res || !res.ok) {
             toast((res && res.reason) || 'Envoi impossible, réessayez.', 'error');
           } else if (res.persisted === false) {
             toast('Justificatif envoyé, mais le stockage du téléphone est plein : la photo n’est gardée que pour cette session.', 'error');
           } else {
-            toast('Justificatif envoyé. L’Office de tourisme va le vérifier.');
+            const p = store.state.participations.find((x) => x.id === id);
+            toast('Justificatif envoyé. Il sera vérifié par ' + checker(p && store.getMission(p.missionId)) + '.'); // toast() échappe
           }
         })
         .catch((err) => toast((err && err.message) || 'Impossible de lire cette photo.', 'error'))

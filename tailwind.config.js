@@ -32,10 +32,10 @@ module.exports = {
         lime: { 200: '#E4FBB8', 300: '#D2F58E', 400: '#BFEF5F' }, // surlignage, accents
         pine: { 600: '#1F8A50', 700: '#16703F', 900: '#0F2A1B' }, // vert montagne
         // Une couleur pastel par type de mission
-        sun: '#FFE2A6', // sentiers
-        leaf: '#D6F2B5', // biodiversité
+        sun: '#FFE2A6', // vie du village
+        leaf: '#D6F2B5', // sentiers & nature
         sky: '#CDE6FF', // mobilité douce
-        coral: '#FFD3C7', // propreté
+        coral: '#FFD3C7', // alertes (refus, bon déjà utilisé)
         lilac: '#E6DCFF', // patrimoine
         night: '#121614', // noir doux
       },

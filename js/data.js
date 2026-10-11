@@ -48,7 +48,7 @@ Meleze.data = (function () {
       duration: 0,
       durationLabel: 'Le temps du trajet',
       location: 'Votre trajet jusqu’à Pralognan',
-      schedule: 'Justificatif à envoyer dans les 48 h après votre arrivée',
+      schedule: 'Justificatif à envoyer dans les 48\u00a0h après votre arrivée',
       spots: null,
       host: 'Office de tourisme',
       description:
@@ -69,7 +69,7 @@ Meleze.data = (function () {
       host: 'Les commerçants du marché',
       description:
         'Avec les commerçants, on monte les tentes, on installe les tables et les stands avant l’arrivée des visiteurs. Aucune expérience demandée, juste de l’énergie le matin.',
-      reward: { title: 'Morceau de Beaufort d’alpage (250 g)', partner: 'Fromagerie du Grand Marchet', category: 'Produit local' },
+      reward: { title: 'Morceau de Beaufort d’alpage (250\u00a0g)', partner: 'Fromagerie du Grand Marchet', category: 'Produit local' },
     },
     {
       id: 'm-sentiers',
@@ -150,7 +150,7 @@ Meleze.data = (function () {
       id: 'v1',
       code: 'MLZ-B-PT42',
       missionId: 'm-marche',
-      title: 'Morceau de Beaufort d’alpage (250 g)',
+      title: 'Morceau de Beaufort d’alpage (250\u00a0g)',
       partner: 'Fromagerie du Grand Marchet',
       status: 'actif',
       issuedAt: '2026-10-03',

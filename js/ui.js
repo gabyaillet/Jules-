@@ -141,13 +141,16 @@ Meleze.ui = (function () {
   }
 
   // --- Formatage -------------------------------------------------------------
-  /** Durée en minutes → "45 min", "1 h 30" ; 0 ou vide → "" (durée variable). */
+  /**
+   * Durée en minutes → "45 min", "1 h 30" ; 0 ou vide → "" (durée variable).
+   * Espaces insécables : le chiffre et l'unité ne sont jamais séparés à la ligne.
+   */
   function duration(min) {
     const total = Math.max(0, Math.round(Number(min) || 0));
     if (!total) return '';
     const h = Math.floor(total / 60), m = total % 60;
-    if (!h) return m + ' min';
-    return h + ' h' + (m ? ' ' + String(m).padStart(2, '0') : '');
+    if (!h) return m + '\u00a0min';
+    return h + '\u00a0h' + (m ? '\u00a0' + String(m).padStart(2, '0') : '');
   }
   /** Durée affichée d'une mission : libellé libre (ex. "Le temps du trajet") sinon minutes. */
   const missionDuration = (m) => (m && m.durationLabel) || duration(m && m.duration);

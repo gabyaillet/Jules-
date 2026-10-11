@@ -27,12 +27,22 @@ Meleze.store = (function () {
   function storage(name) {
     try { return window[name] || null; } catch (e) { return null; }
   }
+  /** Texte brut enregistré sous `key` (null si absent ou illisible). */
+  function readRaw(storage, key) {
+    try { return storage ? storage.getItem(key) : null; } catch (e) { return null; }
+  }
+  function parse(raw) {
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
   function read(storage, key) {
-    try { return JSON.parse(storage.getItem(key)); } catch (e) { return null; }
+    return parse(readRaw(storage, key));
   }
   /** @returns {boolean} true si l'écriture a réussi */
+  function writeRaw(storage, key, raw) {
+    try { storage.setItem(key, raw); return true; } catch (e) { return false; /* mode mémoire seule */ }
+  }
   function write(storage, key, value) {
-    try { storage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; /* mode mémoire seule */ }
+    return writeRaw(storage, key, JSON.stringify(value));
   }
 
   /** Copie profonde des données de démo pour repartir d'un état propre. */
@@ -66,32 +76,87 @@ Meleze.store = (function () {
     return s;
   }
 
+  // Dernière version du stockage connue de cet onglet (lue ou écrite par lui).
+  // Si le stockage contient autre chose, c'est qu'un autre onglet a écrit.
+  let lastRaw = null;
+
   let state = (function () {
-    const saved = read(storage('localStorage'), KEY);
-    try { OLD_KEYS.forEach((k) => storage('localStorage').removeItem(k)); } catch (e) { /* rien */ }
+    const ls = storage('localStorage');
+    lastRaw = readRaw(ls, KEY);
+    const saved = parse(lastRaw);
+    try { OLD_KEYS.forEach((k) => ls.removeItem(k)); } catch (e) { /* rien */ }
     return isValidState(saved) ? repair(saved) : seed();
   })();
+
+  function notify() {
+    listeners.forEach((fn) => { try { fn(state); } catch (e) { /* une vue ne doit pas bloquer les autres */ } });
+  }
+
+  /**
+   * Plusieurs onglets (ex. démo touriste + pro sur le même ordinateur) :
+   * reprend l'état enregistré par un autre onglet, pour ne jamais valider ni
+   * consommer à partir d'un état périmé, ni écraser ce que l'autre a écrit.
+   * @returns {boolean} true si l'état a changé
+   */
+  function sync() {
+    const raw = readRaw(storage('localStorage'), KEY);
+    if (raw == null || raw === lastRaw) return false;
+    lastRaw = raw;
+    const s = parse(raw);
+    if (!isValidState(s)) return false;
+    state = repair(s);
+    return true;
+  }
+  /** Avant chaque modification : repart du dernier état enregistré. */
+  function refresh() {
+    if (sync()) notify();
+  }
+  // Écriture d'un autre onglet : les vues se redessinent avec le nouvel état.
+  window.addEventListener('storage', (e) => {
+    if (e.key === KEY) refresh();
+  });
 
   // Au-delà de cette taille, une photo de justificatif est sacrifiée si le
   // stockage est plein (les données légères, elles, restent enregistrées).
   const HEAVY_IMAGE = 16 * 1024;
 
+  /** Retire les grosses photos des participations retenues par `which`. */
+  function stripImages(s, which) {
+    s.participations.forEach((p) => {
+      if (which(p) && p.proof && typeof p.proof.image === 'string' && p.proof.image.length > HEAVY_IMAGE) p.proof.image = null;
+    });
+  }
+
   /**
    * Enregistre l'état puis prévient les vues. Ne lève jamais d'exception :
    * si localStorage est plein, l'état complet reste en mémoire (session en
-   * cours) et on enregistre une version allégée, sans les grosses photos.
+   * cours) et on enregistre une version allégée, en deux temps :
+   * 1. sans les photos qui ne s'affichent plus (justificatifs déjà traités) ;
+   * 2. sinon, sans aucune grosse photo (le justificatif en attente devra être
+   *    renvoyé après un rechargement).
+   * `persisted` vaut false dès que la photo en attente n'a pas pu être gardée,
+   * ou si rien n'a pu être écrit.
    */
   function commit() {
     const ls = storage('localStorage');
-    persisted = write(ls, KEY, state);
-    if (!persisted && ls) {
-      const light = JSON.parse(JSON.stringify(state));
-      light.participations.forEach((p) => {
-        if (p.proof && typeof p.proof.image === 'string' && p.proof.image.length > HEAVY_IMAGE) p.proof.image = null;
-      });
-      write(ls, KEY, light);
+    const full = JSON.stringify(state);
+    persisted = !!ls && writeRaw(ls, KEY, full);
+    if (persisted) {
+      lastRaw = full;
+    } else if (ls) {
+      const light = JSON.parse(full);
+      stripImages(light, (p) => p.status !== 'preuve');
+      let raw = JSON.stringify(light);
+      if (raw !== full && writeRaw(ls, KEY, raw)) {
+        persisted = true; // seules des photos invisibles ont été retirées
+        lastRaw = raw;
+      } else {
+        stripImages(light, () => true);
+        raw = JSON.stringify(light);
+        if (writeRaw(ls, KEY, raw)) lastRaw = raw; // données légères sauvées, photo en attente perdue
+      }
     }
-    listeners.forEach((fn) => { try { fn(state); } catch (e) { /* une vue ne doit pas bloquer les autres */ } });
+    notify();
     return persisted;
   }
 
@@ -142,6 +207,7 @@ Meleze.store = (function () {
 
     /** Inscription : crée une participation avec son propre code (= son QR). */
     join(missionId) {
+      refresh();
       if (!getMission(missionId) || this.participationFor(missionId)) return null;
       const p = { id: uid('p'), missionId, code: makeCode('P'), status: 'inscrite', date: today() };
       state.participations.unshift(p);
@@ -151,6 +217,7 @@ Meleze.store = (function () {
 
     /** Désinscription (impossible une fois la mission validée). */
     cancel(participationId) {
+      refresh();
       const p = getParticipation(participationId);
       if (!p || p.status === 'validee') return false;
       state.participations = state.participations.filter((x) => x !== p);
@@ -165,6 +232,7 @@ Meleze.store = (function () {
      *          persisted=false : stockage plein, la photo n'est gardée que pour cette session.
      */
     submitProof(participationId, imageDataUrl) {
+      refresh();
       const p = getParticipation(participationId);
       const m = p && getMission(p.missionId);
       if (!p || !m) return { ok: false, reason: 'Participation introuvable.' };
@@ -185,6 +253,7 @@ Meleze.store = (function () {
      * Renvoie null sinon (empêche notamment la double validation).
      */
     validate(participationId) {
+      refresh();
       const p = getParticipation(participationId);
       const m = p && getMission(p.missionId);
       if (!p || !m) return null;
@@ -193,6 +262,9 @@ Meleze.store = (function () {
       if (!allowed) return null;
       p.status = 'validee';
       p.validatedAt = today();
+      // La photo ne s'affiche plus nulle part : on ne garde que sa date d'envoi
+      // (sinon chaque justificatif validé alourdit le stockage).
+      if (p.proof) p.proof.image = null;
       const reward = m.reward || {};
       const voucher = {
         id: uid('v'),
@@ -211,11 +283,13 @@ Meleze.store = (function () {
 
     /** Refus d'un justificatif photo en attente : le touriste pourra en renvoyer un. */
     refuse(participationId, reason) {
+      refresh();
       const p = getParticipation(participationId);
       const m = p && getMission(p.missionId);
       if (!p || !m || proofOf(m) !== 'photo' || p.status !== 'preuve') return null;
       p.status = 'refusee';
       p.refusedAt = today();
+      if (p.proof) p.proof.image = null; // un nouveau justificatif sera envoyé
       p.refusedReason = String(reason || '').trim() || 'Justificatif illisible ou non conforme';
       commit();
       return p;
@@ -223,6 +297,7 @@ Meleze.store = (function () {
 
     /** Consommation d'un bon : irréversible, pour éviter la double utilisation. */
     consume(voucherId) {
+      refresh();
       const v = state.vouchers.find((x) => x.id === voucherId);
       if (!v || v.status !== 'actif') return null;
       v.status = 'consomme';
@@ -233,6 +308,7 @@ Meleze.store = (function () {
 
     /** Création d'une mission par un pro : publiée immédiatement. */
     addMission(input) {
+      refresh();
       const mission = Object.assign({ id: uid('m'), isNew: true, createdAt: today() }, input);
       mission.proof = proofOf(mission);
       mission.duration = Math.max(0, Number(mission.duration) || 0);
