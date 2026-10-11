@@ -21,7 +21,7 @@ Meleze.views.catalogue = (function () {
   const filters = { season: 'all', type: 'all' };
 
   function chip(group, value, label, active) {
-    return '<button type="button" class="chip min-h-[48px] px-5 text-base" data-action="filter" data-group="' + group + '" data-value="' + esc(value) + '" aria-pressed="' + active + '">' + label + '</button>';
+    return '<button type="button" class="chip min-h-[48px] border-transparent bg-sunk px-5 text-base" data-action="filter" data-group="' + group + '" data-value="' + esc(value) + '" aria-pressed="' + active + '">' + label + '</button>';
   }
 
   /** Rangée de filtres défilant horizontalement, jusqu'au bord de l'écran sur mobile. */
@@ -70,10 +70,11 @@ Meleze.views.catalogue = (function () {
       '</div>' +
 
       '<h2 class="mt-6 text-[2rem] leading-[1.02] sm:text-[2.15rem]">' + esc(m.title) + '</h2>' +
-      // Une seule ligne d'infos : durée · lieu (« Durée » reste lu par les lecteurs d'écran)
+      // Une seule ligne d'infos : durée · lieu (« Durée » reste lu par les lecteurs d'écran ;
+      // durée libre, ex. « Le temps du trajet » : le lieu passe dans « Plus d’infos »)
       '<p class="mt-3 font-display text-lg font-semibold leading-snug text-ink">' +
         '<span class="sr-only">Durée </span>' + esc(missionDuration(m) || 'Variable') +
-        (m.location ? ' · ' + esc(m.location) : '') +
+        (m.location && !m.durationLabel ? ' · ' + esc(m.location) : '') +
       '</p>' +
 
       // Bas de fiche (contrepartie, bouton, détails) calé en bas : les blocs
@@ -93,6 +94,7 @@ Meleze.views.catalogue = (function () {
           '<div class="pb-2 pt-1">' +
             '<p class="text-ink">' + esc(m.description) + '</p>' +
             '<div class="mt-5">' + facts([
+              m.location && m.durationLabel ? ['Où', esc(m.location)] : null,
               m.schedule ? ['Quand', esc(m.schedule)] : null,
               ['Validation', isPhoto ? 'Justificatif photo' : 'QR code sur place'],
               m.host ? [isPhoto ? 'Vérifié par' : 'Encadré par', esc(m.host)] : null,

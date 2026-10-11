@@ -77,11 +77,11 @@ Meleze.views.wallet = (function () {
                   '<img src="' + esc(proof.image) + '" alt="Votre justificatif" class="block aspect-[4/3] w-full object-contain" decoding="async">' +
                 '</div>'
               : '') +
-            '<div class="min-w-0">' +
+            '<div class="min-w-0 self-center">' +
               '<p class="font-display text-xl font-bold leading-tight text-ink">Justificatif envoyé</p>' +
-              '<p class="mt-1.5 text-ink">Il est en cours de vérification par ' + esc(checker(m)) + '.</p>' +
             '</div>' +
           '</div>' +
+          '<p class="mt-4 text-lg leading-snug text-ink">Il est en cours de vérification par ' + esc(checker(m)) + '.</p>' +
           '<div class="mt-5">' + uploadControl(p, 'Remplacer la photo', 'btn-secondary') + '</div>' +
         '</div>';
     }

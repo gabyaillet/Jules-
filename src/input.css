@@ -67,6 +67,10 @@
     --c-danger: 255 128 110;
   }
 
+  /* Les aplats « noirs » (bg-night) se fondraient dans le fond sombre :
+     en thème sombre ils deviennent des aplats gris, comme les tuiles. */
+  :root[data-theme='dark'] .night-block { background-color: rgb(var(--c-sunk)); }
+
   /* L'attribut `hidden` doit toujours l'emporter sur les classes d'affichage */
   [hidden] { display: none !important; }
 

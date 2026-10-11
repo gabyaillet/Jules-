@@ -217,7 +217,7 @@ Meleze.views.pro = (function () {
     // Onglets : trois aplats (gris clair), l'onglet actif en noir plein. Largeur
     // suivant le libellé sur mobile (« Justificatifs » + pastille), égale ensuite.
     const tabLink = (id, label, extra, aria) =>
-      '<a href="#/pro/' + id + '"' + (aria ? ' aria-label="' + aria + '"' : '') + ' class="flex min-h-[56px] flex-auto items-center justify-center gap-1.5 px-3 py-2 text-center font-display text-base font-bold leading-tight transition-colors sm:flex-1 ' +
+      '<a href="#/pro/' + id + '"' + (aria ? ' aria-label="' + aria + '"' : '') + ' class="flex min-h-[56px] flex-auto items-center justify-center gap-1.5 px-2 py-2 text-center font-display text-[0.9375rem] font-bold min-[360px]:px-3 min-[360px]:text-[1rem] leading-tight transition-colors sm:flex-1 ' +
       (tab === id ? 'bg-ink text-surface' : 'bg-sunk text-ink hover:bg-line') + '"' + (tab === id ? ' aria-current="page"' : '') + '>' + label + (extra || '') + '</a>';
     const count = pending
       ? '<span class="inline-flex min-w-[1.5rem] shrink-0 items-center justify-center rounded-full bg-forest px-1.5 text-sm font-bold leading-[1.5rem] text-white">' + pending + '<span class="sr-only"> en attente</span></span>'
@@ -293,7 +293,7 @@ Meleze.views.pro = (function () {
       '<h2 id="scan-h" class="sr-only">Scanner un QR code</h2>' +
       '<div class="grid gap-3 sm:grid-cols-2 sm:items-start">' +
         // Aplat noir : le viseur et son bouton
-        '<div class="flex flex-col gap-4 bg-night p-5 text-white sm:p-6">' + scanFrame(canCamera) + control + error + '</div>' +
+        '<div class="night-block flex flex-col gap-4 bg-night p-5 text-white sm:p-6">' + scanFrame(canCamera) + control + error + '</div>' +
 
         // Aplat gris : saisie du code + QR de démo
         '<div class="min-w-0 bg-sunk p-5 sm:p-6">' +

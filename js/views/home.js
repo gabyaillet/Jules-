@@ -117,7 +117,7 @@ Meleze.views.home = (function () {
       '<section class="' + WRAP + ' pb-14 lg:pb-24" aria-labelledby="now">' +
         '<div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">' +
           '<h2 id="now" class="' + H2 + '">Les missions</h2>' +
-          '<a href="#/missions" class="link text-lg">' + (more ? 'Voir les ' + state.missions.length + ' missions' : 'Voir le détail') + ' ' + icon('arrow', 'h-5 w-5') + '</a>' +
+          '<a href="#/missions" class="link text-lg">' + (more ? 'Voir les ' + state.missions.length + ' missions' : 'Toutes les missions') + ' ' + icon('arrow', 'h-5 w-5') + '</a>' +
         '</div>' +
         '<ul class="-mx-5 mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:scroll-px-8 sm:px-8 md:mt-10 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">' +
           picks.map(missionCard).join('') +
@@ -158,7 +158,7 @@ Meleze.views.home = (function () {
       '</section>' +
 
       // ---- Appel final (bloc quasi noir) : le titre répond au hero, « Vanoise » rempli d'une photo ----
-      '<section class="bg-night py-14 text-white lg:py-24">' +
+      '<section class="night-block bg-night py-14 text-white lg:py-24">' +
         '<div class="typo-hero ' + WRAP + '">' +
           '<h2 class="font-extrabold">' +
             '<span class="block ' + HERO_LINE + '">Prêt·e à donner une heure à la</span>' +
