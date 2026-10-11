@@ -1,6 +1,6 @@
 /* ==========================================================================
    Vue : Accueil touriste — concept A « Typo-photo »
-   Base blanche, titres gras quasi noirs, un seul accent vert forêt. Le mot
+   Base blanche, titres gras quasi noirs, un seul accent vert. Le mot
    « montagne » du titre est rempli par une photo (background-clip: text).
    Photos arrondies ; tous les autres blocs sont carrés. Aucune couleur pastel,
    pas d'icônes décoratives : la typographie porte l'information.
@@ -18,6 +18,16 @@ Meleze.views.home = (function () {
   const INTRO = 'mt-4 max-w-xl text-lg text-muted';
   /** Lignes du titre qui encadrent le mot-photo géant. */
   const HERO_LINE = 'text-[2.1rem] leading-[0.98] tracking-[-0.035em] sm:text-6xl lg:text-[4.75rem]';
+
+  /**
+   * Mot géant rempli par une photo (voir .photo-word dans src/input.css).
+   * Photo locale du client (sommets de la Vanoise) : `y` choisit la bande
+   * visible — jamais le bas de la photo, où se trouve le ©.
+   */
+  function photoWord(text, key, y, cls) {
+    const url = (w) => esc(photoUrl(key, w));
+    return '<span class="photo-word ' + cls + '" style="--ph-sm:url(&quot;' + url(1200) + '&quot;);--ph-lg:url(&quot;' + url(1800) + '&quot;);--ph-y:' + y + '">' + text + '</span>';
+  }
 
   /** Trois repères chiffrés sous la photo du hero. */
   const FACTS = [
@@ -69,13 +79,13 @@ Meleze.views.home = (function () {
       '</a></li>';
   }
 
-  /** Tuile "contrepartie" : carré blanc posé sur le bandeau vert forêt. */
+  /** Tuile "contrepartie" : carré blanc posé sur le bandeau vert. */
   function rewardTile(m, i) {
     const t = typeOf(m.type);
     return '<li class="flex min-h-[10rem] flex-col justify-between gap-8 bg-white p-5 text-night sm:min-h-[13rem] sm:p-6">' +
       '<div class="flex items-baseline justify-between gap-4">' +
         '<p class="font-display text-sm font-semibold text-forest">' + esc(m.reward.category || t.label) + '</p>' +
-        '<p class="font-display text-sm font-semibold text-night/45" aria-hidden="true">' + String(i + 1).padStart(2, '0') + '</p>' +
+        '<p class="font-display text-sm font-semibold text-night/60" aria-hidden="true">' + String(i + 1).padStart(2, '0') + '</p>' +
       '</div>' +
       '<div><p class="break-words font-display text-[1.6rem] font-bold leading-[1.05] tracking-[-0.025em] lg:text-[1.85rem]">' + esc(m.reward.title) + '</p>' +
       '<p class="mt-2 text-sm text-night/65">' + esc(m.reward.partner) + '</p></div>' +
@@ -100,7 +110,8 @@ Meleze.views.home = (function () {
           '<span class="h-[2px] w-8 bg-accent" aria-hidden="true"></span>Pralognan-la-Vanoise · 4 saisons</p>' +
         '<h1 id="page-title" tabindex="-1" class="mt-7 font-extrabold sm:mt-10">' +
           '<span class="block ' + HERO_LINE + '">Une heure pour la</span>' +
-          '<span class="photo-word mb-1.5 mt-2 sm:mb-1 sm:mt-4" style="--ph-sm:url(&quot;' + esc(photoUrl('peak', 1200)) + '&quot;);--ph-lg:url(&quot;' + esc(photoUrl('peak', 1800)) + '&quot;)">montagne</span>' +
+          // Bande basse des sommets : roche au soleil, neige, éboulis bleutés
+          photoWord('montagne', 'sentiers', '30%', 'mb-1.5 mt-2 sm:mb-1 sm:mt-4') +
           '<span class="sr-only">,</span>' +
           '<span class="block ' + HERO_LINE + ' md:text-right">une expérience en retour.</span>' +
         '</h1>' +
@@ -123,7 +134,7 @@ Meleze.views.home = (function () {
         '</ul>' +
       '</section>' +
 
-      // ---- Comment ça marche : trois colonnes éditoriales, numéros vert forêt -----------
+      // ---- Comment ça marche : trois colonnes éditoriales, numéros verts ----------------
       '<section class="' + WRAP + ' pb-16 lg:pb-24" aria-labelledby="how">' +
         '<h2 id="how" class="' + H2 + '">Comment ça marche</h2>' +
         '<p class="' + INTRO + '">Trois étapes, de la fiche mission au bon cadeau.</p>' +
@@ -149,12 +160,12 @@ Meleze.views.home = (function () {
         '</ul>' +
       '</section>' +
 
-      // ---- Contreparties : bandeau vert forêt plein, tuiles blanches carrées ------------------
+      // ---- Contreparties : bandeau vert plein, tuiles blanches carrées ------------------------
       '<section class="bg-forest py-16 text-white lg:py-24" aria-labelledby="gifts">' +
         '<div class="' + WRAP + '">' +
           '<div class="grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-end lg:gap-16">' +
             '<h2 id="gifts" class="max-w-3xl ' + H2 + '">Ce que les commerçants vous offrent</h2>' +
-            '<p class="max-w-md text-lg text-white/80">Une contrepartie par mission, offerte par un commerce ou un service de la station.</p>' +
+            '<p class="max-w-md text-lg text-white">Une contrepartie par mission, offerte par un commerce ou un service de la station.</p>' +
           '</div>' +
           '<ul class="mt-10 grid gap-3 sm:grid-cols-3 sm:gap-4">' + picks.map(rewardTile).join('') + '</ul>' +
         '</div>' +
@@ -197,11 +208,12 @@ Meleze.views.home = (function () {
         '<div class="typo-hero ' + WRAP + '">' +
           '<h2 class="font-extrabold">' +
             '<span class="block ' + HERO_LINE + '">Prêt·e à donner une heure à la</span>' +
-            '<span class="photo-word photo-word-short on-dark mt-2.5 sm:mt-4" style="--ph-sm:url(&quot;' + esc(photoUrl('hero', 1200)) + '&quot;);--ph-lg:url(&quot;' + esc(photoUrl('hero', 1800)) + '&quot;);--ph-y:58%">Vanoise&nbsp;?</span>' +
+            // Même photo, cadrée plus haut : les sommets et le ciel, en écho au hero
+            photoWord('Vanoise&nbsp;?', 'sentiers', '22%', 'photo-word-short on-dark mt-2.5 sm:mt-4') +
           '</h2>' +
           '<div class="mt-10 grid gap-8 border-t border-white/15 pt-8 md:mt-14 md:grid-cols-[1fr_auto] md:items-end md:gap-12">' +
             '<p class="max-w-md text-lg text-white/70">Une mission, un local pour vous guider, un commerçant pour vous remercier.</p>' +
-            '<a href="#/missions" class="btn-light">Je choisis ma mission ' + icon('arrow', 'h-5 w-5') + '</a>' +
+            '<a href="#/missions" class="btn btn-light">Je choisis ma mission ' + icon('arrow', 'h-5 w-5') + '</a>' +
           '</div>' +
         '</div>' +
       '</section>'

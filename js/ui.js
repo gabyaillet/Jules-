@@ -204,12 +204,15 @@ Meleze.ui = (function () {
 
   /**
    * URL d'une photo de la photothèque (pour un fond CSS : mot rempli par une photo…).
+   * Une photo locale est rendue en URL absolue : dans une variable CSS
+   * (--ph-sm…), une URL relative serait résolue depuis dist/styles.css.
    * @param {string|object} key  clé de la photothèque ou mission
    * @param {number} w  largeur demandée (Unsplash)
    */
   function photoUrl(key, w) {
     const p = photoOf(key);
-    return isLocal(p.src) ? p.src : unsplash(p.src, w || 1200);
+    if (!isLocal(p.src)) return unsplash(p.src, w || 1200);
+    try { return new URL(p.src, document.baseURI).href; } catch (e) { return p.src; }
   }
 
   /**

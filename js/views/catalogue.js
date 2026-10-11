@@ -81,7 +81,7 @@ Meleze.views.catalogue = (function () {
       // Bas de fiche (contrepartie, détails, bouton) calé en bas : les blocs
       // s'alignent d'une carte à l'autre sur une même rangée.
       '<div class="mt-auto pt-6">' +
-        // Contrepartie : cadre noir carré, libellé vert forêt
+        // Contrepartie : cadre noir carré, libellé vert
         '<div class="border-2 border-ink p-5 sm:min-h-[8.75rem]">' +
           '<p class="font-display text-sm font-semibold text-brand-ink">En échange</p>' +
           '<p class="mt-1 font-display text-xl font-bold leading-tight tracking-[-0.02em]">' + esc(m.reward.title) + '</p>' +

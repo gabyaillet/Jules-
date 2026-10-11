@@ -2,7 +2,9 @@
    Vue : Mon espace (profil / wallet du touriste)
    Une carte par mission en cours : QR de la mission (à montrer au référent)
    ou envoi d'un justificatif photo (transport) · bons de récompense.
-   Pas d'icônes décoratives : la typographie et la couleur du type portent l'info.
+   Langage du concept A : blocs carrés cerclés d'un filet noir, rangées
+   séparées par des filets, accent vert, QR dans des carrés blancs.
+   Pas d'icônes décoratives : la typographie porte l'information.
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 Meleze.views = Meleze.views || {};
@@ -50,99 +52,119 @@ Meleze.views.wallet = (function () {
   const cancelButton = (p, cls) =>
     '<button type="button" class="btn-secondary ' + cls + '" data-action="cancel" data-id="' + esc(p.id) + '">Me désinscrire</button>';
 
-  /** Mission validée par QR : le QR propre à cette participation. */
+  /** Rangées d'une carte : blocs carrés séparés par des filets noirs. */
+  const ROW = 'border-t border-ink px-5 sm:px-6';
+  const LABEL = 'font-display text-sm font-semibold text-brand-ink';
+
+  /** Rangée du bas : date d'inscription + action(s). */
+  function footRow(p, actionsHtml) {
+    return '<div class="' + ROW + ' flex flex-wrap items-center justify-between gap-3 py-4">' +
+      '<p class="text-sm text-muted">' + (p.date ? 'Inscrit·e le ' + esc(date(p.date)) : 'Inscrit·e') + '</p>' +
+      '<div class="flex flex-wrap gap-3">' + actionsHtml + '</div>' +
+    '</div>';
+  }
+
+  /** Mission validée par QR : le QR propre à cette participation, dans un carré blanc. */
   function qrBlock(p) {
-    return '<div class="mt-5 flex flex-col items-center gap-5 border-2 border-ink p-5 text-center sm:flex-row sm:p-6 sm:text-left">' +
-        '<div class="shrink-0 bg-white p-2">' + qr(p.code, { size: 'w-44' }) + '</div>' +
+    return '<div class="' + ROW + ' flex flex-col items-center gap-5 py-6 text-center sm:flex-row sm:gap-6 sm:text-left">' +
+        '<div class="shrink-0 border border-ink bg-white p-1.5">' + qr(p.code, { size: 'w-44' }) + '</div>' +
         '<div class="min-w-0">' +
-          '<p class="font-display text-xl font-bold leading-tight">Le QR de cette mission</p>' +
-          '<p class="mt-2 font-mono text-lg font-bold tracking-[0.18em]">' + esc(p.code) + '</p>' +
-          '<p class="mt-2 text-[0.95rem] leading-snug text-muted">À montrer au référent à la fin de la mission.</p>' +
-          '<p class="mt-1 text-sm text-muted">Pensez à monter la luminosité de l’écran.</p>' +
+          '<p class="' + LABEL + '">QR de la mission</p>' +
+          '<p class="mt-2 font-mono text-xl font-bold tracking-[0.16em]">' + esc(p.code) + '</p>' +
+          '<p class="mt-3 text-[0.95rem] leading-snug text-muted">À montrer au référent à la fin de la mission. Pensez à monter la luminosité de l’écran.</p>' +
         '</div>' +
       '</div>' +
-      '<div class="mt-4">' + cancelButton(p, 'btn-sm') + '</div>';
+      footRow(p, cancelButton(p, 'btn-sm'));
   }
 
   /** Mission validée par justificatif photo (billet, covoiturage…). */
   function photoBlock(p, m) {
     if (p.status === 'preuve') {
       const proof = p.proof || {};
-      return '<div class="mt-5 flex items-start gap-4 bg-sunk p-4 sm:p-5">' +
+      return '<div class="' + ROW + ' flex items-start gap-4 py-5">' +
           (proof.image
-            ? '<div class="w-24 shrink-0 border border-line bg-surface sm:w-28">' +
+            ? '<div class="w-24 shrink-0 border border-ink bg-sunk sm:w-28">' +
                 '<img src="' + esc(proof.image) + '" alt="Votre justificatif" class="block aspect-[4/3] w-full object-contain" decoding="async">' +
               '</div>'
             : '') +
           '<div class="min-w-0">' +
-            '<p class="font-display text-lg font-bold leading-tight">Justificatif envoyé</p>' +
+            '<p class="' + LABEL + '">En cours de vérification</p>' +
+            '<p class="mt-1 font-display text-lg font-bold leading-tight">Justificatif envoyé</p>' +
             '<p class="mt-1 text-[0.95rem] leading-snug text-muted">' +
               (proof.sentAt ? 'Envoyé le ' + esc(date(proof.sentAt)) + ', en' : 'En') +
               ' cours de vérification par ' + esc(checker(m)) + '. Votre bon arrivera ici.' +
             '</p>' +
           '</div>' +
         '</div>' +
-        '<div class="mt-4">' + uploadControl(p, 'Remplacer la photo', 'btn-secondary btn-sm') + '</div>';
+        footRow(p, uploadControl(p, 'Remplacer la photo', 'btn-secondary btn-sm'));
     }
 
     const refused = p.status === 'refusee'
-      ? '<div class="mt-5 border-l-4 border-danger bg-sunk p-4 sm:p-5" role="status">' +
-          '<p class="font-display font-bold">Justificatif refusé' + (p.refusedAt ? ' le ' + esc(date(p.refusedAt)) : '') + '</p>' +
+      ? '<div class="border-t border-ink border-l-4 border-l-danger px-5 py-4 sm:px-6" role="status">' +
+          '<p class="font-display font-bold text-danger">Justificatif refusé' + (p.refusedAt ? ' le ' + esc(date(p.refusedAt)) : '') + '</p>' +
           '<p class="mt-1 text-[0.95rem] leading-snug">' + esc(String(p.refusedReason || 'Justificatif illisible ou non conforme').replace(/[\s.]+$/, '')) + '. Vous pouvez en envoyer un autre.</p>' +
         '</div>'
       : '';
 
     return refused +
-      '<div class="' + (refused ? 'mt-3' : 'mt-5') + ' bg-sunk p-4 sm:p-5">' +
-        '<p class="font-display text-lg font-bold leading-tight">Pour valider : une photo suffit</p>' +
+      '<div class="' + ROW + ' py-5">' +
+        '<p class="' + LABEL + '">Pour valider</p>' +
+        '<p class="mt-1 font-display text-lg font-bold leading-tight">Une photo suffit</p>' +
         '<p class="mt-1 text-[0.95rem] leading-snug text-muted">' + proofHint(m) + '</p>' +
         (m.schedule ? '<p class="mt-2 text-sm text-muted">' + esc(m.schedule) + '.</p>' : '') +
-      '</div>' +
-      '<div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">' +
-        uploadControl(p, 'Envoyer mon justificatif', 'btn-primary') +
-        cancelButton(p, '') +
+        '<div class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">' +
+          uploadControl(p, 'Envoyer mon justificatif', 'btn-primary') +
+          cancelButton(p, '') +
+        '</div>' +
       '</div>';
   }
 
-  /** Carte "mission en cours" : vignette, type, titre, infos, contrepartie, puis QR ou justificatif. */
+  /**
+   * Carte "mission en cours" : bloc carré cerclé d'un filet noir, en rangées —
+   * vignette + titre, contrepartie, puis QR ou justificatif.
+   */
   function participationCard({ participation: p, mission: m }) {
     const t = typeOf(m.type);
     const meta = [missionDuration(m), m.location].filter(Boolean).map(esc).join(' · ');
-    return '<li class="card p-5 sm:p-6" id="participation-' + esc(p.id) + '">' +
-      '<div class="flex items-start gap-4 sm:gap-5">' +
+    return '<li class="border border-ink bg-card" id="participation-' + esc(p.id) + '">' +
+      '<div class="flex items-start gap-4 p-5 sm:gap-5 sm:p-6">' +
         '<div class="ph ph-sm aspect-square w-16 shrink-0 sm:w-20">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
         '<div class="min-w-0 flex-1">' +
           '<span class="tag ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
-          '<h3 class="mt-2 text-xl leading-tight sm:text-2xl">' + esc(m.title) + '</h3>' +
+          '<h3 class="mt-2.5 text-xl leading-tight sm:text-2xl">' + esc(m.title) + '</h3>' +
           (meta ? '<p class="mt-1.5 text-sm text-muted">' + meta + '</p>' : '') +
           (m.schedule && !isPhoto(m) ? '<p class="text-sm text-muted">' + esc(m.schedule) + '</p>' : '') +
         '</div>' +
       '</div>' +
       (m.reward
-        ? '<p class="mt-4 text-[0.95rem]"><span class="text-muted">En échange :</span> <span class="font-semibold">' + esc(m.reward.title) + '</span></p>'
+        ? '<div class="' + ROW + ' py-4">' +
+            '<p class="' + LABEL + '">En échange</p>' +
+            '<p class="mt-0.5 font-display text-lg font-bold leading-snug tracking-[-0.01em]">' + esc(m.reward.title) + '</p>' +
+          '</div>'
         : '') +
       (isPhoto(m) ? photoBlock(p, m) : qrBlock(p)) +
     '</li>';
   }
 
-  /** Bon façon ticket : partenaire + contrepartie en haut, code et QR en bas. */
-  function voucherCard(v) {
+  /**
+   * Bon façon ticket, comme les tuiles de l'accueil : bloc vert plein, texte
+   * blanc, QR dans un carré blanc. Bon utilisé : bloc blanc, filet gris, barré.
+   */
+  function voucherCard(v, i) {
     const used = v.status === 'consomme';
-    const m = store.getMission(v.missionId);
-    // Bon valable : bloc vert forêt plein ; bon utilisé : gris neutre.
-    const surface = used ? 'bg-sunk text-muted' : 'bg-forest text-white';
-    const soft = used ? 'text-muted' : 'text-white/75';
-    const softer = used ? 'text-muted' : 'text-white/80';
-    return '<li class="flex flex-col justify-between gap-8 p-5 sm:p-6 ' + esc(surface) + '">' +
-      '<div>' +
-        '<p class="text-sm ' + soft + '">' + esc(v.partner) + '</p>' +
-        '<h3 class="mt-1.5 text-2xl' + (used ? ' line-through decoration-2' : '') + '">' + esc(v.title) + '</h3>' +
+    const surface = used ? 'border border-line bg-card text-muted' : 'bg-forest text-white';
+    const rule = used ? 'border-line' : 'border-white/60';
+    return '<li class="flex flex-col ' + surface + '">' +
+      '<div class="flex items-baseline justify-between gap-4 px-5 pt-5 sm:px-6">' +
+        '<p class="font-display text-sm font-semibold">' + esc(v.partner) + '</p>' +
+        '<p class="shrink-0 font-display text-sm font-semibold" aria-hidden="true">' + String(i + 1).padStart(2, '0') + '</p>' +
       '</div>' +
-      '<div class="flex items-end justify-between gap-4">' +
+      '<h3 class="mt-6 px-5 pb-6 text-[1.7rem] leading-[1.05] tracking-[-0.025em] sm:px-6' + (used ? ' line-through decoration-2' : '') + '">' + esc(v.title) + '</h3>' +
+      '<div class="mt-auto flex items-end justify-between gap-4 border-t ' + rule + ' px-5 py-5 sm:px-6">' +
         '<div class="min-w-0">' +
-          '<p class="font-mono text-[0.95rem] font-semibold tracking-wide">' + esc(v.code) + '</p>' +
-          '<p class="mt-1 text-sm ' + softer + '">' +
-            (used ? 'Utilisé le ' + esc(date(v.usedAt)) : '<span class="font-semibold text-white">Valable</span> · reçu le ' + esc(date(v.issuedAt))) +
+          '<p class="font-mono text-base font-bold tracking-[0.12em]">' + esc(v.code) + '</p>' +
+          '<p class="mt-1 text-sm">' +
+            (used ? 'Utilisé le ' + esc(date(v.usedAt)) : '<span class="font-semibold">Valable</span> · reçu le ' + esc(date(v.issuedAt))) +
           '</p>' +
         '</div>' +
         '<div class="shrink-0 bg-white p-1' + (used ? ' opacity-60' : '') + '">' + qr(v.code, { size: 'w-28', muted: used }) + '</div>' +
@@ -164,46 +186,61 @@ Meleze.views.wallet = (function () {
     const minutes = validated.reduce((sum, x) => sum + (Number(x.mission.duration) || 0), 0);
     const vouchers = state.vouchers.slice().sort((a, b) => (a.status === b.status ? 0 : a.status === 'actif' ? -1 : 1));
     const activeCount = vouchers.filter((v) => v.status === 'actif').length;
-    const done = plural(validated.length, 'mission') + ' validée' + (validated.length > 1 ? 's' : '');
     const H2 = 'text-4xl sm:text-5xl';
+    const INTRO = 'mt-3 max-w-xl text-lg text-muted';
 
     let intro = 'Vos missions et vos bons apparaîtront ici.';
-    if (validated.length && minutes) intro = 'Vous avez déjà donné ' + duration(minutes) + ' à la montagne (' + done + '). Merci !';
-    else if (validated.length) intro = 'Déjà ' + done + '. Merci !';
-    if (activeCount) intro += ' Il vous reste ' + plural(activeCount, 'bon') + ' à utiliser.';
+    if (validated.length && minutes) intro = 'Vous avez déjà donné ' + duration(minutes) + ' à la montagne. Merci !';
+    else if (validated.length) intro = 'Merci pour votre aide !';
+
+    // Trois repères chiffrés, comme sous la photo de l'accueil
+    const stats = [
+      [validated.length, 'mission' + (validated.length > 1 ? 's' : '') + ' validée' + (validated.length > 1 ? 's' : '')],
+      [active.length, 'en cours'],
+      [activeCount, 'bon' + (activeCount > 1 ? 's' : '') + ' à utiliser'],
+    ];
 
     return '<div class="mx-auto max-w-app px-5 pb-16 pt-8 sm:px-8 lg:pb-24 lg:pt-14">' +
-      '<h1 id="page-title" tabindex="-1" class="text-5xl font-extrabold sm:text-6xl lg:text-7xl">Bonjour <span class="mark">' + esc(u.firstName) + '</span></h1>' +
+      '<p class="flex items-center gap-3 font-display text-[0.95rem] font-semibold text-ink">' +
+        '<span class="h-[2px] w-8 bg-accent" aria-hidden="true"></span>Mon espace</p>' +
+      '<h1 id="page-title" tabindex="-1" class="mt-6 text-5xl font-extrabold sm:text-6xl lg:text-7xl">Bonjour <span class="mark">' + esc(u.firstName) + '</span></h1>' +
       '<p class="mt-4 max-w-xl text-lg text-muted">' + intro + '</p>' +
+      '<ul class="mt-8 grid max-w-3xl grid-cols-3 gap-4 sm:gap-8">' +
+        stats.map(([n, label]) =>
+          '<li class="border-t-2 border-ink pt-3">' +
+            '<p class="font-display text-[2rem] font-bold leading-none tracking-[-0.04em] sm:text-5xl">' + n + '</p>' +
+            '<p class="mt-2 text-sm leading-snug text-muted sm:text-base">' + label + '</p></li>').join('') +
+      '</ul>' +
 
-      '<div class="mt-12 space-y-16 lg:mt-16 lg:space-y-20">' +
+      '<div class="mt-14 space-y-16 lg:mt-20 lg:space-y-20">' +
         // ---- Missions en cours : un QR (ou un justificatif) par mission ------------
         '<section aria-labelledby="ongoing">' +
           '<h2 id="ongoing" class="' + H2 + '">Mes missions</h2>' +
+          '<p class="' + INTRO + '">Sur place, montrez le QR de la mission au référent. Pour le trajet, envoyez une photo de votre billet.</p>' +
           (active.length
-            ? '<ul class="mt-8 grid items-start gap-4 lg:grid-cols-2">' + active.map(participationCard).join('') + '</ul>'
-            : '<div class="mt-8 bg-sunk p-6 sm:p-8">' +
-                '<p class="text-lg text-muted">Aucune mission en cours.</p>' +
-                '<a href="#/missions" class="link mt-3">Trouver une mission ' + icon('arrow', 'h-4 w-4') + '</a>' +
+            ? '<ul class="mt-8 grid items-start gap-4 lg:grid-cols-2 lg:gap-6">' + active.map(participationCard).join('') + '</ul>'
+            : '<div class="mt-8 border border-ink p-6 sm:p-8">' +
+                '<p class="font-display text-2xl font-bold leading-tight tracking-[-0.02em]">Aucune mission en cours.</p>' +
+                '<a href="#/missions" class="link mt-4">Trouver une mission ' + icon('arrow', 'h-4 w-4') + '</a>' +
               '</div>') +
         '</section>' +
 
         // ---- Bons de récompense (h2 → p → ul) ------------------------------------------
         '<section aria-labelledby="rewards">' +
           '<h2 id="rewards" class="' + H2 + '">Mes bons</h2>' +
-          '<p class="mt-4 max-w-xl text-lg text-muted">Le commerçant scanne le QR du bon, et c’est tout.</p>' +
+          '<p class="' + INTRO + '">Le commerçant scanne le QR du bon, et c’est tout.</p>' +
           (vouchers.length
-            ? '<ul class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">' + vouchers.map(voucherCard).join('') + '</ul>'
-            : '<p class="mt-8 bg-sunk p-6 text-muted sm:p-8">Vos bons apparaîtront ici après validation d’une mission.</p>') +
+            ? '<ul class="mt-8 grid gap-4 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">' + vouchers.map(voucherCard).join('') + '</ul>'
+            : '<p class="mt-8 border border-ink p-6 text-muted sm:p-8">Vos bons apparaîtront ici après validation d’une mission.</p>') +
         '</section>' +
 
         // ---- Historique ----------------------------------------------------------------
         (validated.length
           ? '<section aria-labelledby="validated">' +
               '<h2 id="validated" class="text-2xl sm:text-3xl">Missions validées</h2>' +
-              '<ul class="mt-5 divide-y divide-line border-y border-line">' +
+              '<ul class="mt-5 border-t-2 border-ink">' +
                 validated.map(({ participation: p, mission: m }) =>
-                  '<li class="flex flex-col gap-1 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">' +
+                  '<li class="flex flex-col gap-1 border-b border-line py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">' +
                     '<span class="font-display font-semibold leading-snug">' + esc(m.title) + '</span>' +
                     '<span class="shrink-0 text-sm text-muted">' + (p.validatedAt ? 'Validée le ' + esc(date(p.validatedAt)) : 'Validée') + '</span>' +
                   '</li>').join('') +
@@ -211,8 +248,7 @@ Meleze.views.wallet = (function () {
             '</section>'
           : '') +
 
-        // Pas de second filet si la liste « Missions validées » (déjà bordée) précède
-        '<div' + (validated.length ? '' : ' class="border-t border-line pt-8"') + '>' +
+        '<div>' +
           '<button type="button" class="text-sm text-muted underline underline-offset-4 hover:text-ink" data-action="reset">Réinitialiser les données de démo</button>' +
         '</div>' +
       '</div>' +

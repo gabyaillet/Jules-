@@ -170,9 +170,16 @@
 
   /* ---- Typo-photo : un mot géant rempli par une photo (background-clip: text)
      La taille suit la largeur du conteneur (unités cqi, repli vw) : le mot
-     occupe toute la ligne, du téléphone au grand écran. Replis : texte vert
-     forêt plein si le navigateur ne sait pas découper le fond au texte ; gris
-     moyen (le voile, découpé lui aussi) si la photo ne charge pas. */
+     occupe toute la ligne, du téléphone au grand écran.
+     Photo : img/sentiers.webp (photo du client, 533 × 800). Le mot étant
+     toujours sur une ligne, la bande visible fait ~11 % de la hauteur de la
+     photo (12 % pour « Vanoise ? ») : avec --ph-y entre 20 et 35 %, on ne
+     montre que les sommets (lignes 19–38 %), jamais le © en bas à droite (93–98 %).
+     Lisibilité : la photo est « multipliée » sur un gris moyen (#8C969A) et
+     ravivée (saturate) : la neige ne remonte jamais au-dessus de ce gris
+     (3:1 sur blanc), roches au soleil et éboulis restent en couleurs.
+     Replis : vert plein si le navigateur ne sait pas découper le fond au texte ;
+     gris moyen uni (3:1, découpé lui aussi) si la photo ne charge pas. */
   .typo-hero { container-type: inline-size; }
   .photo-word {
     @apply block font-display font-extrabold uppercase text-brand-ink;
@@ -184,16 +191,20 @@
     margin-left: -0.035em; /* aligne optiquement le M sur la marge */
     padding-bottom: 0.04em;
   }
+  .photo-word.on-dark { @apply text-white; }
   @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-    /* La photo est « multipliée » sur un gris moyen : les neiges et le ciel
-       clair ne descendent jamais sous 3:1 sur le blanc, quelle que soit la photo. */
     .photo-word {
+      /* Le gris est un calque (dégradé uni) sous la photo : c'est le fond de
+         fusion ET le repli uni (3:1 sur blanc) si la photo ne charge pas.
+         (Chrome ignore la fusion avec background-color sous background-clip: text.) */
       --ph-tint: linear-gradient(#8C969A, #8C969A);
-      background-color: rgb(var(--c-accent));
+      background-color: transparent;
       background-image: var(--ph-sm, none), var(--ph-tint);
       background-blend-mode: multiply, normal;
       background-size: cover;
+      background-repeat: no-repeat;
       background-position: center var(--ph-y, 30%);
+      filter: saturate(1.5) contrast(1.05);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -203,18 +214,17 @@
       .photo-word { background-image: var(--ph-lg, var(--ph-sm, none)), var(--ph-tint); }
     }
     /* Sur fond sombre (bandeau final, thème sombre) : la photo est « éclaircie »
-       (screen) pour que ses ombres restent lisibles sur le quasi noir. */
+       (screen) sur un gris qui garde 3:1 sur le quasi noir, même sans photo. */
     .photo-word.on-dark, :root[data-theme='dark'] .photo-word {
-      --ph-tint: linear-gradient(#4A5055, #4A5055);
-      background-color: #fff;
+      --ph-tint: linear-gradient(#5F666A, #5F666A);
       background-blend-mode: screen, normal;
+      filter: saturate(1.5) contrast(1.1);
     }
   }
   /* Mot court (« Vanoise ? ») : un peu plus grand pour occuper toute la ligne */
   .photo-word-short { font-size: clamp(3.5rem, 19vw, 15.5rem); font-size: 21.2cqi; }
-  .photo-word.on-dark { @apply text-white; }
   @media (forced-colors: active) {
-    .photo-word { background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
+    .photo-word { background: none; filter: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
   }
 
   /* Viseur du scanner */

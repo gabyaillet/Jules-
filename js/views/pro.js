@@ -86,21 +86,26 @@ Meleze.views.pro = (function () {
     return '<div><label class="label" for="' + id + '">' + label + '</label>' + control + (hint ? '<p class="hint">' + hint + '</p>' : '') + '</div>';
   }
 
-  /** Bloc "En échange" dans la couleur du type de mission. */
-  function rewardBlock(m) {
+  /** Rangées des fiches résultat : blocs carrés séparés par des filets noirs. */
+  const ROW = 'border-t border-ink px-5 py-5 sm:px-6';
+  const LABEL = 'font-display text-sm font-semibold text-brand-ink';
+
+  /** Rangée "En échange" : libellé vert, contrepartie en gras. */
+  function rewardRow(m) {
     if (!m.reward) return '';
-    return '<div class="mt-4 border-2 border-ink px-4 py-3">' +
-      '<p class="text-sm font-semibold text-brand-ink">En échange</p>' +
-      '<p class="font-display font-bold leading-snug">' + esc(m.reward.title) + '</p>' +
+    return '<div class="' + ROW + '">' +
+      '<p class="' + LABEL + '">En échange</p>' +
+      '<p class="mt-0.5 font-display text-lg font-bold leading-snug tracking-[-0.01em]">' + esc(m.reward.title) + '</p>' +
       (m.reward.partner ? '<p class="text-sm text-muted">' + esc(m.reward.partner) + '</p>' : '') +
     '</div>';
   }
 
+  /** Succès (mission validée…) : bloc vert plein, texte blanc. */
   function flashBox(tab) {
     if (!flash || flash.tab !== tab) return '';
-    return '<div id="pro-flash" tabindex="-1" class="border-l-4 border-accent bg-sunk px-5 py-4">' +
-      '<p class="font-display font-bold">' + flash.title + '</p>' +
-      '<p class="mt-1 text-muted">' + flash.html + '</p>' +
+    return '<div id="pro-flash" tabindex="-1" class="bg-forest px-5 py-5 text-white sm:px-6">' +
+      '<p class="font-display text-xl font-bold leading-tight">' + flash.title + '</p>' +
+      '<p class="mt-1.5">' + flash.html + '</p>' +
     '</div>';
   }
 
@@ -179,10 +184,11 @@ Meleze.views.pro = (function () {
   function renderLogin() {
     const demo = Meleze.data.proDemo;
     return '<div class="' + WRAP + ' max-w-md">' +
-      '<span class="tag">Espace partenaires</span>' +
-      '<h1 id="page-title" tabindex="-1" class="mt-4 text-5xl font-extrabold sm:text-6xl">Connexion <span class="mark">pro</span></h1>' +
+      '<p class="flex items-center gap-3 font-display text-[0.95rem] font-semibold text-ink">' +
+        '<span class="h-[2px] w-8 bg-accent" aria-hidden="true"></span>Espace partenaires</p>' +
+      '<h1 id="page-title" tabindex="-1" class="mt-6 text-5xl font-extrabold sm:text-6xl">Connexion <span class="mark">pro</span></h1>' +
       '<p class="mt-4 text-lg text-muted">Commerçants, référents de mission, Office de tourisme : scannez les QR des missions, vérifiez les justificatifs, encaissez les bons et publiez de nouvelles missions.</p>' +
-      '<form class="card mt-8 space-y-5 p-5 sm:p-7" data-form="login" novalidate>' +
+      '<form class="mt-8 space-y-5 border border-ink bg-card p-5 sm:p-7" data-form="login" novalidate>' +
         field('email', 'E-mail professionnel', '<input class="field" id="email" name="email" type="email" autocomplete="username" required value="' + esc(demo.email) + '">') +
         field('pin', 'Code PIN', '<input class="field tracking-[0.4em]" id="pin" name="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password" required placeholder="••••">') +
         field('role', 'Je suis', '<select class="field" id="role" name="role">' + ROLES.map((r) => '<option>' + esc(r) + '</option>').join('') + '</select>') +
@@ -198,20 +204,22 @@ Meleze.views.pro = (function () {
   // Coquille connectée + onglets
   // ------------------------------------------------------------------------
   function renderShell(pro, tab, inner, pending) {
+    // Onglets : trois cases carrées sous un filet noir, l'onglet actif en noir plein
     const tabLink = (id, label, extra) =>
-      '<a href="#/pro/' + id + '" class="flex min-h-[48px] flex-1 items-center justify-center gap-1.5 px-2 py-1.5 text-center font-display text-[0.95rem] font-semibold leading-tight transition-colors ' +
-      (tab === id ? 'bg-ink text-surface' : 'text-muted hover:text-ink') + '"' + (tab === id ? ' aria-current="page"' : '') + '>' + label + (extra || '') + '</a>';
+      '<a href="#/pro/' + id + '" class="flex min-h-[52px] flex-1 items-center justify-center gap-1.5 border-l border-ink px-2 py-1.5 text-center font-display text-[0.95rem] font-semibold leading-tight transition-colors first:border-l-0 ' +
+      (tab === id ? 'bg-ink text-surface' : 'text-ink hover:bg-sunk') + '"' + (tab === id ? ' aria-current="page"' : '') + '>' + label + (extra || '') + '</a>';
     const count = pending
       ? '<span class="inline-flex min-w-[1.375rem] shrink-0 items-center justify-center rounded-full bg-forest px-1.5 text-xs font-bold leading-[1.375rem] text-white">' + pending + '<span class="sr-only"> en attente</span></span>'
       : '';
 
     return '<div class="' + WRAP + ' max-w-2xl">' +
       '<div class="flex items-center justify-between gap-4">' +
-        '<p class="min-w-0 text-sm text-muted">' + esc(pro.role) + '</p>' +
+        '<p class="flex min-w-0 items-center gap-2.5 font-display text-[0.95rem] font-semibold leading-tight text-ink">' +
+          '<span class="h-[2px] w-6 shrink-0 bg-accent" aria-hidden="true"></span><span class="min-w-0">' + esc(pro.role) + '</span></p>' +
         '<button type="button" class="link min-h-[44px] shrink-0 text-[0.95rem]" data-action="logout">Se déconnecter</button>' +
       '</div>' +
-      '<h1 id="page-title" tabindex="-1" class="mt-3 break-words text-4xl font-extrabold sm:text-5xl">' + esc(pro.org) + '</h1>' +
-      '<nav class="mt-8 flex gap-1 bg-sunk p-1" aria-label="Outils pro">' +
+      '<h1 id="page-title" tabindex="-1" class="mt-4 break-words text-4xl font-extrabold sm:text-5xl">' + esc(pro.org) + '</h1>' +
+      '<nav class="mt-8 flex border border-ink" aria-label="Outils pro">' +
         tabLink('scan', 'Scanner') + tabLink('justificatifs', 'Justificatifs', count) + tabLink('creer', 'Créer une mission') +
       '</nav>' +
       '<div class="mt-10">' + inner + '</div>' +
@@ -274,7 +282,7 @@ Meleze.views.pro = (function () {
       '<div class="grid gap-8 sm:grid-cols-[15rem_1fr] sm:items-start">' +
         '<div class="mx-auto w-full max-w-[18rem]">' + scanFrame(canCamera) + control + error + '</div>' +
 
-        '<div class="min-w-0">' +
+        '<div class="min-w-0 border-t-2 border-ink pt-6 sm:border-t-0 sm:pt-0">' +
           '<form class="flex flex-col gap-3" data-form="scan">' +
             '<label for="code" class="label">Code du QR ou du bon</label>' +
             '<input class="field min-w-0 font-mono uppercase tracking-wide placeholder:normal-case placeholder:tracking-normal" id="code" name="code" placeholder="MLZ-…" autocomplete="off" autocapitalize="characters" spellcheck="false" value="' + esc(scanned || '') + '">' +
@@ -325,14 +333,14 @@ Meleze.views.pro = (function () {
   function historyWarning(p) {
     const h = history(p);
     if (!h) return '';
-    return '<p class="mt-4 border-l-4 border-danger bg-sunk px-4 py-3 text-[0.95rem] leading-snug">' +
+    return '<p class="border-l-4 border-danger bg-sunk px-4 py-3 text-[0.95rem] leading-snug">' +
       '<span class="font-semibold">Déjà fait :</span> ' + historyText(h) + ' pour ce participant. Vérifiez que le justificatif est bien nouveau (date du trajet).' +
     '</p>';
   }
 
   /** Mission déjà validée : pas de bouton, le bon n'est émis qu'une fois. */
   function alreadyBox(p, isPhoto) {
-    return '<div class="mt-6 border-l-4 border-danger bg-sunk px-5 py-4">' +
+    return '<div class="border-l-4 border-danger bg-sunk px-5 py-4">' +
       '<p class="font-display font-bold">Mission déjà validée' + (p.validatedAt ? ' le ' + esc(date(p.validatedAt)) : '') + '</p>' +
       '<p class="mt-1 text-muted">' + (isPhoto ? 'Ce justificatif a déjà été accepté' : 'Ce QR a déjà servi') + ' : le bon n’est émis qu’une seule fois.</p>' +
     '</div>';
@@ -352,9 +360,9 @@ Meleze.views.pro = (function () {
   }
 
   /** Motif de refus + Valider / Refuser. */
-  function reviewControls(p) {
+  function reviewControls(p, flush) {
     const id = esc(p.id);
-    return '<div class="mt-5">' +
+    return '<div' + (flush ? '' : ' class="mt-5"') + '>' +
         '<label class="label text-[0.95rem]" for="reason-' + id + '">Motif en cas de refus</label>' +
         '<select class="field" id="reason-' + id + '" data-reason-for="' + id + '">' +
           REASONS.map((r) => '<option>' + esc(r) + '</option>').join('') +
@@ -388,53 +396,60 @@ Meleze.views.pro = (function () {
         state = 'Justificatif refusé' + (p.refusedAt ? ' le ' + esc(date(p.refusedAt)) : '') +
           (p.refusedReason ? ' (« ' + esc(p.refusedReason) + ' »)' : '') + '. En attente d’une nouvelle photo.';
       }
-      body = '<div class="mt-6 bg-sunk px-5 py-4">' +
-          '<p class="font-display font-bold">Cette mission se valide avec un justificatif photo</p>' +
+      body = '<div>' +
+          '<p class="' + LABEL + '">Validation par justificatif</p>' +
+          '<p class="mt-0.5 font-display font-bold">Cette mission se valide avec un justificatif photo</p>' +
           '<p class="mt-1 text-[0.95rem] text-muted">' + state + '</p>' +
           '<a href="#/pro/justificatifs" class="link mt-3">Voir les justificatifs</a>' +
         '</div>' +
-        (p.status === 'preuve' ? '<div class="mt-5">' + proofPicture(p, name) + '</div>' + reviewControls(p) : '');
+        (p.status === 'preuve' ? (historyWarning(p) || '') + '<div>' + proofPicture(p, name) + reviewControls(p) + '</div>' : '');
     } else if (p.status === 'inscrite') {
-      body = '<button type="button" class="btn-primary mt-6 w-full" data-action="validate" data-id="' + esc(p.id) + '">Valider la mission</button>' +
-        '<p class="mt-3 text-center text-sm text-muted">Le bon part aussitôt dans l’espace du participant.</p>';
+      body = '<div><button type="button" class="btn-primary w-full" data-action="validate" data-id="' + esc(p.id) + '">Valider la mission</button>' +
+        '<p class="mt-3 text-center text-sm text-muted">Le bon part aussitôt dans l’espace du participant.</p></div>';
     } else {
-      body = '<p class="mt-6 bg-sunk px-5 py-4 text-muted">Cette participation ne peut pas être validée par QR.</p>';
+      body = '<p class="bg-sunk px-5 py-4 text-muted">Cette participation ne peut pas être validée par QR.</p>';
     }
 
-    return '<article class="card p-5 sm:p-6">' +
-      '<div class="flex flex-wrap items-center gap-2">' +
-        '<span class="tag ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
-        '<span class="tag ' + esc(st.color) + '">' + esc(st.label) + '</span>' +
+    // Fiche carrée cerclée d'un filet noir : en-tête, détails, contrepartie, action
+    return '<article class="border border-ink bg-card">' +
+      '<div class="p-5 sm:p-6">' +
+        '<div class="flex flex-wrap items-center gap-2">' +
+          '<span class="tag ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
+          '<span class="tag ' + esc(st.color) + '">' + esc(st.label) + '</span>' +
+        '</div>' +
+        '<h3 class="mt-3 text-2xl sm:text-3xl">' + esc(m.title) + '</h3>' +
+        (meta ? '<p class="mt-1.5 text-sm text-muted">' + meta + '</p>' : '') +
       '</div>' +
-      '<h3 class="mt-3 text-2xl sm:text-3xl">' + esc(m.title) + '</h3>' +
-      (meta ? '<p class="mt-1.5 text-sm text-muted">' + meta + '</p>' : '') +
-      '<dl class="mt-5 grid grid-cols-[auto_1fr] gap-x-5 gap-y-1.5 text-[0.95rem]">' +
+      '<dl class="' + ROW + ' grid grid-cols-[auto_1fr] gap-x-5 gap-y-1.5 text-[0.95rem]">' +
         row('Participant', '<span class="font-semibold">' + esc(name) + '</span>') +
         row('Code', '<span class="font-mono font-semibold">' + esc(p.code) + '</span>') +
         (p.date ? row('Inscription', esc(date(p.date))) : '') +
         (p.validatedAt ? row('Validée le', esc(date(p.validatedAt))) : '') +
         (past ? row('Historique', historyText(past)) : '') +
       '</dl>' +
-      rewardBlock(m) +
-      (isPhoto && p.status === 'preuve' ? historyWarning(p) : '') +
-      body +
+      rewardRow(m) +
+      (body ? '<div class="' + ROW + ' space-y-5">' + body + '</div>' : '') +
     '</article>';
   }
 
-  /** Bon de récompense : consommation unique. */
+  /** Bon de récompense : consommation unique. Bloc carré, comme dans « Mon espace ». */
   function voucherResult(v) {
     const used = v.status === 'consomme';
-    return '<div class="p-5 sm:p-6 ' + (used ? 'bg-sunk' : 'card') + '">' +
-      '<div class="flex flex-wrap items-center justify-between gap-2">' +
-        '<span class="tag ' + (used ? 'bg-danger text-white' : 'bg-forest text-white') + '">' + (used ? 'Déjà utilisé' : 'Bon valable') + '</span>' +
-        '<span class="font-mono text-sm font-semibold">' + esc(v.code) + '</span>' +
+    return '<article class="' + (used ? 'border border-line bg-sunk' : 'border border-ink bg-card') + '">' +
+      '<div class="p-5 sm:p-6">' +
+        '<div class="flex flex-wrap items-center justify-between gap-2">' +
+          '<span class="tag ' + (used ? 'bg-danger text-white' : 'bg-forest text-white') + '">' + (used ? 'Déjà utilisé' : 'Bon valable') + '</span>' +
+          '<span class="font-mono text-sm font-semibold tracking-[0.08em]">' + esc(v.code) + '</span>' +
+        '</div>' +
+        '<h3 class="mt-4 text-2xl sm:text-3xl ' + (used ? 'text-muted line-through decoration-1' : '') + '">' + esc(v.title) + '</h3>' +
+        '<p class="mt-1 text-muted">' + esc(v.partner) + ' · reçu le ' + esc(date(v.issuedAt)) + '</p>' +
       '</div>' +
-      '<h3 class="mt-4 text-2xl ' + (used ? 'text-muted line-through decoration-1' : '') + '">' + esc(v.title) + '</h3>' +
-      '<p class="mt-1 text-muted">' + esc(v.partner) + ' · reçu le ' + esc(date(v.issuedAt)) + '</p>' +
-      (used
-        ? '<button type="button" class="btn mt-6 w-full bg-card text-muted" disabled>Bon utilisé le ' + esc(date(v.usedAt)) + '</button>'
-        : '<button type="button" class="btn-primary mt-6 w-full" data-action="consume" data-id="' + esc(v.id) + '">Consommer le bon</button>') +
-    '</div>';
+      '<div class="border-t ' + (used ? 'border-line' : 'border-ink') + ' px-5 py-5 sm:px-6">' +
+        (used
+          ? '<button type="button" class="btn w-full border-2 border-line bg-card text-muted" disabled>Bon utilisé le ' + esc(date(v.usedAt)) + '</button>'
+          : '<button type="button" class="btn-primary w-full" data-action="consume" data-id="' + esc(v.id) + '">Consommer le bon</button>') +
+      '</div>' +
+    '</article>';
   }
 
   // ------------------------------------------------------------------------
@@ -443,18 +458,21 @@ Meleze.views.pro = (function () {
   function proofItem({ participation: p, mission: m }, name) {
     const t = typeOf(m.type);
     const proof = p.proof || {};
-    return '<li class="card">' +
+    const warning = historyWarning(p);
+    return '<li class="border border-ink bg-card">' +
       proofPicture(p, name) +
-      '<div class="p-5 sm:p-6">' +
+      '<div class="border-t border-ink p-5 sm:p-6">' +
         '<div class="flex flex-wrap items-center gap-x-3 gap-y-2">' +
           '<span class="tag ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
           (proof.sentAt ? '<span class="text-sm text-muted">Envoyé le ' + esc(date(proof.sentAt)) + '</span>' : '') +
         '</div>' +
         '<h3 class="mt-3 text-xl sm:text-2xl">' + esc(m.title) + '</h3>' +
         '<p class="mt-1.5 text-[0.95rem]"><span class="font-semibold">' + esc(name) + '</span> · <span class="font-mono text-sm">' + esc(p.code) + '</span></p>' +
-        (m.reward ? '<p class="mt-1 text-[0.95rem] text-muted">En échange : ' + esc(m.reward.title) + '</p>' : '') +
-        historyWarning(p) +
-        reviewControls(p) +
+      '</div>' +
+      rewardRow(m) +
+      '<div class="' + ROW + '">' +
+        (warning ? '<div class="mb-5">' + warning + '</div>' : '') +
+        reviewControls(p, true) +
       '</div>' +
     '</li>';
   }
@@ -469,7 +487,7 @@ Meleze.views.pro = (function () {
         '<div aria-live="polite">' + flashBox('justificatifs') + '</div>' +
         (items.length
           ? '<ul class="space-y-6">' + items.map((x) => proofItem(x, name)).join('') + '</ul>'
-          : '<p class="bg-sunk px-5 py-6 text-muted">Aucun justificatif en attente.</p>') +
+          : '<p class="border border-ink px-5 py-6 text-muted">Aucun justificatif en attente.</p>') +
       '</div>' +
     '</section>';
   }
@@ -481,14 +499,14 @@ Meleze.views.pro = (function () {
     const { SEASONS, TYPES, PROOFS } = Meleze.data;
     if (created) {
       const proof = PROOFS.find((x) => x.id === created.proof);
-      // Bloc vert forêt : boutons blancs explicites (lisibles aussi en mode sombre)
+      // Bloc vert plein : boutons blancs explicites (lisibles aussi en mode sombre)
       return '<div class="bg-forest p-6 text-white sm:p-8">' +
         '<p class="font-display font-bold">Mission publiée</p>' +
         '<h2 class="mt-2 text-3xl text-white sm:text-4xl">« ' + esc(created.title) + ' »</h2>' +
-        '<p class="mt-3 max-w-xl text-white/80">Elle est visible dès maintenant dans le catalogue, avec sa contrepartie : ' + esc(created.reward.title) + '.' +
+        '<p class="mt-3 max-w-xl text-white">Elle est visible dès maintenant dans le catalogue, avec sa contrepartie : ' + esc(created.reward.title) + '.' +
           (proof ? ' Validation : ' + esc(proof.label.charAt(0).toLowerCase() + proof.label.slice(1)) + '.' : '') + '</p>' +
         '<div class="mt-8 flex flex-wrap items-center gap-3">' +
-          '<a href="#/missions?focus=' + esc(created.id) + '" class="btn-light">Voir dans le catalogue' + icon('arrow', 'h-5 w-5') + '</a>' +
+          '<a href="#/missions?focus=' + esc(created.id) + '" class="btn btn-light">Voir dans le catalogue' + icon('arrow', 'h-5 w-5') + '</a>' +
           '<button type="button" class="btn border-2 border-white bg-transparent text-white hover:bg-white hover:text-night" data-action="new-mission">Créer une autre mission</button>' +
         '</div>' +
       '</div>';
@@ -501,20 +519,20 @@ Meleze.views.pro = (function () {
     const OPTION = 'flex min-h-[52px] cursor-pointer items-start gap-3 border-2 border-transparent bg-sunk px-4 py-3 transition-colors has-[:checked]:border-ink has-[:checked]:bg-card';
 
     return '<form class="space-y-6" data-form="create">' +
-      '<fieldset class="card space-y-5 p-5 sm:p-7">' +
+      '<fieldset class="space-y-5 border border-ink bg-card p-5 sm:p-7">' +
         '<legend class="' + LEGEND + '">La mission</legend>' +
         field('title', 'Intitulé', '<input class="field" id="title" name="title" required maxlength="80" placeholder="Ex. Nettoyer les berges du Doron">') +
         field('type', 'Type', '<select class="field" id="type" name="type" required>' + TYPES.map((t) => '<option value="' + esc(t.id) + '">' + esc(t.label) + '</option>').join('') + '</select>') +
         '<div><p class="label" id="proof-l">Validation</p><div class="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-labelledby="proof-l">' +
           PROOFS.map((p, i) => '<label class="' + OPTION + '">' +
-            '<input type="radio" name="proof" value="' + esc(p.id) + '" required' + (i === 0 ? ' checked' : '') + ' class="mt-0.5 h-5 w-5 shrink-0 accent-[#121614]">' +
+            '<input type="radio" name="proof" value="' + esc(p.id) + '" required' + (i === 0 ? ' checked' : '') + ' class="mt-0.5 h-5 w-5 shrink-0 accent-forest">' +
             '<span class="min-w-0"><span class="block font-semibold leading-snug">' + esc(p.label) + '</span>' +
               (PROOF_HINTS[p.id] ? '<span class="mt-0.5 block text-sm leading-snug opacity-75">' + PROOF_HINTS[p.id] + '</span>' : '') +
             '</span></label>').join('') +
         '</div></div>' +
         '<div><p class="label" id="seasons-l">Saison(s)</p><div class="grid grid-cols-2 gap-2" role="group" aria-labelledby="seasons-l">' +
           SEASONS.map((s) => '<label class="flex min-h-[52px] cursor-pointer items-center gap-3 border-2 border-transparent bg-sunk px-4 font-semibold transition-colors has-[:checked]:border-ink has-[:checked]:bg-card">' +
-            '<input type="checkbox" name="seasons" value="' + esc(s.id) + '" class="h-5 w-5 shrink-0 accent-[#121614]">' + esc(s.label) + '</label>').join('') +
+            '<input type="checkbox" name="seasons" value="' + esc(s.id) + '" class="h-5 w-5 shrink-0 accent-forest">' + esc(s.label) + '</label>').join('') +
         '</div></div>' +
         '<div class="grid grid-cols-2 gap-4">' +
           field('duration', 'Durée', '<select class="field" id="duration" name="duration">' +
@@ -529,13 +547,13 @@ Meleze.views.pro = (function () {
       '</fieldset>' +
 
       // Contrepartie : bloc mis en avant, champs obligatoires
-      '<fieldset class="space-y-5 border-2 border-ink p-5 sm:p-7">' +
+      '<fieldset class="space-y-5 border-2 border-forest bg-card p-5 sm:p-7">' +
         '<legend class="' + LEGEND + ' flex flex-wrap items-center gap-3">La contrepartie <span class="tag bg-forest text-white">Obligatoire</span></legend>' +
         '<p class="text-muted">Chaque mission offre quelque chose en échange : c’est le principe de Mélèze.</p>' +
         field('rtitle', 'Ce que vous offrez', '<input class="field" id="rtitle" name="rtitle" required maxlength="80" placeholder="Ex. Une descente en luge">') +
         field('rpartner', 'Offert par', '<input class="field" id="rpartner" name="rpartner" required value="' + esc(pro.org) + '">') +
         field('rcat', 'Catégorie', '<select class="field" id="rcat" name="rcat">' + CATEGORIES.map((c) => '<option>' + esc(c) + '</option>').join('') + '</select>') +
-        '<label class="flex cursor-pointer items-start gap-3"><input type="checkbox" name="commit" required class="mt-1 h-5 w-5 shrink-0 accent-[#121614]">Je m’engage à offrir cette contrepartie à chaque participant dont la mission est validée.</label>' +
+        '<label class="flex cursor-pointer items-start gap-3"><input type="checkbox" name="commit" required class="mt-1 h-5 w-5 shrink-0 accent-forest">Je m’engage à offrir cette contrepartie à chaque participant dont la mission est validée.</label>' +
       '</fieldset>' +
 
       '<button class="btn-primary w-full">Publier la mission</button>' +
