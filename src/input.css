@@ -110,9 +110,9 @@
      grandes, 16px pour les vignettes) et les petits contrôles (boutons,
      filtres, étiquettes) sont en pilule. Tout le reste — tuiles de couleur,
      cartes, encadrés, formulaires — est carré : photos douces, blocs graphiques. */
-  /* Boutons pilule — cibles tactiles ≥ 48px */
+  /* Boutons pilule — grands et gras, cibles tactiles ≥ 48px (56px par défaut) */
   .btn {
-    @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full px-6 font-display text-[1.02rem] font-semibold tracking-[-0.01em] transition duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-[56px] items-center justify-center gap-2 rounded-full px-7 font-display text-[1.0625rem] font-bold tracking-[-0.01em] transition duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary { @apply btn bg-brand text-on-brand hover:bg-brand-hover active:bg-brand-hover; }
   .btn-light { @apply btn bg-white text-night hover:bg-white/90; } /* sur les bandeaux sombres */
@@ -134,7 +134,7 @@
   .card { @apply border border-line bg-card; }
 
   /* Étiquette — gris neutre par défaut ; texte foncé sur fond blanc fixe */
-  .tag { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 font-display text-[0.8rem] font-semibold leading-snug text-ink; }
+  .tag { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 font-display text-[0.875rem] font-bold leading-snug text-ink; }
   .tag:where([class*='bg-white']) { @apply text-night; }
 
   /* Photos — seuls éléments arrondis (avec les contrôles) ; le conteneur donne la taille et un fond neutre
