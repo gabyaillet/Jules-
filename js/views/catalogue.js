@@ -89,7 +89,7 @@ Meleze.views.catalogue = (function () {
         '</div>' +
 
         '<details class="acc mt-3"' + (focusId === m.id ? ' open' : '') + '>' +
-          '<summary class="min-h-[48px] py-2 font-display font-semibold">Plus d’infos<span class="acc-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sunk">' + icon('plus', 'h-4 w-4') + '</span></summary>' +
+          '<summary class="min-h-[48px] py-2 font-display font-semibold">Plus d’infos<span class="acc-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-surface">' + icon('plus', 'h-4 w-4') + '</span></summary>' +
           '<div class="pb-2 pt-1">' +
             '<p class="text-muted">' + esc(m.description) + '</p>' +
             '<div class="mt-4">' + facts([

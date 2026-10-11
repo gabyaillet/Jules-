@@ -108,11 +108,12 @@ Meleze.views.home = (function () {
       '<section class="typo-hero ' + WRAP + ' pb-14 pt-8 sm:pt-12 lg:pb-24 lg:pt-16">' +
         '<p class="flex items-center gap-3 font-display text-[0.95rem] font-semibold tracking-[-0.005em] text-ink">' +
           '<span class="h-[2px] w-8 bg-accent" aria-hidden="true"></span>Pralognan-la-Vanoise · 4 saisons</p>' +
-        '<h1 id="page-title" tabindex="-1" class="mt-7 font-extrabold sm:mt-10">' +
-          '<span class="block ' + HERO_LINE + '">Une heure pour la</span>' +
+        // Nom accessible explicite : les lignes en bloc ajouteraient une espace avant la virgule
+        '<h1 id="page-title" tabindex="-1" class="mt-7 font-extrabold sm:mt-10" aria-label="Une heure pour la montagne, une expérience en retour.">' +
+          '<span class="block ' + HERO_LINE + '">Une heure pour la </span>' +
           // Bande basse des sommets : roche au soleil, neige, éboulis bleutés
           photoWord('montagne', 'sentiers', '30%', 'mb-1.5 mt-2 sm:mb-1 sm:mt-4') +
-          '<span class="sr-only">,</span>' +
+          '<span class="sr-only">, </span>' +
           '<span class="block ' + HERO_LINE + ' md:text-right">une expérience en retour.</span>' +
         '</h1>' +
         '<div class="mt-8 grid gap-7 border-t border-line pt-7 md:mt-14 md:grid-cols-[1fr_auto] md:items-end md:gap-12 md:pt-8">' +
@@ -208,8 +209,9 @@ Meleze.views.home = (function () {
         '<div class="typo-hero ' + WRAP + '">' +
           '<h2 class="font-extrabold">' +
             '<span class="block ' + HERO_LINE + '">Prêt·e à donner une heure à la</span>' +
-            // Même photo, cadrée plus haut : les sommets et le ciel, en écho au hero
-            photoWord('Vanoise&nbsp;?', 'sentiers', '22%', 'photo-word-short on-dark mt-2.5 sm:mt-4') +
+            // Même photo, cadrée un peu plus haut : le sommet et la neige, en écho au hero
+            // (pas plus haut : le ciel, éclairci sur le fond noir, virerait au bleu pâle)
+            photoWord('Vanoise&nbsp;?', 'sentiers', '28%', 'photo-word-short on-dark mt-2.5 sm:mt-4') +
           '</h2>' +
           '<div class="mt-10 grid gap-8 border-t border-white/15 pt-8 md:mt-14 md:grid-cols-[1fr_auto] md:items-end md:gap-12">' +
             '<p class="max-w-md text-lg text-white/70">Une mission, un local pour vous guider, un commerçant pour vous remercier.</p>' +

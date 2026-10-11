@@ -31,16 +31,17 @@ Meleze.views.pro = (function () {
   /** Noms courts des missions de démo, pour les puces "QR · …". */
   const SHORT = { 'm-transport': 'Transport', 'm-marche': 'Marché', 'm-sentiers': 'Sentiers' };
 
+  // Rouge : texte couleur du fond (blanc en clair, quasi noir en sombre, où le rouge s'éclaircit)
   const STATUS = {
     inscrite: { label: 'Inscrit·e', color: 'bg-sunk' },
     preuve: { label: 'Justificatif à vérifier', color: 'bg-forest text-white' },
-    refusee: { label: 'Justificatif refusé', color: 'bg-danger text-white' },
-    validee: { label: 'Déjà validée', color: 'bg-danger text-white' },
+    refusee: { label: 'Justificatif refusé', color: 'bg-danger text-surface' },
+    validee: { label: 'Déjà validée', color: 'bg-danger text-surface' },
   };
 
   // Conteneur commun : même rythme vertical que les autres pages
   const WRAP = 'mx-auto px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16';
-  const LEGEND = 'float-left mb-1 w-full font-display text-2xl font-bold tracking-[-0.02em]';
+  const LEGEND = 'float-left mb-4 w-full font-display text-2xl font-bold tracking-[-0.02em]';
 
   // État local de l'écran
   let scanned = null; // dernier code lu (caméra, saisie ou puce de démo)
@@ -205,8 +206,8 @@ Meleze.views.pro = (function () {
   // ------------------------------------------------------------------------
   function renderShell(pro, tab, inner, pending) {
     // Onglets : trois cases carrées sous un filet noir, l'onglet actif en noir plein
-    const tabLink = (id, label, extra) =>
-      '<a href="#/pro/' + id + '" class="flex min-h-[52px] flex-1 items-center justify-center gap-1.5 border-l border-ink px-2 py-1.5 text-center font-display text-[0.95rem] font-semibold leading-tight transition-colors first:border-l-0 ' +
+    const tabLink = (id, label, extra, aria) =>
+      '<a href="#/pro/' + id + '"' + (aria ? ' aria-label="' + aria + '"' : '') + ' class="flex min-h-[52px] flex-1 items-center justify-center gap-1.5 border-l border-ink px-2 py-1.5 text-center font-display text-[0.95rem] font-semibold leading-tight transition-colors first:border-l-0 ' +
       (tab === id ? 'bg-ink text-surface' : 'text-ink hover:bg-sunk') + '"' + (tab === id ? ' aria-current="page"' : '') + '>' + label + (extra || '') + '</a>';
     const count = pending
       ? '<span class="inline-flex min-w-[1.375rem] shrink-0 items-center justify-center rounded-full bg-forest px-1.5 text-xs font-bold leading-[1.375rem] text-white">' + pending + '<span class="sr-only"> en attente</span></span>'
@@ -220,7 +221,7 @@ Meleze.views.pro = (function () {
       '</div>' +
       '<h1 id="page-title" tabindex="-1" class="mt-4 break-words text-4xl font-extrabold sm:text-5xl">' + esc(pro.org) + '</h1>' +
       '<nav class="mt-8 flex border border-ink" aria-label="Outils pro">' +
-        tabLink('scan', 'Scanner') + tabLink('justificatifs', 'Justificatifs', count) + tabLink('creer', 'Créer une mission') +
+        tabLink('scan', 'Scanner') + tabLink('justificatifs', 'Justificatifs', count) + tabLink('creer', 'Créer<span class="hidden sm:inline"> une mission</span>', '', 'Créer une mission') +
       '</nav>' +
       '<div class="mt-10">' + inner + '</div>' +
     '</div>';
@@ -438,7 +439,7 @@ Meleze.views.pro = (function () {
     return '<article class="' + (used ? 'border border-line bg-sunk' : 'border border-ink bg-card') + '">' +
       '<div class="p-5 sm:p-6">' +
         '<div class="flex flex-wrap items-center justify-between gap-2">' +
-          '<span class="tag ' + (used ? 'bg-danger text-white' : 'bg-forest text-white') + '">' + (used ? 'Déjà utilisé' : 'Bon valable') + '</span>' +
+          '<span class="tag ' + (used ? 'bg-danger text-surface' : 'bg-forest text-white') + '">' + (used ? 'Déjà utilisé' : 'Bon valable') + '</span>' +
           '<span class="font-mono text-sm font-semibold tracking-[0.08em]">' + esc(v.code) + '</span>' +
         '</div>' +
         '<h3 class="mt-4 text-2xl sm:text-3xl ' + (used ? 'text-muted line-through decoration-1' : '') + '">' + esc(v.title) + '</h3>' +
@@ -504,10 +505,10 @@ Meleze.views.pro = (function () {
         '<p class="font-display font-bold">Mission publiée</p>' +
         '<h2 class="mt-2 text-3xl text-white sm:text-4xl">« ' + esc(created.title) + ' »</h2>' +
         '<p class="mt-3 max-w-xl text-white">Elle est visible dès maintenant dans le catalogue, avec sa contrepartie : ' + esc(created.reward.title) + '.' +
-          (proof ? ' Validation : ' + esc(proof.label.charAt(0).toLowerCase() + proof.label.slice(1)) + '.' : '') + '</p>' +
+          (proof ? ' Validation : ' + esc(/^[A-Z][a-zà-ÿ]/.test(proof.label) ? proof.label.charAt(0).toLowerCase() + proof.label.slice(1) : proof.label) + '.' : '') + '</p>' +
         '<div class="mt-8 flex flex-wrap items-center gap-3">' +
-          '<a href="#/missions?focus=' + esc(created.id) + '" class="btn btn-light">Voir dans le catalogue' + icon('arrow', 'h-5 w-5') + '</a>' +
-          '<button type="button" class="btn border-2 border-white bg-transparent text-white hover:bg-white hover:text-night" data-action="new-mission">Créer une autre mission</button>' +
+          '<a href="#/missions?focus=' + esc(created.id) + '" class="btn btn-light focus-visible:outline-white">Voir dans le catalogue' + icon('arrow', 'h-5 w-5') + '</a>' +
+          '<button type="button" class="btn border-2 border-white bg-transparent text-white hover:bg-white hover:text-night focus-visible:outline-white" data-action="new-mission">Créer une autre mission</button>' +
         '</div>' +
       '</div>';
     }

@@ -58,7 +58,8 @@ Meleze.views.wallet = (function () {
 
   /** Rangée du bas : date d'inscription + action(s). */
   function footRow(p, actionsHtml) {
-    return '<div class="' + ROW + ' flex flex-wrap items-center justify-between gap-3 py-4">' +
+    // mt-auto : pied calé en bas de la carte, aligné d'une carte à l'autre
+    return '<div class="' + ROW + ' mt-auto flex flex-wrap items-center justify-between gap-3 py-4">' +
       '<p class="text-sm text-muted">' + (p.date ? 'Inscrit·e le ' + esc(date(p.date)) : 'Inscrit·e') + '</p>' +
       '<div class="flex flex-wrap gap-3">' + actionsHtml + '</div>' +
     '</div>';
@@ -126,7 +127,7 @@ Meleze.views.wallet = (function () {
   function participationCard({ participation: p, mission: m }) {
     const t = typeOf(m.type);
     const meta = [missionDuration(m), m.location].filter(Boolean).map(esc).join(' · ');
-    return '<li class="border border-ink bg-card" id="participation-' + esc(p.id) + '">' +
+    return '<li class="flex flex-col border border-ink bg-card" id="participation-' + esc(p.id) + '">' +
       '<div class="flex items-start gap-4 p-5 sm:gap-5 sm:p-6">' +
         '<div class="ph ph-sm aspect-square w-16 shrink-0 sm:w-20">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
         '<div class="min-w-0 flex-1">' +
@@ -218,7 +219,7 @@ Meleze.views.wallet = (function () {
           '<h2 id="ongoing" class="' + H2 + '">Mes missions</h2>' +
           '<p class="' + INTRO + '">Sur place, montrez le QR de la mission au référent. Pour le trajet, envoyez une photo de votre billet.</p>' +
           (active.length
-            ? '<ul class="mt-8 grid items-start gap-4 lg:grid-cols-2 lg:gap-6">' + active.map(participationCard).join('') + '</ul>'
+            ? '<ul class="mt-8 grid gap-4 lg:grid-cols-2 lg:gap-6">' + active.map(participationCard).join('') + '</ul>'
             : '<div class="mt-8 border border-ink p-6 sm:p-8">' +
                 '<p class="font-display text-2xl font-bold leading-tight tracking-[-0.02em]">Aucune mission en cours.</p>' +
                 '<a href="#/missions" class="link mt-4">Trouver une mission ' + icon('arrow', 'h-4 w-4') + '</a>' +

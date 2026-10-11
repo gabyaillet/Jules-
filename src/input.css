@@ -46,7 +46,10 @@
     --c-danger: 180 35 24; /* #B42318 */
   }
 
-  /* Thème sombre : simple inversion, l'accent passe en vert plus lumineux */
+  /* Thème sombre : simple inversion. Les APLATS verts (boutons, badge Pro)
+     restent #178350 comme les blocs bg-forest : un seul vert plein dans les
+     deux thèmes. Le vert en TEXTE et en filets passe en #5CCB93, lisible sur
+     le fond sombre. */
   :root[data-theme='dark'] {
     color-scheme: dark;
     --c-surface: 13 16 15;
@@ -55,11 +58,11 @@
     --c-ink: 242 243 241;
     --c-muted: 163 169 165;
     --c-line: 46 51 48;
-    --c-brand: 92 203 147; /* #5CCB93 — 9,5:1 sur le fond sombre */
-    --c-brand-hover: 126 216 170; /* #7ED8AA */
-    --c-on-brand: 15 20 18;
-    --c-brand-ink: 92 203 147;
-    --c-accent: 92 203 147;
+    --c-brand: 23 131 80; /* #178350 — blanc dessus 4,8:1 ; bouton ≈ 3,9:1 sur le fond */
+    --c-brand-hover: 18 107 65; /* #126B41 */
+    --c-on-brand: 255 255 255;
+    --c-brand-ink: 92 203 147; /* #5CCB93 — texte vert, 9,5:1 sur le fond sombre */
+    --c-accent: 92 203 147; /* filets, contour de focus */
     --c-ok: 92 203 147;
     --c-danger: 255 128 110;
   }
@@ -87,7 +90,7 @@
   /* Le titre reçoit le focus à chaque changement de page (lecteurs d'écran) :
      ce n'est pas un contrôle, inutile d'afficher le contour. */
   #page-title:focus { outline: none; }
-  ::selection { @apply bg-accent text-on-brand; }
+  ::selection { @apply bg-brand text-on-brand; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -173,8 +176,10 @@
      occupe toute la ligne, du téléphone au grand écran.
      Photo : img/sentiers.webp (photo du client, 533 × 800). Le mot étant
      toujours sur une ligne, la bande visible fait ~11 % de la hauteur de la
-     photo (12 % pour « Vanoise ? ») : avec --ph-y entre 20 et 35 %, on ne
-     montre que les sommets (lignes 19–38 %), jamais le © en bas à droite (93–98 %).
+     photo (12 % pour « Vanoise ? ») : avec --ph-y entre 28 et 35 %, on ne
+     montre que les sommets (lignes 24–38 %), jamais le © en bas à droite
+     (93–98 %). Pas plus haut que 28 % : le ciel, éclairci (screen) sur le
+     fond noir, deviendrait un aplat bleu pâle au lieu d'une photo.
      Lisibilité : la photo est « multipliée » sur un gris moyen (#8C969A) et
      ravivée (saturate) : la neige ne remonte jamais au-dessus de ce gris
      (3:1 sur blanc), roches au soleil et éboulis restent en couleurs.

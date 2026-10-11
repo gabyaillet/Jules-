@@ -179,7 +179,7 @@ Meleze.ui = (function () {
     if (!host) return;
     const error = tone === 'error';
     host.innerHTML = '<div class="pointer-events-auto mx-auto flex w-fit max-w-md items-center gap-3 bg-night py-3 pl-3 pr-5 text-white shadow-lg ring-1 ring-white/10">' +
-      '<span class="flex h-7 w-7 shrink-0 items-center justify-center text-white ' + (error ? 'bg-danger' : 'bg-forest') + '">' +
+      '<span class="flex h-7 w-7 shrink-0 items-center justify-center ' + (error ? 'bg-danger text-surface' : 'bg-forest text-white') + '">' +
       icon(error ? 'alert' : 'check', 'h-4 w-4') + '</span>' +
       '<span class="font-display text-[0.95rem] font-semibold leading-snug">' + esc(message) + '</span></div>';
     clearTimeout(toastTimer);

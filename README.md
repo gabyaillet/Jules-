@@ -48,7 +48,7 @@ Jules-/
 ├── src/input.css         Source Tailwind + jetons de couleur (thèmes clair / sombre) + composants
 ├── dist/styles.css       CSS compilé et purgé (≈ 35 ko, ≈ 7 ko gzip)
 ├── fonts/                Bricolage Grotesque + Source Sans 3 (woff2 latin, auto-hébergées, licence OFL)
-├── tailwind.config.js    Palette Mélèze (blanc, noir, lime, pastels par type de mission)
+├── tailwind.config.js    Palette Mélèze (blanc, quasi-noir, gris, un accent vert #178350)
 ├── js/
 │   ├── data.js           Données de démonstration (3 missions, participations, bons, identifiants pro)
 │   ├── photos.js         Photothèque (Unsplash ou fichiers locaux) — à remplacer par vos photos
@@ -78,15 +78,21 @@ Jules-/
 
 ## Photos
 
-Les photos sont des paysages de montagne **Unsplash** (licence Unsplash : gratuite, usage commercial
-autorisé), chargées depuis `images.unsplash.com` au bon format (AVIF/WebP) et à la bonne taille.
+Les trois photos des missions et la photo des mots géants « MONTAGNE » / « VANOISE » sont des fichiers
+locaux fournis par le client (`img/sentiers.webp`, `img/covoiturage.webp`, `img/marche.webp`) ;
+`img/sentiers.webp` porte le crédit **© Randozone.com** (tenu hors des lettres par le cadrage).
+Droits d’usage à confirmer avec le client, ainsi que les originaux en haute définition
+(`img/sentiers.webp` ne fait que 533 × 800 px : agrandie dans les mots géants, sa texture est un peu floue
+sur grand écran ; idéalement ≥ 2400 px de large, en vérifiant que le © reste dans les 7 % du bas).
+Les autres paysages viennent d’**Unsplash** (licence Unsplash : gratuite, usage commercial
+autorisé), chargés depuis `images.unsplash.com` au bon format (AVIF/WebP) et à la bonne taille.
 
 **Pour utiliser de vraies photos de Pralognan** (Office de tourisme, photographe local…) :
 1. déposez-les dans un dossier `img/` (idéalement en `.webp`, 1600 px de large, < 250 ko) ;
 2. dans `js/photos.js`, remplacez l'identifiant par le chemin : `lake: { src: 'img/lac-des-vaches.webp', alt: '…' }`.
 
 Chaque mission choisit sa photo via le champ `photo` dans `js/data.js` (sinon une photo par type).
-Si une photo ne charge pas (hors-ligne, lien mort), un fond vert pastel prend le relais.
+Si une photo ne charge pas (hors-ligne, lien mort), un fond gris neutre prend le relais.
 
 ## Choix d'éco-conception (Green IT)
 
@@ -96,7 +102,7 @@ Si une photo ne charge pas (hors-ligne, lien mort), un fond vert pastel prend le
   (`loading="lazy"`) : seule la photo d'accueil est chargée d'emblée. Elles sont ensuite gardées en cache par le service worker.
 - 2 polices variables **auto-hébergées**, sous-ensemble latin uniquement (~70 ko au total, mises en cache).
 - CSS Tailwind **compilé et purgé** (pas de CDN Tailwind de ~300 ko exécuté sur le téléphone).
-- **Fond blanc** pour tout le monde (choix de design, à la manière de CopenPay). Sur écran OLED, le blanc consomme plus
+- **Fond blanc** pour tout le monde (choix de design). Sur écran OLED, le blanc consomme plus
   qu'un fond sombre : un **mode sombre** quasi noir reste disponible via le bouton de l'en-tête (choix mémorisé).
 - Contrastes élevés et boutons ≥ 48 px : lisible **en plein soleil, avec des gants**.
 - Quasiment aucune animation (seule la ligne du scanner bouge) ; `prefers-reduced-motion` respecté.
@@ -104,27 +110,34 @@ Si une photo ne charge pas (hors-ligne, lien mort), un fond vert pastel prend le
 
 ## Direction artistique
 
-Inspirée de **CopenPay** (Copenhague) : fond blanc, grands titres gras en noir, un mot clé surligné
-en vert lime comme au feutre, blocs de couleurs pastel, photos en grille « bento », quelques
-étiquettes inclinées façon autocollant, boutons pilule noirs.
+Concept **A · Typo-photo**, retenu par le client : base blanche, grands titres gras quasi noirs
+(`#0F1412`), gris neutres et **un seul accent vert** (`#178350`) ; **aucune couleur pastel**.
+- Le mot géant **MONTAGNE** du titre d’accueil est rempli par une photo des sommets de la Vanoise
+  (`img/sentiers.webp`, `background-clip: text`), multipliée sur un gris moyen pour rester lisible ;
+  repli en couleur unie si la photo ne charge pas ou si le navigateur ne sait pas découper le fond.
+- Les contreparties sont présentées sur un **bandeau vert plein**, en tuiles blanches carrées.
+- La page se termine sur un **bandeau noir** dont le mot **VANOISE** est rempli par la même photo.
+- Quelques étiquettes inclinées façon autocollant posées sur les photos ; boutons pilule.
 
 Règles de sobriété :
 - **Pas d'icônes décoratives** : la typographie porte l'information (seules restent la flèche des
-  boutons principaux, le « + » des accordéons et le bouton clair/sombre).
+  boutons principaux, le « + » des accordéons, le bouton clair/sombre et l’état des messages).
 - **Photos douces, blocs graphiques** : seules les photos sont arrondies (24 px ; 32 px pour les grandes
   photos sur ordinateur ; 16 px pour les vignettes). Boutons, filtres et étiquettes sont en pilule.
   Tout le reste (tuiles de couleur, cartes, encadrés, bons, formulaires, surlignage) est carré.
 
 | Rôle | Couleur |
 |---|---|
-| Fond | `#FFFFFF` · gris très clair `#F5F5F1` |
-| Texte / boutons | `#121614` (noir doux) · secondaire `#5A605C` |
-| Vert lime (surlignage, accents) | `#D2F58E` / `#BFEF5F` |
-| Vert montagne (grand bloc, liens) | `#16703F` / `#1F8A50` |
-| Mobilité douce | `#CDE6FF` (bleu ciel) |
-| Vie du village | `#FFE2A6` (or) |
-| Sentiers & nature | `#D6F2B5` (vert tendre) |
-| Alertes (refus, bon déjà utilisé) | `#FFD3C7` (corail) |
+| Fond de page, cartes | `#FFFFFF` |
+| Gris très clair (champs, encadrés, repli photo) | `#F4F4F3` |
+| Filets, bordures discrètes | `#E4E5E4` |
+| Texte, titres, bandeau final | `#0F1412` (quasi noir, ≈ 19:1 sur blanc) |
+| Texte secondaire | `#5E6360` (≈ 6:1 sur blanc) |
+| Accent vert unique (boutons, bandeau, texte vert) | `#178350` (4,8:1 sur blanc, blanc dessus 4,8:1) |
+| Vert au survol / appui | `#126B41` |
+| Alertes (refus, bon déjà utilisé) | `#B42318` |
+| Mode sombre : vert en texte et filets | `#5CCB93` (aplats verts inchangés : `#178350`) |
+| Mode sombre : fond de page | `#0D100F` |
 
 Typographies : **Bricolage Grotesque** (titres, grotesque grasse et expressive) et **Source Sans 3** (texte, très lisible au soleil).
 
