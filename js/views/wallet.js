@@ -53,10 +53,13 @@ Meleze.views.wallet = (function () {
   const cancelButton = (p) =>
     '<button type="button" class="min-h-[44px] font-display text-base font-semibold text-ink underline decoration-2 underline-offset-4 hover:text-brand-ink" data-action="cancel" data-id="' + esc(p.id) + '">Me désinscrire</button>';
 
-  /** Mission validée par QR : grand bloc noir, QR propre à cette participation dans un carré blanc. */
+  /**
+   * Mission validée par QR : grand bloc noir, QR propre à cette participation
+   * (blanc, marge de lecture comprise). 240 px dès 360 px d'écran, 176 px en dessous.
+   */
   function qrBlock(p) {
     return '<div class="mt-5 flex flex-col items-center bg-ink px-6 pb-7 pt-8 text-center text-surface">' +
-        '<div class="bg-white">' + qr(p.code, { size: 'w-60' }) + '</div>' +
+        '<div class="bg-white">' + qr(p.code, { size: 'w-44 min-[360px]:w-60' }) + '</div>' +
         '<p class="mt-5 font-mono text-2xl font-bold tracking-[0.16em]">' + esc(p.code) + '</p>' +
         '<p class="mt-2 font-display text-lg font-semibold leading-snug">À montrer au référent à la fin de la mission.</p>' +
       '</div>' +
@@ -151,7 +154,7 @@ Meleze.views.wallet = (function () {
     const activeCount = vouchers.filter((v) => v.status === 'actif').length;
     const H2 = 'text-[2.5rem] sm:text-5xl';
 
-    let intro = 'Vos missions et vos bons apparaîtront ici.';
+    let intro = 'Prêt·e pour une première mission ?';
     if (validated.length) intro = 'Merci pour votre aide !';
     else if (active.length || vouchers.length) intro = 'Vos missions et vos bons, au même endroit.';
 

@@ -80,7 +80,7 @@ Meleze.views.catalogue = (function () {
       // s'alignent d'une carte à l'autre sur une même rangée.
       '<div class="mt-auto pt-6">' +
         // Contrepartie : bloc vert plein, texte blanc
-        '<div class="bg-forest p-6 text-white sm:min-h-[10.5rem]">' +
+        '<div class="bg-forest p-6 text-white sm:min-h-[12.25rem]">' +
           '<p class="font-display text-base font-semibold">En échange</p>' +
           '<p class="mt-2 font-display text-[1.6rem] font-bold leading-[1.08] tracking-[-0.02em]">' + esc(m.reward.title) + '</p>' +
           '<p class="mt-2 text-base">offert par ' + esc(m.reward.partner) + '</p>' +
