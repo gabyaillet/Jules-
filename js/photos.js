@@ -40,5 +40,5 @@ Meleze.photos.byType = {
    saut au redémarrage) ; pendant le chargement, la photo HD s'affiche.
    Mettre null à la place de { … } = pas de vidéo, seulement la photo.
    ========================================================================== */
-// Vidéo actuelle : drone fournie par le client (forêt enneigée puis sommets), 1920 × 1080, ~9 Mo.
+// Vidéo actuelle : drone du client (randonneur sur une crête au lever du soleil), 1280 × 720, ~7,5 Mo.
 Meleze.media = { heroVideo: { mp4: 'video/hero.mp4' } };
