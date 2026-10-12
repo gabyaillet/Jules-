@@ -125,7 +125,7 @@ Meleze.views.home = (function () {
           // bloc est masqué) + vidéo éventuelle par-dessus + voile sombre pour la lisibilité.
           '<div class="absolute inset-0 -z-10 hidden overflow-hidden bg-night md:block">' +
             '<div class="hero-kenburns absolute inset-0 [&>img]:absolute [&>img]:inset-0 [&>img]:h-full [&>img]:w-full [&>img]:object-cover">' +
-              photo('range', { sizes: '100vw', alt: '' }) +
+              heroBackdrop() +
             '</div>' +
             heroVideo() +
             '<div class="pointer-events-none absolute inset-0 bg-[image:linear-gradient(to_bottom,rgb(0_0_0/0.45),rgb(0_0_0/0.5)_45%,rgb(0_0_0/0.6))]" aria-hidden="true"></div>' +
@@ -224,6 +224,14 @@ Meleze.views.home = (function () {
     );
   }
 
+  /** Fond fixe derrière la vidéo : l'image tirée de la vidéo s'il y en a une (transition
+   *  sans saut), sinon la photo HD. Chargement différé : rien n'est téléchargé sur mobile. */
+  function heroBackdrop() {
+    const v = Meleze.media && Meleze.media.heroVideo;
+    if (v && v.poster) return '<img src="' + esc(v.poster) + '" alt="" loading="lazy" decoding="async">';
+    return photo('range', { sizes: '100vw', alt: '' });
+  }
+
   // ---- Vidéo de fond (≥ md) ------------------------------------------------------------------
   // Le <video> est écrit SANS source : mounted() ne branche les sources que si l'écran est
   // assez large, si le visiteur n'a demandé ni « moins d'animations » ni « économie de
@@ -231,8 +239,9 @@ Meleze.views.home = (function () {
   function heroVideo() {
     const v = Meleze.media && Meleze.media.heroVideo;
     if (!v) return '';
-    return '<video class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" data-hero-video muted loop playsinline preload="none" aria-hidden="true"' +
-        (v.poster ? ' poster="' + esc(v.poster) + '"' : '') + '></video>' +
+    // Pas d'attribut poster : il serait téléchargé même sur mobile ; l'image fixe est déjà
+    // affichée derrière (heroBackdrop, en chargement différé).
+    return '<video class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" data-hero-video muted loop playsinline preload="none" aria-hidden="true"></video>' +
       '<button type="button" data-hero-toggle class="absolute bottom-6 right-6 z-10 hidden min-h-[44px] rounded-full border-2 border-white/80 px-4 font-display text-sm font-bold text-white hover:bg-white hover:text-night lg:bottom-8 lg:right-12" aria-pressed="false">Pause</button>';
   }
 

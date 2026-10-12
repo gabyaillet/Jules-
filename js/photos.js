@@ -34,8 +34,11 @@ Meleze.photos.byType = {
 
 /* ==========================================================================
    Vidéo de fond de l'accueil (ordinateur). null = pas de vidéo : la photo HD
-   s'affiche avec un lent zoom. Pour activer : déposer les fichiers dans
+   s'affiche avec un lent zoom. Avec une vidéo, l'image fixe (poster) sert de
+   fond pendant le chargement. Pour activer : déposer les fichiers dans
    video/ et renseigner par ex. :
    Meleze.media = { heroVideo: { webm: 'video/hero.webm', mp4: 'video/hero.mp4', poster: 'video/hero.jpg' } };
    ========================================================================== */
-Meleze.media = { heroVideo: null };
+// Vidéo drone fournie par le client (forêt enneigée puis sommets), 9,4 s en aller-retour
+// pour une boucle sans saut ; 1600 × 900, sans son, ~2,2 Mo. Image fixe tirée de la vidéo.
+Meleze.media = { heroVideo: { webm: 'video/hero.webm', mp4: 'video/hero.mp4', poster: 'video/hero.jpg' } };

@@ -2,7 +2,7 @@
    Stratégie : réseau d'abord pour les fichiers du site (on voit toujours la
    dernière version quand il y a du réseau), cache en secours hors connexion.
    Les photos, elles, viennent du cache d'abord (elles ne changent pas). */
-const VERSION = 'meleze-v7';
+const VERSION = 'meleze-v8';
 const SHELL = [
   './', './index.html', './dist/styles.css', './icon.svg', './manifest.webmanifest',
   './fonts/bricolage-grotesque-latin-wght-normal.woff2', './fonts/source-sans-3-latin-wght-normal.woff2',
@@ -34,6 +34,9 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   if (url.origin !== self.location.origin) return;
+  // Vidéos : chargées par morceaux (requêtes Range, réponses 206) → laissées au navigateur,
+  // jamais mises en cache (trop lourdes et non stockables par morceaux).
+  if (e.request.headers.has('range') || e.request.destination === 'video' || /\.(webm|mp4)$/.test(url.pathname)) return;
   e.respondWith(
     fetch(e.request)
       .then((res) => {
