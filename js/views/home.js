@@ -122,13 +122,18 @@ Meleze.views.home = (function () {
       '<section class="' + WRAP + ' pb-14 pt-4 sm:pt-6 md:max-w-none md:px-0 md:pb-4 md:pt-0 lg:pb-12">' +
         '<div class="md:relative md:isolate md:flex md:h-[calc(100svh-4rem)] md:max-h-[62rem] md:min-h-[34rem] md:flex-col md:items-center md:justify-center md:overflow-hidden md:pb-10 md:text-center lg:pb-12">' +
           // Fond (≥ md) : photo HD (chargement différé → jamais téléchargée sur mobile, où ce
-          // bloc est masqué) + vidéo éventuelle par-dessus + voile sombre pour la lisibilité.
+          // bloc est masqué) + vidéo éventuelle par-dessus + voile léger pour la lisibilité.
           '<div class="absolute inset-0 -z-10 hidden overflow-hidden bg-night md:block">' +
             '<div class="hero-kenburns absolute inset-0 [&>img]:absolute [&>img]:inset-0 [&>img]:h-full [&>img]:w-full [&>img]:object-cover">' +
               heroBackdrop() +
             '</div>' +
+            // Voile en plus pour la photo seule (avant la vidéo, ou « moins d'animations ») :
+            // la vidéo, opaque, le recouvre dès qu'elle tourne.
+            '<div class="pointer-events-none absolute inset-0 bg-[image:linear-gradient(to_bottom,rgb(0_0_0/0.35),rgb(0_0_0/0.35)_45%,rgb(0_0_0/0.45))]" aria-hidden="true"></div>' +
             heroVideo() +
-            '<div class="pointer-events-none absolute inset-0 bg-[image:linear-gradient(to_bottom,rgb(0_0_0/0.45),rgb(0_0_0/0.5)_45%,rgb(0_0_0/0.6))]" aria-hidden="true"></div>' +
+            // Voile commun, léger : 20 % partout + un halo sombre centré derrière le texte, pour
+            // que la vidéo reste lumineuse (titre ≥ 3:1 mesuré sur toute la vidéo, ombre en plus).
+            '<div class="pointer-events-none absolute inset-0 bg-black/20 bg-[image:radial-gradient(70%_40%_at_50%_46%,rgb(0_0_0/0.35),transparent)]" aria-hidden="true"></div>' +
           '</div>' +
           // Haut : le lieu (avec un trait vert sur mobile, en blanc sur la photo) + l'autocollant (≥ md)
           '<div class="flex items-start justify-between gap-x-4 md:absolute md:right-8 md:top-8 lg:right-12 lg:top-10">' +
@@ -136,11 +141,10 @@ Meleze.views.home = (function () {
               '<span class="h-[3px] w-8 shrink-0 bg-accent md:hidden" aria-hidden="true"></span>Pralognan-la-Vanoise</p>' +
             '<span class="sticker ml-auto hidden shrink-0 rotate-3 bg-forest px-4 py-2 text-[0.95rem] text-white md:inline-flex lg:px-5 lg:py-2.5 lg:text-lg">Téléphérique offert</span>' +
           '</div>' +
-          // Bas (≥ md) : le dégradé sombre suit le bloc de texte (et le déborde de 10rem vers le
-          // haut), quelle que soit la hauteur de l'écran : blanc sur noir ≥ 0,68 → contraste ≥ 4,5:1.
+          // Centre (≥ md) : le lieu, le titre et les boutons, avec une ombre douce sous le texte.
           '<div class="mt-2.5 md:mt-0 md:flex md:flex-col md:items-center md:px-8">' +
-            '<p class="hidden font-display text-sm font-bold uppercase tracking-[0.28em] text-white/90 md:block lg:text-base">Pralognan-la-Vanoise · Savoie</p>' +
-            '<h1 id="page-title" tabindex="-1" class="max-w-[17ch] text-[length:clamp(1.75rem,7.7vw,1.9rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink sm:text-[2.25rem] md:mt-6 md:max-w-none md:text-[3.25rem] md:uppercase md:leading-[0.95] md:tracking-[-0.03em] md:text-white md:[text-shadow:0_2px_30px_rgb(0_0_0/0.35)] lg:text-[4.25rem] xl:text-[5rem]">Une heure pour la montagne,<br class="hidden md:block"> une expérience en retour.</h1>' +
+            '<p class="hidden font-display text-sm font-bold uppercase tracking-[0.28em] text-white [text-shadow:0_1px_3px_rgb(0_0_0/0.5),0_0_20px_rgb(0_0_0/0.45)] md:block lg:text-base">Pralognan-la-Vanoise · Savoie</p>' +
+            '<h1 id="page-title" tabindex="-1" class="max-w-[17ch] text-[length:clamp(1.75rem,7.7vw,1.9rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink sm:text-[2.25rem] md:mt-6 md:max-w-none md:text-[3.25rem] md:uppercase md:leading-[0.95] md:tracking-[-0.03em] md:text-white md:[text-shadow:0_2px_4px_rgb(0_0_0/0.25),0_2px_30px_rgb(0_0_0/0.4)] lg:text-[4.25rem] xl:text-[5rem]">Une heure pour la montagne,<br class="hidden md:block"> une expérience en retour.</h1>' +
             '<div class="hidden gap-4 md:mt-10 md:flex md:flex-wrap md:items-center md:justify-center">' +
               '<a href="#/missions" class="btn-primary">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>' +
               '<a href="#/wallet" class="btn border-2 border-white text-white hover:bg-white hover:text-night">Mon espace</a>' +
@@ -244,8 +248,7 @@ Meleze.views.home = (function () {
     if (!v) return '';
     // Pas d'attribut poster : il serait téléchargé même sur mobile ; l'image fixe est déjà
     // affichée derrière (heroBackdrop, en chargement différé).
-    return '<video class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" data-hero-video muted loop playsinline preload="none" aria-hidden="true"></video>' +
-      '<button type="button" data-hero-toggle class="absolute bottom-16 right-6 z-10 hidden min-h-[44px] rounded-full border-2 border-white/80 px-4 font-display text-sm font-bold text-white hover:bg-white hover:text-night lg:bottom-[4.5rem] lg:right-12" aria-pressed="false">Pause</button>';
+    return '<video class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" data-hero-video muted loop playsinline preload="none" aria-hidden="true"></video>';
   }
 
   let heroObserver = null;
@@ -262,27 +265,14 @@ Meleze.views.home = (function () {
       const s = document.createElement('source');
       s.type = type; s.src = src; video.appendChild(s);
     });
-    const btn = root.querySelector('[data-hero-toggle]');
-    // Vidéo et bouton n'apparaissent qu'une fois la lecture lancée : si le navigateur ne sait
-    // pas lire le fichier (ex. MP4 en HEVC), la photo HD reste affichée, sans bouton inutile.
-    video.addEventListener('playing', () => {
-      video.classList.remove('opacity-0');
-      if (btn) btn.classList.remove('hidden');
-    }, { once: true });
-    let paused = false;
-    if (btn) {
-      btn.addEventListener('click', () => {
-        paused = !paused;
-        if (paused) video.pause(); else video.play().catch(() => {});
-        btn.textContent = paused ? 'Lecture' : 'Pause';
-        btn.setAttribute('aria-pressed', String(paused));
-      });
-    }
+    // La vidéo n'apparaît qu'une fois la lecture lancée : si le navigateur ne sait pas lire
+    // le fichier (ex. MP4 en HEVC), la photo HD reste affichée.
+    video.addEventListener('playing', () => video.classList.remove('opacity-0'), { once: true });
     video.load();
     // Économie : la vidéo ne tourne que lorsqu'elle est visible à l'écran.
     if ('IntersectionObserver' in window) {
       heroObserver = new IntersectionObserver((entries) => {
-        entries.forEach((e) => { if (e.isIntersecting && !paused) video.play().catch(() => {}); else video.pause(); });
+        entries.forEach((e) => { if (e.isIntersecting) video.play().catch(() => {}); else video.pause(); });
       }, { threshold: 0.15 });
       heroObserver.observe(video);
     } else {

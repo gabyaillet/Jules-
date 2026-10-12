@@ -2,7 +2,7 @@
    Stratégie : réseau d'abord pour les fichiers du site (on voit toujours la
    dernière version quand il y a du réseau), cache en secours hors connexion.
    Les photos, elles, viennent du cache d'abord (elles ne changent pas). */
-const VERSION = 'meleze-v11';
+const VERSION = 'meleze-v12';
 const SHELL = [
   './', './index.html', './dist/styles.css', './icon.svg', './manifest.webmanifest',
   './fonts/bricolage-grotesque-latin-wght-normal.woff2', './fonts/source-sans-3-latin-wght-normal.woff2',
