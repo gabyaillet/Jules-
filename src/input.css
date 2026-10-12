@@ -238,6 +238,12 @@
     .photo-word { background: none; filter: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
   }
 
+  /* Accueil (ordinateur) : lent zoom de la photo de fond tant qu'il n'y a pas de vidéo.
+     Coupé si le visiteur demande moins d'animations. */
+  .hero-kenburns > img { animation: kenburns 28s ease-in-out infinite alternate; transform-origin: 50% 40%; }
+  @keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.09); } }
+  @media (prefers-reduced-motion: reduce) { .hero-kenburns > img { animation: none; } }
+
   /* Viseur du scanner */
   .scan-frame { @apply relative mx-auto aspect-square w-full max-w-[18rem] overflow-hidden bg-night; }
   .scan-corner { @apply absolute h-9 w-9 border-white; }

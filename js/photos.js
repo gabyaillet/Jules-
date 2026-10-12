@@ -31,3 +31,11 @@ Meleze.photos.byType = {
   village: 'marche',
   nature: 'sentiers',
 };
+
+/* ==========================================================================
+   Vidéo de fond de l'accueil (ordinateur). null = pas de vidéo : la photo HD
+   s'affiche avec un lent zoom. Pour activer : déposer les fichiers dans
+   video/ et renseigner par ex. :
+   Meleze.media = { heroVideo: { webm: 'video/hero.webm', mp4: 'video/hero.mp4', poster: 'video/hero.jpg' } };
+   ========================================================================== */
+Meleze.media = { heroVideo: null };
