@@ -40,5 +40,5 @@ Meleze.photos.byType = {
    Meleze.media = { heroVideo: { webm: 'video/hero.webm', mp4: 'video/hero.mp4', poster: 'video/hero.jpg' } };
    ========================================================================== */
 // Vidéo drone fournie par le client (forêt enneigée puis sommets), 9,4 s en aller-retour
-// pour une boucle sans saut ; 1600 × 900, sans son, ~2,2 Mo. Image fixe tirée de la vidéo.
+// pour une boucle sans saut ; 1920 × 1080, sans son, ~10 Mo. Image fixe tirée de la vidéo.
 Meleze.media = { heroVideo: { webm: 'video/hero.webm', mp4: 'video/hero.mp4', poster: 'video/hero.jpg' } };
