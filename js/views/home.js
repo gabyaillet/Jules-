@@ -262,11 +262,15 @@ Meleze.views.home = (function () {
       const s = document.createElement('source');
       s.type = type; s.src = src; video.appendChild(s);
     });
-    video.addEventListener('playing', () => video.classList.remove('opacity-0'), { once: true });
     const btn = root.querySelector('[data-hero-toggle]');
+    // Vidéo et bouton n'apparaissent qu'une fois la lecture lancée : si le navigateur ne sait
+    // pas lire le fichier (ex. MP4 en HEVC), la photo HD reste affichée, sans bouton inutile.
+    video.addEventListener('playing', () => {
+      video.classList.remove('opacity-0');
+      if (btn) btn.classList.remove('hidden');
+    }, { once: true });
     let paused = false;
     if (btn) {
-      btn.classList.remove('hidden');
       btn.addEventListener('click', () => {
         paused = !paused;
         if (paused) video.pause(); else video.play().catch(() => {});
