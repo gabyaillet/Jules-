@@ -114,15 +114,15 @@ Meleze.views.home = (function () {
       // ---- Hero : une seule section, deux mises en page -------------------------------------
       // · Mobile (< md) « direct » : le lieu, le titre, puis tout de suite les 3 missions en
       //   lignes compactes et le bouton, le tout visible sur le premier écran.
-      // · Tablette / ordinateur (≥ md) « Plein écran » : la photo du client (lac gelé sous les
-      //   sommets) en grand, le titre en blanc posé dessus, les deux boutons.
+      // · Tablette / ordinateur (≥ md) « Plein écran » : une photo de montagne haute définition
+      //   (Unsplash, jusqu'à 2400 px) en grand, le titre en blanc posé dessus, les deux boutons.
       // Un seul <h1 id="page-title"> : seule sa mise en forme change selon la largeur.
       '<section class="' + WRAP + ' pb-14 pt-4 sm:pt-6 lg:pb-24 lg:pt-8">' +
         '<div class="md:relative md:isolate md:flex md:h-[min(78svh,56rem)] md:min-h-[34rem] md:flex-col md:justify-between md:overflow-hidden md:rounded-3xl lg:rounded-4xl md:[[data-theme=dark]_&]:ring-1 md:[[data-theme=dark]_&]:ring-white/15">' +
-          // Photo (≥ md) : 9 % plus haute que son cadre et calée en haut, le bas de l'image
-          // (où se trouve le filigrane © Randozone) reste caché.
-          '<div class="ph ph-lg absolute inset-0 -z-10 hidden md:block [&>img]:h-[109%] [&>img]:object-[58%_30%] lg:[&>img]:object-[50%_20%]">' +
-            photo('sentiers', { eager: true, sizes: '(min-width:1216px) 1152px, 100vw' }) +
+          // Photo (≥ md) : chargement différé (loading=lazy) → jamais téléchargée sur mobile,
+          // où ce bloc est masqué ; à l'écran sur ordinateur, elle se charge aussitôt.
+          '<div class="ph ph-lg absolute inset-0 -z-10 hidden md:block">' +
+            photo('range', { sizes: '(min-width:1216px) 1152px, 100vw' }) +
             // Voile léger en haut, plus dense dans l'angle du lieu (roche claire sur grand écran)
             '<div class="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[image:radial-gradient(ellipse_60%_100%_at_0%_0%,rgb(0_0_0/0.5),transparent),linear-gradient(to_bottom,rgb(0_0_0/0.3),transparent)] lg:h-64" aria-hidden="true"></div>' +
           '</div>' +

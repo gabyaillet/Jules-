@@ -189,7 +189,7 @@ Meleze.ui = (function () {
   // --- Photos responsives -------------------------------------------------------
   // Unsplash sert automatiquement de l'AVIF/WebP compressé (auto=format, q=60)
   // à la largeur demandée : le téléphone ne télécharge que ce qu'il affiche.
-  const WIDTHS = [480, 800, 1200, 1800];
+  const WIDTHS = [480, 800, 1200, 1800, 2400];
   const isLocal = (src) => /^(https?:|\/|\.|img\/)/.test(src);
   const unsplash = (id, w) => 'https://images.unsplash.com/photo-' + id + '?auto=format&fit=crop&q=60&w=' + w;
 
