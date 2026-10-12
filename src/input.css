@@ -139,6 +139,7 @@
 
   /* Étiquette — gris neutre par défaut ; texte foncé sur fond blanc fixe */
   .tag { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 font-display text-[0.875rem] font-bold leading-snug text-ink; }
+  .tag-sign { @apply rounded-none; } /* type de mission : pancarte carrée */
   .tag:where([class*='bg-white']) { @apply text-night; }
 
   /* Photos — seuls éléments arrondis (avec les contrôles) ; le conteneur donne la taille et un fond neutre
@@ -151,7 +152,10 @@
   .group:hover .ph-zoom > img { transform: scale(1.04); }
 
   /* Étiquette inclinée posée sur une photo (façon autocollant) */
-  .sticker { @apply inline-flex items-center rounded-full px-3.5 py-1.5 font-display text-sm font-bold text-night shadow-[0_6px_18px_-8px_rgb(0_0_0/0.4)]; }
+  /* Mixte voulu par le client : les « pancartes » (étiquettes inclinées posées sur
+     les photos, types de mission) sont CARRÉES ; les statuts, filtres et boutons
+     restent en pilule. */
+  .sticker { @apply inline-flex items-center rounded-none px-3.5 py-1.5 font-display text-sm font-bold text-night shadow-[0_6px_18px_-8px_rgb(0_0_0/0.4)]; }
 
   /* Formulaires */
   .label { @apply mb-1.5 block font-display font-semibold text-ink; }

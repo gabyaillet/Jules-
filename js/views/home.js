@@ -1,7 +1,9 @@
 /* ==========================================================================
-   Vue : Accueil touriste — concept A « Typo-photo », version allégée
-   Base blanche, titres gras quasi noirs, un seul accent vert. Le mot
-   « montagne » du titre est rempli par une photo (background-clip: text).
+   Vue : Accueil touriste — base blanche, titres gras quasi noirs, un seul
+   accent vert. Hero « Plein écran » sur tablette / ordinateur (grande photo,
+   titre en blanc posé dessus) ; sur mobile, hero « direct » : le titre puis
+   les 3 missions, visibles dès l'arrivée. Le mot « Vanoise » de l'appel final
+   est rempli par une photo (background-clip: text).
    Peu de texte, une idée par bloc, des APLATS pleins (vert, noir, gris clair)
    plutôt que des filets. Photos arrondies ; tous les autres blocs sont carrés.
    ========================================================================== */
@@ -16,7 +18,7 @@ Meleze.views.home = (function () {
   const WRAP = 'mx-auto max-w-app px-5 sm:px-8';
   const SECTION = WRAP + ' py-14 lg:py-24';
   const H2 = 'text-[2.5rem] sm:text-5xl lg:text-6xl';
-  /** Lignes du titre qui encadrent le mot-photo géant. */
+  /** Lignes du titre qui accompagnent le mot-photo géant (appel final). */
   const HERO_LINE = 'text-[length:clamp(2rem,10.2vw,2.5rem)] leading-[0.98] tracking-[-0.035em] sm:text-6xl lg:text-[4.75rem]';
 
   /**
@@ -48,7 +50,7 @@ Meleze.views.home = (function () {
     return '<li class="w-[85%] shrink-0 snap-start sm:w-[46%] lg:w-auto">' +
       '<a href="#/missions?focus=' + esc(m.id) + '" class="group block">' +
         '<div class="ph ph-zoom aspect-[5/4]">' + photo(m, { sizes: '(min-width:1024px) 30vw, 85vw', alt: '' }) +
-          '<span class="tag absolute left-3 top-3 ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
+          '<span class="tag tag-sign absolute left-3 top-3 ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
         '</div>' +
         '<h3 class="mt-5 text-[1.75rem] leading-[1.05] group-hover:underline group-hover:decoration-accent group-hover:decoration-[3px] group-hover:underline-offset-4">' + esc(m.title) + '</h3>' +
         '<p class="mt-2 font-display text-lg font-semibold text-ink">' + esc(missionDuration(m)) + '</p>' +
@@ -63,6 +65,40 @@ Meleze.views.home = (function () {
     '</li>';
   }
 
+  /** Contrepartie en version courte pour les lignes du hero mobile (sinon : le titre, tronqué). */
+  const SHORT_REWARD = {
+    'm-sentiers': 'Téléphérique offert',
+    'm-marche': 'Beaufort offert',
+    'm-transport': 'Patinoire offerte',
+  };
+  /** Participation en cours : pastille noire à la place de la contrepartie. */
+  const STATUS = { inscrite: 'Inscrit·e', preuve: 'Justificatif envoyé', refusee: 'Justificatif refusé' };
+
+  /**
+   * Ligne mission du hero mobile : vignette, titre, puis durée + contrepartie (ou statut)
+   * sur une même ligne quand il y a la place, flèche. Une tuile gris clair carrée,
+   * entièrement cliquable.
+   */
+  function missionRow(m) {
+    const p = Meleze.store.participationFor(m.id);
+    const PILL = 'tag block min-w-0 max-w-full truncate px-2.5 py-0.5 text-[0.875rem] max-[359px]:px-2 max-[359px]:text-[0.8125rem]';
+    const badge = p
+      ? '<span class="' + PILL + ' bg-ink text-surface">' + esc(STATUS[p.status] || STATUS.inscrite) + '</span>'
+      : '<span class="sr-only">En échange : ' + esc(m.reward.title) + '</span>' +
+        '<span class="' + PILL + ' bg-forest text-white" aria-hidden="true">' + esc(SHORT_REWARD[m.id] || m.reward.title) + '</span>';
+    return '<li><a href="#/missions?focus=' + esc(m.id) + '" class="flex items-center gap-3 bg-sunk p-2 pr-2.5 transition-colors hover:bg-line">' +
+      '<div class="ph ph-sm h-16 w-16 shrink-0 min-[360px]:h-[4.75rem] min-[360px]:w-[4.75rem] min-[375px]:h-[5.5rem] min-[375px]:w-[5.5rem]">' + photo(m, { sizes: '88px', alt: '' }) + '</div>' +
+      '<div class="min-w-0 flex-1 py-1">' +
+        '<h3 class="line-clamp-3 text-[1.1rem] leading-[1.1] tracking-[-0.02em] text-ink">' + esc(m.title) + '</h3>' +
+        '<div class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">' +
+          '<p class="font-display text-[0.95rem] font-semibold leading-tight text-ink"><span class="sr-only">Durée : </span>' + esc(missionDuration(m) || 'Variable') + '</p>' +
+          badge +
+        '</div>' +
+      '</div>' +
+      icon('arrow', 'h-5 w-5 shrink-0 text-ink') +
+    '</a></li>';
+  }
+
   function render(state) {
     // Les missions (3 pour l'instant) : celles de la saison en cours d'abord.
     const season = currentSeason();
@@ -75,28 +111,40 @@ Meleze.views.home = (function () {
     const more = state.missions.length > picks.length;
 
     return (
-      // ---- Hero « Typo-photo » : le mot montagne rempli par une photo -----------------------
-      '<section class="typo-hero ' + WRAP + ' pb-14 pt-8 sm:pt-12 lg:pb-24 lg:pt-16">' +
-        '<p class="flex items-center gap-3 font-display text-base font-bold tracking-[-0.005em] text-ink">' +
-          '<span class="h-[3px] w-8 bg-accent" aria-hidden="true"></span>Pralognan-la-Vanoise</p>' +
-        // Nom accessible explicite : les lignes en bloc ajouteraient une espace avant la virgule
-        '<h1 id="page-title" tabindex="-1" class="mt-7 font-extrabold sm:mt-10" aria-label="Une heure pour la montagne, une expérience en retour.">' +
-          '<span class="block ' + HERO_LINE + '">Une heure pour la </span>' +
-          // Bande basse des sommets : roche au soleil, neige, éboulis bleutés
-          photoWord('montagne', 'stars', '55%', 'mb-1.5 mt-2 sm:mb-1 sm:mt-4') +
-          '<span class="sr-only">, </span>' +
-          '<span class="block ' + HERO_LINE + ' md:text-right">une expérience en retour.</span>' +
-        '</h1>' +
-        '<div class="mt-8 grid gap-7 md:mt-14 md:grid-cols-[1fr_auto] md:items-end md:gap-12">' +
-          '<p class="max-w-md font-display text-xl font-semibold leading-snug tracking-[-0.01em] text-ink sm:text-2xl">Une petite mission, un cadeau des commerçants du village.</p>' +
-          '<div class="flex flex-col gap-3 sm:flex-row">' +
-            '<a href="#/missions" class="btn-primary">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>' +
-            '<a href="#/wallet" class="btn-secondary">Mon espace</a>' +
+      // ---- Hero : une seule section, deux mises en page -------------------------------------
+      // · Mobile (< md) « direct » : le lieu, le titre, puis tout de suite les 3 missions en
+      //   lignes compactes et le bouton, le tout visible sur le premier écran.
+      // · Tablette / ordinateur (≥ md) « Plein écran » : la photo du client (lac gelé sous les
+      //   sommets) en grand, le titre en blanc posé dessus, les deux boutons.
+      // Un seul <h1 id="page-title"> : seule sa mise en forme change selon la largeur.
+      '<section class="' + WRAP + ' pb-14 pt-4 sm:pt-6 lg:pb-24 lg:pt-8">' +
+        '<div class="md:relative md:isolate md:flex md:h-[min(78svh,56rem)] md:min-h-[34rem] md:flex-col md:justify-between md:overflow-hidden md:rounded-3xl lg:rounded-4xl md:[[data-theme=dark]_&]:ring-1 md:[[data-theme=dark]_&]:ring-white/15">' +
+          // Photo (≥ md) : 9 % plus haute que son cadre et calée en haut, le bas de l'image
+          // (où se trouve le filigrane © Randozone) reste caché.
+          '<div class="ph ph-lg absolute inset-0 -z-10 hidden md:block [&>img]:h-[109%] [&>img]:object-[58%_30%] lg:[&>img]:object-[50%_20%]">' +
+            photo('sentiers', { eager: true, sizes: '(min-width:1216px) 1152px, 100vw' }) +
+            // Voile léger en haut, plus dense dans l'angle du lieu (roche claire sur grand écran)
+            '<div class="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[image:radial-gradient(ellipse_60%_100%_at_0%_0%,rgb(0_0_0/0.5),transparent),linear-gradient(to_bottom,rgb(0_0_0/0.3),transparent)] lg:h-64" aria-hidden="true"></div>' +
           '</div>' +
-        '</div>' +
-        '<div class="relative mt-12 lg:mt-16">' +
-          '<div class="ph ph-lg aspect-[4/3] sm:aspect-[21/9]">' + photo('hero', { eager: true, sizes: '(min-width:1216px) 1152px, 100vw' }) + '</div>' +
-          '<span class="sticker absolute -top-4 right-5 -rotate-3 bg-forest px-4 py-2 text-base text-white sm:right-10">Téléphérique offert</span>' +
+          // Haut : le lieu (avec un trait vert sur mobile, en blanc sur la photo) + l'autocollant (≥ md)
+          '<div class="flex items-start justify-between gap-x-4 md:p-8 lg:p-12">' +
+            '<p class="flex items-center gap-3 font-display text-base font-bold leading-tight tracking-[-0.005em] text-ink md:block md:pt-1 md:text-white md:[text-shadow:0_1px_10px_rgb(0_0_0/0.45)] lg:text-lg">' +
+              '<span class="h-[3px] w-8 shrink-0 bg-accent md:hidden" aria-hidden="true"></span>Pralognan-la-Vanoise</p>' +
+            '<span class="sticker ml-auto hidden shrink-0 rotate-3 bg-forest px-4 py-2 text-[0.95rem] text-white md:inline-flex lg:px-5 lg:py-2.5 lg:text-lg">Téléphérique offert</span>' +
+          '</div>' +
+          // Bas (≥ md) : le dégradé sombre suit le bloc de texte (et le déborde de 10rem vers le
+          // haut), quelle que soit la hauteur de l'écran : blanc sur noir ≥ 0,68 → contraste ≥ 4,5:1.
+          '<div class="mt-2.5 md:relative md:isolate md:mt-0 md:grid md:gap-6 md:p-8 md:before:pointer-events-none md:before:absolute md:before:inset-x-0 md:before:-top-40 md:before:bottom-0 md:before:-z-10 md:before:bg-[image:linear-gradient(to_top,rgb(0_0_0/0.82)_0%,rgb(0_0_0/0.68)_calc(100%-10rem),rgb(0_0_0/0.3)_calc(100%-5rem),transparent_100%)] lg:grid-cols-[1fr_auto] lg:items-end lg:gap-12 lg:p-12">' +
+            '<h1 id="page-title" tabindex="-1" class="max-w-[17ch] text-[length:clamp(1.75rem,7.7vw,1.9rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink sm:text-[2.25rem] md:max-w-[14ch] md:text-6xl md:leading-[0.95] md:tracking-[-0.04em] md:text-white md:[text-shadow:0_2px_24px_rgb(0_0_0/0.35)] lg:max-w-[15ch] lg:text-[4.25rem] lg:leading-[0.92] xl:text-[5rem]">Une heure pour la montagne, une expérience en retour.</h1>' +
+            '<div class="hidden gap-4 md:flex md:flex-wrap md:items-center lg:flex-col lg:items-stretch lg:gap-3">' +
+              '<a href="#/missions" class="btn-primary">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>' +
+              '<a href="#/wallet" class="btn border-2 border-white text-white hover:bg-white hover:text-night">Mon espace</a>' +
+            '</div>' +
+          '</div>' +
+          // Mobile : les missions tout de suite, puis le bouton (« Mon espace » est dans la barre du bas)
+          '<h2 class="sr-only md:hidden">Les missions</h2>' +
+          '<ul class="mt-5 grid grid-cols-1 gap-2 md:hidden">' + picks.map(missionRow).join('') + '</ul>' +
+          '<a href="#/missions" class="btn-primary mt-3 w-full md:hidden">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>' +
         '</div>' +
       '</section>' +
 
@@ -113,8 +161,8 @@ Meleze.views.home = (function () {
         '</ol>' +
       '</section>' +
 
-      // ---- Les missions : grandes cartes photo ----------------------------------------------
-      '<section class="' + WRAP + ' pb-14 lg:pb-24" aria-labelledby="now">' +
+      // ---- Les missions : grandes cartes photo (≥ md ; sur mobile, elles sont dans le hero) ----
+      '<section class="' + WRAP + ' hidden pb-14 md:block lg:pb-24" aria-labelledby="now">' +
         '<div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">' +
           '<h2 id="now" class="' + H2 + '">Les missions</h2>' +
           '<a href="#/missions" class="link text-lg">' + (more ? 'Voir les ' + state.missions.length + ' missions' : 'Toutes les missions') + ' ' + icon('arrow', 'h-5 w-5') + '</a>' +

@@ -111,7 +111,7 @@ Meleze.views.wallet = (function () {
       '<div class="flex items-center gap-4">' +
         '<div class="ph ph-sm aspect-square w-20 shrink-0 sm:w-24">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
         '<div class="min-w-0 flex-1">' +
-          '<span class="tag ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
+          '<span class="tag tag-sign ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
           '<h3 class="mt-2 text-2xl leading-[1.05] sm:text-[1.75rem]">' + esc(m.title) + '</h3>' +
         '</div>' +
       '</div>' +

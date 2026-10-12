@@ -426,7 +426,7 @@ Meleze.views.pro = (function () {
     return '<article>' +
       '<div class="bg-ink p-6 text-surface sm:p-7">' +
         '<div class="flex flex-wrap items-center gap-2">' +
-          '<span class="tag bg-surface text-ink">' + esc(t.label) + '</span>' +
+          '<span class="tag tag-sign bg-surface text-ink">' + esc(t.label) + '</span>' +
           '<span class="tag ' + esc(st.color) + '">' + esc(st.label) + '</span>' +
         '</div>' +
         '<h3 class="mt-4 break-words text-3xl sm:text-4xl">' + esc(m.title) + '</h3>' +
@@ -483,7 +483,7 @@ Meleze.views.pro = (function () {
       '<div class="space-y-6 bg-sunk p-6 sm:p-7">' +
         '<div>' +
           '<div class="flex flex-wrap items-center gap-x-3 gap-y-2">' +
-            '<span class="tag ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
+            '<span class="tag tag-sign ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
             (proof.sentAt ? '<span class="font-display font-semibold">Envoyé le ' + esc(date(proof.sentAt)) + '</span>' : '') +
           '</div>' +
           '<h3 class="mt-4 break-words text-2xl sm:text-3xl">' + esc(m.title) + '</h3>' +

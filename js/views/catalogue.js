@@ -15,7 +15,7 @@ Meleze.views.catalogue = (function () {
   /** Conteneur commun : même largeur et mêmes marges que les autres pages. */
   const WRAP = 'mx-auto max-w-app px-5 sm:px-8';
   /** Pastille posée sur la photo (type) : texte seul, jamais inclinée. */
-  const PILL = 'rounded-full px-3.5 py-1.5 font-display text-base font-bold leading-snug';
+  const PILL = 'rounded-none px-3.5 py-1.5 font-display text-base font-bold leading-snug'; // pancarte carrée
 
   // Filtres conservés pendant la navigation (pas besoin de les persister)
   const filters = { season: 'all', type: 'all' };
