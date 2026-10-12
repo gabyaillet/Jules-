@@ -119,8 +119,8 @@ Meleze.views.home = (function () {
       //   blanches et les deux boutons. Tant qu'aucune vidéo n'est fournie (Meleze.media.heroVideo),
       //   la photo HD s'affiche avec un lent zoom (« Ken Burns »).
       // Un seul <h1 id="page-title"> : seule sa mise en forme change selon la largeur.
-      '<section class="' + WRAP + ' pb-14 pt-4 sm:pt-6 md:max-w-none md:px-0 md:pt-0 lg:pb-24">' +
-        '<div class="md:relative md:isolate md:flex md:h-[calc(100svh-4rem)] md:max-h-[62rem] md:min-h-[34rem] md:flex-col md:items-center md:justify-center md:overflow-hidden md:text-center">' +
+      '<section class="' + WRAP + ' pb-14 pt-4 sm:pt-6 md:max-w-none md:px-0 md:pb-4 md:pt-0 lg:pb-12">' +
+        '<div class="md:relative md:isolate md:flex md:h-[calc(100svh-4rem)] md:max-h-[62rem] md:min-h-[34rem] md:flex-col md:items-center md:justify-center md:overflow-hidden md:pb-10 md:text-center lg:pb-12">' +
           // Fond (≥ md) : photo HD (chargement différé → jamais téléchargée sur mobile, où ce
           // bloc est masqué) + vidéo éventuelle par-dessus + voile sombre pour la lisibilité.
           '<div class="absolute inset-0 -z-10 hidden overflow-hidden bg-night md:block">' +
@@ -150,6 +150,9 @@ Meleze.views.home = (function () {
           '<h2 class="sr-only md:hidden">Les missions</h2>' +
           '<ul class="mt-5 grid grid-cols-1 gap-2 md:hidden">' + picks.map(missionRow).join('') + '</ul>' +
           '<a href="#/missions" class="btn-primary mt-3 w-full md:hidden">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>' +
+          // Bas (≥ md, comme Campus) : le début de la suite, un pan blanc aux coins arrondis
+          // (même arrondi que les photos) qui recouvre le bas de la vidéo et invite à défiler.
+          '<div class="absolute inset-x-0 bottom-0 hidden h-10 rounded-t-3xl bg-surface md:block lg:h-12 lg:rounded-t-4xl" aria-hidden="true"></div>' +
         '</div>' +
       '</section>' +
 
@@ -242,7 +245,7 @@ Meleze.views.home = (function () {
     // Pas d'attribut poster : il serait téléchargé même sur mobile ; l'image fixe est déjà
     // affichée derrière (heroBackdrop, en chargement différé).
     return '<video class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" data-hero-video muted loop playsinline preload="none" aria-hidden="true"></video>' +
-      '<button type="button" data-hero-toggle class="absolute bottom-6 right-6 z-10 hidden min-h-[44px] rounded-full border-2 border-white/80 px-4 font-display text-sm font-bold text-white hover:bg-white hover:text-night lg:bottom-8 lg:right-12" aria-pressed="false">Pause</button>';
+      '<button type="button" data-hero-toggle class="absolute bottom-16 right-6 z-10 hidden min-h-[44px] rounded-full border-2 border-white/80 px-4 font-display text-sm font-bold text-white hover:bg-white hover:text-night lg:bottom-[4.5rem] lg:right-12" aria-pressed="false">Pause</button>';
   }
 
   let heroObserver = null;
