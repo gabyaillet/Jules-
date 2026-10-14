@@ -67,7 +67,7 @@ Meleze.views.home = (function () {
 
   /** Contrepartie en version courte pour les lignes du hero mobile (sinon : le titre, tronqué). */
   const SHORT_REWARD = {
-    'm-sentiers': 'Téléphérique offert',
+    'm-sentiers': 'Aller-retour Mont Bochor',
     'm-marche': 'Beaufort offert',
     'm-transport': 'Patinoire offerte',
   };

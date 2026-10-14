@@ -26,6 +26,7 @@ Meleze.views.legal = (function () {
     directeur: '', // directeur·rice de la publication (souvent la même personne)
     photos: '', // auteur ou source des photos du covoiturage et du marché
     video: '', // auteur ou source de la vidéo de l'accueil, ex. « Gab » ou « Pexels – Nom »
+    telephoneHebergeur: '', // téléphone de GitHub, Inc. (la loi le demande) : à vérifier avant de le mettre
   };
   const MISE_A_JOUR = '14 octobre 2026';
 
@@ -73,7 +74,7 @@ Meleze.views.legal = (function () {
 
       section('hebergeur', 'Hébergement',
         '<p class="' + P + '">Le site est hébergé par <strong>GitHub, Inc.</strong> (service GitHub Pages), ' +
-          '88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis — ' +
+          '88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis — téléphone : ' + val(e.telephoneHebergeur) + ' — ' +
           link('https://support.github.com/contact', 'support.github.com/contact') + '.</p>') +
 
       section('demo', 'Version de démonstration',
@@ -98,12 +99,17 @@ Meleze.views.legal = (function () {
           '<strong>uniquement dans votre navigateur</strong>, sur votre appareil. Ils ne sont envoyés ni à l’éditeur ni à des tiers.</p>' +
         '<ul class="mt-4 max-w-[68ch] list-disc space-y-2 pl-6 text-lg marker:text-accent">' +
           '<li><strong>Caméra</strong> : utilisée seulement pour lire les codes QR dans l’espace partenaires. Les images sont analysées sur l’appareil, jamais enregistrées ni envoyées.</li>' +
-          '<li><strong>Espace partenaires</strong> : l’e-mail, le rôle et l’organisation saisis à la connexion restent dans l’onglet et sont effacés à sa fermeture.</li>' +
+          '<li><strong>Espace partenaires</strong> : l’e-mail, le rôle et l’organisation saisis à la connexion restent dans l’onglet et sont effacés à sa fermeture. ' +
+            'Les missions publiées depuis cet espace (avec le nom de la structure) sont, elles, enregistrées dans le navigateur comme les autres données.</li>' +
           '<li><strong>Tout effacer</strong> : bouton « Réinitialiser les données de démo » en bas de ' + link('#/wallet', 'Mon espace') + ', ou suppression des données du site dans les réglages du navigateur.</li>' +
           '<li><strong>Cookies</strong> : aucun cookie, aucune mesure d’audience, aucune publicité. Le stockage du navigateur sert uniquement au fonctionnement du site (missions, bons, thème clair ou sombre).</li>' +
-          '<li><strong>Services tiers</strong> : certaines photos sont chargées depuis Unsplash, et l’hébergeur GitHub peut enregistrer l’adresse IP des visiteurs pour la sécurité du service. Comme pour toute page web, ils reçoivent alors votre adresse IP et des informations techniques sur votre navigateur.</li>' +
+          '<li><strong>Services tiers</strong> : certaines photos sont chargées depuis Unsplash (Canada), et l’hébergeur GitHub (États-Unis) peut enregistrer l’adresse IP des visiteurs pour la sécurité du service. Comme pour toute page web, ils reçoivent alors votre adresse IP et des informations techniques sur votre navigateur, selon leurs propres politiques de confidentialité.</li>' +
+          '<li><strong>Responsable du traitement</strong> : l’éditeur du site (voir plus haut).</li>' +
+          '<li><strong>Finalité et base légale</strong> : afficher le site et ses photos et en assurer la sécurité, sur le fondement de l’intérêt légitime de l’éditeur (article 6.1.f du RGPD).</li>' +
+          '<li><strong>Durée de conservation</strong> : les données enregistrées dans votre navigateur y restent jusqu’à ce que vous les effaciez ; les journaux techniques de GitHub et d’Unsplash sont conservés selon leurs propres règles.</li>' +
         '</ul>' +
-        '<p class="' + P + '">Vous pouvez exercer vos droits (accès, rectification, effacement, opposition) en écrivant à l’éditeur : ' + mail + '. ' +
+        '<p class="' + P + '">Vous disposez d’un droit d’accès, de rectification, d’effacement, de limitation et d’opposition, ainsi que du droit à la portabilité lorsqu’il s’applique. ' +
+          'Pour les exercer, écrivez à l’éditeur : ' + mail + '. ' +
           'Vous pouvez aussi adresser une réclamation à la ' + link('https://www.cnil.fr/fr/plaintes', 'CNIL') + '.</p>') +
     '</div>';
   }

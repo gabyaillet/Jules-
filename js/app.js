@@ -98,6 +98,9 @@
 
   const globalActions = {
     theme() { setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); },
+    // « Aller au contenu » : place le focus sur le titre de la page sans toucher au hash
+    // (#app serait lu par le routeur comme une page inconnue et ramènerait à l'accueil).
+    skip() { const h = document.getElementById('page-title') || root; h.focus(); },
   };
 
   // ------------------------------------------------------------------------
