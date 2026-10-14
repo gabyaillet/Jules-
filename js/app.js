@@ -5,6 +5,7 @@
      #/missions      Catalogue (?focus=<id> pour cibler une mission)
      #/wallet        Profil / wallet
      #/pro           Espace partenaire (#/pro/scan, #/pro/justificatifs, #/pro/creer)
+     #/mentions-legales  Mentions légales, crédits et données personnelles
 
    Contrat d'une vue : { title, render(state, params, sub), actions?, forms?,
    changes?, mounted?(root, params, sub, app), unmount?() }.
@@ -13,7 +14,7 @@
   'use strict';
   const { views, store, ui } = Meleze;
 
-  const ROUTES = { '': views.home, missions: views.catalogue, wallet: views.wallet, pro: views.pro };
+  const ROUTES = { '': views.home, missions: views.catalogue, wallet: views.wallet, pro: views.pro, 'mentions-legales': views.legal };
   const root = document.getElementById('app');
   let route = parse();
   let queued = false;

@@ -61,7 +61,7 @@ Jules-/
 │   │   ├── qrcode.min.js qrcode-generator (Kazuhiko Arase, licence MIT) : génération des QR
 │   │   └── jsQR.min.js   jsQR 1.4.0 (Cosmo Wolfe, licence Apache 2.0) : lecture caméra, chargé
 │   │                     seulement à la première activation du scanner
-│   ├── views/            home · catalogue · wallet · pro  → render() + actions + forms + changes
+│   ├── views/            home · catalogue · wallet · pro · legal  → render() + actions + forms + changes
 │   └── app.js            Routeur par hash, délégation d'événements, thème, service worker
 ├── sw.js                 Cache hors-ligne (couverture réseau aléatoire en altitude)
 └── manifest.webmanifest  Installation PWA
@@ -75,6 +75,13 @@ Jules-/
 - **Scripts classiques** (pas de modules ES) pour que l'app s'ouvre sans serveur.
 - Toutes les saisies des pros passent par `ui.esc()` avant affichage (pas d'injection HTML).
 - Pour brancher une vraie API en V2, il suffit de réécrire `store.js` en gardant les mêmes fonctions.
+
+## Mentions légales
+
+Page `#/mentions-legales` (lien en pied de page), dans `js/views/legal.js`. **À compléter** : l'objet
+`EDITEUR` en haut du fichier (nom, statut, adresse, e-mail, téléphone, SIRET, directeur·rice de la
+publication, crédits des photos et de la vidéo). Tant qu'un champ est vide, la page affiche « À compléter ».
+La partie « Données personnelles » décrit cette version sans serveur : à mettre à jour avec le futur backend.
 
 ## Photos
 

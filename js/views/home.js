@@ -135,12 +135,9 @@ Meleze.views.home = (function () {
             // que la vidéo reste lumineuse (titre ≥ 3:1 mesuré sur toute la vidéo, ombre en plus).
             '<div class="pointer-events-none absolute inset-0 bg-black/20 bg-[image:radial-gradient(70%_40%_at_50%_46%,rgb(0_0_0/0.35),transparent)]" aria-hidden="true"></div>' +
           '</div>' +
-          // Haut : le lieu (avec un trait vert sur mobile, en blanc sur la photo) + l'autocollant (≥ md)
-          '<div class="flex items-start justify-between gap-x-4 md:absolute md:right-8 md:top-8 lg:right-12 lg:top-10">' +
-            '<p class="flex items-center gap-3 font-display text-base font-bold leading-tight tracking-[-0.005em] text-ink md:hidden">' +
-              '<span class="h-[3px] w-8 shrink-0 bg-accent md:hidden" aria-hidden="true"></span>Pralognan-la-Vanoise</p>' +
-            '<span class="sticker ml-auto hidden shrink-0 rotate-3 bg-forest px-4 py-2 text-[0.95rem] text-white md:inline-flex lg:px-5 lg:py-2.5 lg:text-lg">Téléphérique offert</span>' +
-          '</div>' +
+          // Mobile : le lieu, avec un trait vert (sur ordinateur, il est au-dessus du titre)
+          '<p class="flex items-center gap-3 font-display text-base font-bold leading-tight tracking-[-0.005em] text-ink md:hidden">' +
+            '<span class="h-[3px] w-8 shrink-0 bg-accent" aria-hidden="true"></span>Pralognan-la-Vanoise</p>' +
           // Centre (≥ md) : le lieu, le titre et les boutons, avec une ombre douce sous le texte.
           '<div class="mt-2.5 md:mt-0 md:flex md:flex-col md:items-center md:px-8">' +
             '<p class="hidden font-display text-sm font-bold uppercase tracking-[0.28em] text-white [text-shadow:0_1px_3px_rgb(0_0_0/0.5),0_0_20px_rgb(0_0_0/0.45)] md:block lg:text-base">Pralognan-la-Vanoise · Savoie</p>' +

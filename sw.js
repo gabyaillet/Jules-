@@ -2,7 +2,7 @@
    Stratégie : réseau d'abord pour les fichiers du site (on voit toujours la
    dernière version quand il y a du réseau), cache en secours hors connexion.
    Les photos, elles, viennent du cache d'abord (elles ne changent pas). */
-const VERSION = 'meleze-v12';
+const VERSION = 'meleze-v13';
 const SHELL = [
   './', './index.html', './dist/styles.css', './icon.svg', './manifest.webmanifest',
   './fonts/bricolage-grotesque-latin-wght-normal.woff2', './fonts/source-sans-3-latin-wght-normal.woff2',
@@ -10,6 +10,7 @@ const SHELL = [
   './js/data.js', './js/photos.js', './js/store.js', './js/ui.js', './js/scanner.js', './js/app.js',
   './js/vendor/qrcode.min.js', './js/vendor/jsQR.min.js',
   './js/views/home.js', './js/views/catalogue.js', './js/views/wallet.js', './js/views/pro.js',
+  './js/views/legal.js',
 ];
 
 self.addEventListener('install', (e) => {
