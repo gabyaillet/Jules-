@@ -96,12 +96,15 @@ Meleze.api = (function () {
     bad_model_output: { msg: 'La vérification n’a pas abouti. Réessayez.', retry: true },
     upstream_busy: { msg: 'Service saturé, réessayez dans un instant.', retry: true },
     busy: { msg: 'Service très demandé aujourd’hui. Réessayez plus tard.', retry: true },
+    // Réponse de la passerelle Supabase, pas de la fonction (fonction en panne ou en cours
+    // de déploiement) : ce n'est pas une saturation, il faut prévenir l'équipe.
+    unavailable: { msg: 'Vérification indisponible pour le moment. ' + CONTACT, retry: true },
   };
   /** Statut HTTP → code, quand la réponse n'est pas celle de la fonction (passerelle Supabase…). */
   const VERIFY_BY_STATUS = {
     400: 'bad_image', 401: 'unauthorized', 403: 'origin_not_allowed', 404: 'not_found', 405: 'method_not_allowed',
     409: 'already_validated', 410: 'mission_inactive', 413: 'payload_too_large', 422: 'attempts_exhausted',
-    429: 'rate_limited', 500: 'internal_error', 502: 'upstream_error', 503: 'upstream_busy',
+    429: 'rate_limited', 500: 'internal_error', 502: 'upstream_error', 503: 'unavailable', 504: 'unavailable',
   };
 
   class ApiError extends Error {

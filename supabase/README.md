@@ -145,13 +145,15 @@ Ces accords précisent aussi ce qui encadre les transferts de données vers les 
 
 ### Option A — depuis le tableau de bord (sans rien installer)
 
-1. **Edge Functions → Deploy a new function → Via Editor**.
+1. **Edge Functions → Deploy a new function → Via Editor** (ou, si la fonction existe déjà, ouvrez **verify-photo → Code**).
 2. Nom de la fonction : **`verify-photo`** (exactement).
-3. Le fichier `index.ts` s'ouvre : remplacez tout son contenu par celui de `supabase/functions/verify-photo/index.ts`.
-4. Ajoutez un second fichier nommé **`handler.ts`** (bouton d'ajout de fichier de l'éditeur) et collez-y le contenu de `supabase/functions/verify-photo/handler.ts`.
-   Le fichier `handler_test.ts` ne sert qu'aux tests : ne le déployez pas.
-5. **Deploy function**.
-6. Dans les réglages de la fonction (**Details**), **désactivez « Verify JWT »** (« Enforce JWT verification »). La fonction vérifie elle-même, à chaque appel, que la personne est bien connectée ; la vérification automatique de Supabase peut en revanche bloquer la demande préalable du navigateur (CORS) et les nouvelles clés d'API.
+3. Le fichier `index.ts` s'ouvre : remplacez **tout** son contenu par celui de **`supabase/dashboard/verify-photo.ts`** (la fonction complète en un seul fichier). S'il existe un fichier `handler.ts` dans l'éditeur, supprimez-le : il ne sert plus.
+4. **Deploy function**.
+5. Dans les réglages de la fonction (**Details**), **désactivez « Verify JWT »** (« Enforce JWT verification »). La fonction vérifie elle-même, à chaque appel, que la personne est bien connectée ; la vérification automatique de Supabase peut en revanche bloquer la demande préalable du navigateur (CORS) et les nouvelles clés d'API.
+
+> `supabase/dashboard/verify-photo.ts` est fabriqué à partir de `supabase/functions/verify-photo/` (index.ts + handler.ts) par `node supabase/dashboard/build.mjs` : relancez cette commande après toute modification de la fonction, puis recollez le fichier.
+>
+> Si les journaux de la fonction (**Logs**) affichent `worker boot error … does not provide an export named 'createHandler'`, c'est que l'ancien fichier `handler.ts` n'avait pas le bon contenu : recollez le fichier unique ci-dessus.
 
 ### Option B — en ligne de commande
 
