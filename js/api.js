@@ -34,7 +34,7 @@ Meleze.api = (function () {
   const FUNCTION = 'verify-photo';
   /** Délai max d'une requête ordinaire, et de la vérification photo (IA). */
   const REQUEST_TIMEOUT = 20000;
-  const VERIFY_TIMEOUT = 60000;
+  const VERIFY_TIMEOUT = 90000; // > délai de l'IA côté fonction (70 s), réseau de montagne compris
   /** Taille max de la photo encodée (le serveur refuse un corps > 2,5 Mo). */
   const MAX_IMAGE_B64 = 2400000;
 

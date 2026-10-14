@@ -461,7 +461,9 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
     const attemptsUsed = Number(slot.attempts) || 0;
     const attemptsLeft = Math.max(0, (Number(slot.max_attempts) || MAX_ATTEMPTS) - attemptsUsed);
 
-    // 7. Claude
+    // 7. Claude (durée journalisée : c'est l'étape la plus longue)
+    log("anthropic_call", { participationId });
+    const claudeStart = Date.now();
     let response: Anthropic.Beta.Messages.BetaMessage;
     try {
       response = await deps.anthropic.beta.messages.create({
@@ -483,6 +485,7 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
       const code = upstreamErrorCode(err);
       log("anthropic_error", {
         code,
+        ms: Date.now() - claudeStart,
         status: err instanceof Anthropic.APIError ? err.status ?? null : null,
         type: err instanceof Anthropic.APIError ? err.type ?? null : null,
       });
@@ -494,6 +497,7 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
     const verdict = interpretResponse(response);
     log("anthropic_response", {
       participationId,
+      ms: Date.now() - claudeStart,
       stop_reason: response.stop_reason,
       model: response.model,
       input_tokens: response.usage?.input_tokens,

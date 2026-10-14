@@ -65,7 +65,8 @@ Meleze.views.wallet = (function () {
     if (c && c.phase === 'verifying') {
       inner = '<div class="flex items-center gap-4 bg-ink p-5 text-surface">' +
           (c.photo ? '<img src="' + esc(c.photo) + '" alt="" class="h-16 w-16 shrink-0 rounded-2xl object-cover">' : '') +
-          '<p class="flex items-center gap-3 font-display text-xl font-bold">' + spinner() + 'Vérification…</p>' +
+          '<div><p class="flex items-center gap-3 font-display text-xl font-bold">' + spinner() + 'Vérification…</p>' +
+          '<p class="mt-1 text-sm text-surface/75">Cela peut prendre jusqu’à une minute.</p></div>' +
         '</div>';
     } else if (c && c.phase === 'invalid') {
       inner = '<div class="bg-danger p-5 text-surface">' +

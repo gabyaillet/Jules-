@@ -471,7 +471,9 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
     const attemptsUsed = Number(slot.attempts) || 0;
     const attemptsLeft = Math.max(0, (Number(slot.max_attempts) || MAX_ATTEMPTS) - attemptsUsed);
 
-    // 7. Claude
+    // 7. Claude (durée journalisée : c'est l'étape la plus longue)
+    log("anthropic_call", { participationId });
+    const claudeStart = Date.now();
     let response: Anthropic.Beta.Messages.BetaMessage;
     try {
       response = await deps.anthropic.beta.messages.create({
@@ -493,6 +495,7 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
       const code = upstreamErrorCode(err);
       log("anthropic_error", {
         code,
+        ms: Date.now() - claudeStart,
         status: err instanceof Anthropic.APIError ? err.status ?? null : null,
         type: err instanceof Anthropic.APIError ? err.type ?? null : null,
       });
@@ -504,6 +507,7 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
     const verdict = interpretResponse(response);
     log("anthropic_response", {
       participationId,
+      ms: Date.now() - claudeStart,
       stop_reason: response.stop_reason,
       model: response.model,
       input_tokens: response.usage?.input_tokens,
@@ -602,9 +606,10 @@ const noSession = { persistSession: false, autoRefreshToken: false, detectSessio
 const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: noSession });
 
 const handler = createHandler({
-  // Délai court et une seule relance : la réponse doit arriver avant la limite
-  // de 60 s de l'app.
-  anthropic: ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY, timeout: 25_000, maxRetries: 1 }) : null,
+  // Une seule tentative de 70 s au plus : la réponse doit arriver avant la limite
+  // de 90 s de l'app (VERIFY_TIMEOUT dans js/api.js). Deux tentatives de 25 s
+  // dépassaient l'ancienne limite de 60 s quand l'IA était lente.
+  anthropic: ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY, timeout: 70_000, maxRetries: 0 }) : null,
   db: admin,
   async getUser(token) {
     // Client « anon » + jeton du touriste, comme le ferait l'app.
