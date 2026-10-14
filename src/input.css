@@ -243,13 +243,4 @@
   .hero-kenburns > img { animation: kenburns 28s ease-in-out infinite alternate; transform-origin: 50% 40%; }
   @keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.09); } }
   @media (prefers-reduced-motion: reduce) { .hero-kenburns > img { animation: none; } }
-
-  /* Viseur du scanner */
-  .scan-frame { @apply relative mx-auto aspect-square w-full max-w-[18rem] overflow-hidden bg-night; }
-  .scan-corner { @apply absolute h-9 w-9 border-white; }
-  .scan-line {
-    @apply absolute inset-x-8 h-1 bg-white;
-    animation: scan 2.4s ease-in-out infinite alternate;
-  }
-  @keyframes scan { from { top: 14%; } to { top: 86%; } }
 }

@@ -348,7 +348,21 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
     const origin = req.headers.get("origin");
     const originAllowed = origin !== null && allowedOrigins.includes(origin);
     const cors = corsHeaders(originAllowed ? origin : null);
+    try {
+      return await processRequest(req, origin, originAllowed, cors);
+    } catch (err) {
+      // Toujours une réponse JSON avec les en-têtes CORS, même sur une panne imprévue.
+      log("unexpected_error", { name: err instanceof Error ? err.name : typeof err });
+      return fail("internal_error", cors);
+    }
+  };
 
+  async function processRequest(
+    req: Request,
+    origin: string | null,
+    originAllowed: boolean,
+    cors: Record<string, string>,
+  ): Promise<Response> {
     // 1. CORS
     if (req.method === "OPTIONS") {
       return new Response(null, { status: originAllowed ? 204 : 403, headers: cors });
@@ -533,5 +547,5 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
       voucher,
       attemptsLeft: verdict.valid ? 0 : attemptsLeft,
     }, cors);
-  };
+  }
 }

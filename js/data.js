@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Mélèze — référentiels (saisons, types de mission, libellés, limites)
+   Mélèze — listes fixes (saisons, types de mission, libellés, limites)
    Les missions, participations et bons viennent du serveur (js/api.js) :
    ce fichier ne contient plus aucune donnée, seulement les listes fixes
    partagées par les vues et les règles de saisie.

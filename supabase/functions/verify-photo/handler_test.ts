@@ -569,6 +569,20 @@ Deno.test("panne de base pendant complete_participation : 500, essai rendu", asy
   assert.deepEqual(db.args("release_photo_check"), { p_check: 7, p_count_in_quota: true });
 });
 
+Deno.test("panne imprévue (exception de la base) : 500 JSON avec CORS", async () => {
+  const { handler } = setup({
+    db: {
+      begin_photo_check: () => {
+        throw new Error("connexion perdue");
+      },
+    },
+  });
+  const { res, body } = await call(handler, post(goodBody()));
+  assert.equal(res.status, 500);
+  assert.equal(body.error, "internal_error");
+  assert.equal(res.headers.get("access-control-allow-origin"), ORIGIN);
+});
+
 Deno.test("appel sans en-tête Origin (serveur à serveur) : traité, sans en-tête CORS", async () => {
   const { handler } = setup();
   const { res, body } = await call(handler, post(goodBody(), { origin: null }));
@@ -596,6 +610,7 @@ Deno.test("interpretResponse : phrase nettoyée et raccourcie", () => {
   const long = "Merci\u0000 pour   cette photo\n" + " très".repeat(80);
   const v = interpretResponse(message(verdictText(false, 0.9, long)))!;
   assert.ok(v.reason.length <= 160);
+  // deno-lint-ignore no-control-regex
   assert.ok(!/[\u0000-\u001f]/.test(v.reason));
   assert.ok(v.reason.endsWith("…"));
   const empty = interpretResponse(message(verdictText(false, 0.9, "   ")))!;

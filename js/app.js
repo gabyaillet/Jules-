@@ -3,9 +3,12 @@
    Routes :
      #/              Accueil touriste
      #/missions      Catalogue (?focus=<id> pour cibler une mission)
-     #/wallet        Profil / wallet
-     #/pro           Espace partenaire (#/pro/scan, #/pro/justificatifs, #/pro/creer)
+     #/wallet        Mon espace : missions en cours (photo à prendre) et bons
+     #/pro           Espace partenaires (#/pro/creer ; toute autre sous-page → #/pro)
      #/mentions-legales  Mentions légales, crédits et données personnelles
+   Les données viennent du serveur via Meleze.store (copie locale pour le
+   hors-ligne) : le routeur les fait recharger en arrivant sur une page qui
+   les affiche, au retour du réseau et au retour sur l'onglet.
 
    Contrat d'une vue : { title, render(state, params, sub), actions?, forms?,
    changes?, mounted?(root, params, sub, app), unmount?() }.
@@ -15,6 +18,8 @@
   const { views, store, ui } = Meleze;
 
   const ROUTES = { '': views.home, missions: views.catalogue, wallet: views.wallet, pro: views.pro, 'mentions-legales': views.legal };
+  /** Pages qui affichent les missions, participations ou bons. */
+  const DATA_ROUTES = ['', 'missions', 'wallet'];
   const root = document.getElementById('app');
   let route = parse();
   let queued = false;
@@ -35,7 +40,9 @@
   // ------------------------------------------------------------------------
   /** Clé permettant de retrouver l'élément focalisé après un nouveau rendu. */
   function focusKey(el) {
-    if (!el || !el.dataset || !el.dataset.action) return null;
+    if (!el || !root.contains(el)) return null;
+    if (el.id && el.id !== 'page-title') return '#' + CSS.escape(el.id);
+    if (!el.dataset || !el.dataset.action) return null;
     return ['action', 'id', 'group', 'value', 'code']
       .filter((k) => el.dataset[k] != null)
       .map((k) => '[data-' + k + '="' + CSS.escape(el.dataset[k]) + '"]').join('');
@@ -138,7 +145,7 @@
     if (e.target.tagName === 'IMG') e.target.style.visibility = 'hidden';
   }, true);
 
-  // Changement de page : la vue quittée libère ses ressources (ex. caméra du scanner).
+  // Changement de page : la vue quittée libère ses ressources (ex. caméra de « Mon espace »).
   window.addEventListener('hashchange', () => {
     const previous = ROUTES[route.name];
     route = parse();
@@ -146,8 +153,16 @@
       try { previous.unmount(); } catch (e) { /* la navigation ne doit jamais bloquer */ }
     }
     render(true);
+    if (DATA_ROUTES.includes(route.name)) store.ensureFresh();
   });
   store.subscribe(scheduleRender);
+
+  // Données à jour : retour du réseau, retour sur l'onglet ; réseau perdu → bandeau hors connexion.
+  window.addEventListener('online', () => { if (DATA_ROUTES.includes(route.name)) store.refresh(); });
+  window.addEventListener('offline', () => store.markOffline());
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && DATA_ROUTES.includes(route.name)) store.ensureFresh();
+  });
 
   // ------------------------------------------------------------------------
   // Démarrage
@@ -155,6 +170,7 @@
   setTheme(document.documentElement.dataset.theme || 'light');
   document.getElementById('year').textContent = new Date().getFullYear();
   render(false);
+  if (DATA_ROUTES.includes(route.name)) store.refresh();
 
   // PWA : cache hors-ligne (uniquement servi en http/https, pas en file://)
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {

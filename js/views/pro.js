@@ -139,9 +139,10 @@ Meleze.views.pro = (function () {
   // ------------------------------------------------------------------------
   // Connexion
   // ------------------------------------------------------------------------
-  function loginHead(title) {
-    return kicker('Espace partenaires') +
-      '<h1 id="page-title" tabindex="-1" class="mt-6 text-5xl font-extrabold sm:text-6xl">' + title + '</h1>';
+  /** Titre des écrans de connexion ; le petit libellé « Espace partenaires » sauf s'il répète le titre. */
+  function loginHead(title, noKicker) {
+    return (noKicker ? '' : kicker('Espace partenaires')) +
+      '<h1 id="page-title" tabindex="-1" class="' + (noKicker ? '' : 'mt-6 ') + 'text-5xl font-extrabold sm:text-6xl">' + title + '</h1>';
   }
 
   function loginError() {
@@ -202,7 +203,7 @@ Meleze.views.pro = (function () {
 
   function renderError() {
     return '<div class="' + WRAP + ' max-w-xl">' +
-      loginHead('Espace <span class="mark">partenaires</span>') +
+      loginHead('Espace <span class="mark">partenaires</span>', true) +
       '<div class="mt-8">' + notice({
         title: 'Vérification impossible',
         text: S.error || api.MESSAGES.generic,
@@ -398,15 +399,14 @@ Meleze.views.pro = (function () {
   function render(state, params, sub) {
     if (!api.ready()) {
       return '<div class="' + WRAP + ' max-w-xl">' +
-        kicker('Espace partenaires') +
-        '<h1 id="page-title" tabindex="-1" class="mt-6 text-5xl font-extrabold sm:text-6xl">Espace <span class="mark">partenaires</span></h1>' +
+        loginHead('Espace <span class="mark">partenaires</span>', true) +
         '<div class="mt-8">' + soon('L’espace partenaires ouvrira très bientôt.') + '</div>' +
       '</div>';
     }
     switch (S.phase) {
       case 'init':
       case 'checking':
-        return '<div class="' + WRAP + ' max-w-md">' + loginHead('Espace <span class="mark">partenaires</span>') +
+        return '<div class="' + WRAP + ' max-w-md">' + loginHead('Espace <span class="mark">partenaires</span>', true) +
           '<div class="mt-8">' + notice({ title: S.phase === 'checking' ? 'Vérification du compte…' : 'Chargement…', busy: true }) + '</div></div>';
       case 'email': return renderEmail();
       case 'code': return renderCode();
@@ -420,7 +420,7 @@ Meleze.views.pro = (function () {
   }
 
   function mounted(root, params, sub, app) {
-    // Anciennes adresses (#/pro/scan…) ou inconnues : on revient sur #/pro sans nouvel historique
+    // Anciennes adresses de l’espace pro, ou inconnues : retour sur #/pro sans nouvel historique
     if (sub && !TABS[sub]) {
       try { history.replaceState(null, '', '#/pro'); } catch (e) { /* rien */ }
     }
