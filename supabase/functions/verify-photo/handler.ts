@@ -115,7 +115,7 @@ const ERRORS: Record<ErrorCode, [number, string]> = {
   upstream_busy: [503, "Service saturé, réessayez dans un instant."],
   upstream_error: [502, "La vérification n’a pas abouti. Réessayez."],
   bad_model_output: [502, "La vérification n’a pas abouti. Réessayez."],
-  config_error: [500, "Le service de vérification n’est pas configuré. Prévenez l’organisateur."],
+  config_error: [500, "Le service de vérification n’est pas configuré. Prévenez l’équipe Mélèze."],
   internal_error: [500, "Erreur du serveur. Réessayez."],
 };
 

@@ -43,8 +43,9 @@ Meleze.views.home = (function () {
   const FAQ = [
     ['C’est vraiment gratuit ?', 'Oui. On ne vous demande jamais de carte bancaire.'],
     ['Comment ma mission est-elle validée ?', 'Dans « Mon espace », prenez la photo demandée. Une IA la vérifie en quelques secondes.'],
-    ['Ma photo est-elle gardée ?', 'Non. Elle sert seulement à la vérification : Mélèze ne la conserve pas.'],
+    ['Ma photo est-elle gardée ?', 'Mélèze ne la garde pas. Elle est envoyée à l’IA d’Anthropic (États-Unis), seulement pour la vérification. Détails dans les mentions légales.'],
     ['Comment utiliser mon bon ?', 'Devant le partenaire, appuyez sur « Utiliser mon bon ». Il ne sert qu’une fois.'],
+    ['Et si je change de téléphone ?', 'Ajoutez votre e-mail dans « Mon espace » : vous retrouverez vos bons avec un code reçu par e-mail.'],
   ];
 
   /** Carte mission : grande photo + type, titre, durée. (La contrepartie est dans le bandeau vert.) */
@@ -81,14 +82,14 @@ Meleze.views.home = (function () {
     const PILL = 'tag block min-w-0 max-w-full truncate px-2.5 py-0.5 text-[0.875rem] max-[359px]:px-2 max-[359px]:text-[0.8125rem]';
     const badge = p
       ? '<span class="' + PILL + ' bg-ink text-surface">' + esc(STATUS[p.status] || STATUS.inscrite) + '</span>'
-      : '<span class="sr-only">En échange : ' + esc(m.reward.title) + '</span>' +
+      : '<span class="sr-only">En échange : ' + esc(m.reward.title) + '</span>' +
         '<span class="' + PILL + ' bg-forest text-white" aria-hidden="true">' + esc(m.reward.title) + '</span>';
     return '<li><a href="#/missions?focus=' + esc(m.id) + '" class="flex items-center gap-3 bg-sunk p-2 pr-2.5 transition-colors hover:bg-line">' +
       '<div class="ph ph-sm h-16 w-16 shrink-0 min-[360px]:h-[4.75rem] min-[360px]:w-[4.75rem] min-[375px]:h-[5.5rem] min-[375px]:w-[5.5rem]">' + photo(m, { sizes: '88px', alt: '' }) + '</div>' +
       '<div class="min-w-0 flex-1 py-1">' +
         '<h3 class="line-clamp-3 text-[1.1rem] leading-[1.1] tracking-[-0.02em] text-ink">' + esc(m.title) + '</h3>' +
         '<div class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">' +
-          '<p class="font-display text-[0.95rem] font-semibold leading-tight text-ink"><span class="sr-only">Durée : </span>' + esc(missionDuration(m) || 'Variable') + '</p>' +
+          '<p class="font-display text-[0.95rem] font-semibold leading-tight text-ink"><span class="sr-only">Durée : </span>' + esc(missionDuration(m) || 'Variable') + '</p>' +
           badge +
         '</div>' +
       '</div>' +
@@ -119,7 +120,7 @@ Meleze.views.home = (function () {
         '<button type="button" class="btn mt-4 bg-ink text-surface hover:bg-ink/85" data-action="retry">Réessayer</button></div>';
     }
     return '<div class="' + BOX + '"><p class="' + TITLE + '">Aucune mission pour le moment</p>' +
-      '<p class="' + TEXT + '">Revenez bientôt : de nouvelles missions arrivent.</p></div>';
+      '<p class="' + TEXT + '">Revenez bientôt : de nouvelles missions arrivent.</p></div>';
   }
 
   function render(state) {
@@ -232,7 +233,7 @@ Meleze.views.home = (function () {
         '</div>' +
       '</section>' +
 
-      // ---- Questions : trois tuiles grises pleines -------------------------------------------
+      // ---- Questions : tuiles grises pleines -------------------------------------------
       '<section class="' + WRAP + ' grid gap-8 pb-14 lg:grid-cols-[1fr_1.5fr] lg:gap-16 lg:pb-24" aria-labelledby="faq">' +
         '<h2 id="faq" class="' + H2 + '">Vos questions</h2>' +
         '<div class="grid gap-3">' +

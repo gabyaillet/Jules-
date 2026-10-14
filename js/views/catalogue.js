@@ -41,8 +41,8 @@ Meleze.views.catalogue = (function () {
 
   /** Libellé du bouton quand le touriste participe déjà (lien vers « Mon espace »). */
   const ACTIVE_LABEL = {
-    inscrite: 'Inscrit·e : prendre la photo',
-    validee: 'Mission validée : voir mon bon',
+    inscrite: 'Inscrit·e : prendre la photo',
+    validee: 'Mission validée : voir mon bon',
   };
 
   /** « Nouveau » pendant deux semaines après la publication. */
@@ -120,10 +120,11 @@ Meleze.views.catalogue = (function () {
   let handledFocus = null;
   let scrollPending = false;
 
-  /** Bandeau discret : données affichées depuis la copie locale (hors connexion). */
+  /** Bandeau discret : données affichées depuis la copie locale (hors connexion, serveur injoignable). */
   function offlineBanner(state) {
-    if (state.status !== 'offline' || !state.known) return '';
-    return '<p class="mt-6 bg-ink px-5 py-3 font-display text-base font-semibold text-surface">Hors connexion : dernières missions enregistrées sur cet appareil.</p>';
+    if ((state.status !== 'offline' && state.status !== 'error') || !state.known) return '';
+    return '<p class="mt-6 bg-ink px-5 py-3 font-display text-base font-semibold text-surface" role="status">' +
+      (state.status === 'offline' ? 'Hors connexion' : 'Serveur injoignable') + ' : dernières missions enregistrées sur cet appareil.</p>';
   }
 
   /** Page sans liste : bientôt disponible, chargement ou erreur. */
@@ -192,7 +193,7 @@ Meleze.views.catalogue = (function () {
               '<p class="mx-auto max-w-md font-display text-[1.75rem] font-bold leading-tight tracking-[-0.02em] sm:text-3xl">Aucune mission ne correspond à ces filtres.</p>' +
               '<button type="button" class="btn mt-7 min-h-[56px] bg-ink text-surface hover:bg-ink/85" data-action="clear-filters">Voir toutes les missions</button>' +
             '</div>'
-          : '<div class="mt-6">' + notice({ title: 'Aucune mission pour le moment', text: 'Revenez bientôt : de nouvelles missions arrivent.' }) + '</div>') +
+          : '<div class="mt-6">' + notice({ title: 'Aucune mission pour le moment', text: 'Revenez bientôt : de nouvelles missions arrivent.' }) + '</div>') +
     '</section>';
   }
 
@@ -213,7 +214,7 @@ Meleze.views.catalogue = (function () {
       joining = m.id;
       app.rerender();
       store.join(m.id)
-        .then(() => toast('C’est noté ! Prenez la photo depuis « Mon espace ».'),
+        .then(() => toast('C’est noté ! Prenez la photo depuis « Mon espace ».'),
           (err) => toast((err && err.message) || 'Inscription impossible. Réessayez.', 'error'))
         .then(() => { joining = null; app.rerender(); });
     },

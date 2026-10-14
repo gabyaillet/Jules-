@@ -100,7 +100,13 @@ Meleze.views.pro = (function () {
       if (session) { S.email = session.email; return checkProfile(app); }
       S.phase = 'email';
       rerender(app);
-    }, () => { S.phase = 'email'; rerender(app); })
+    }, (err) => {
+      // Session enregistrée mais impossible à renouveler (réseau…) : on ne la
+      // traite pas comme une déconnexion ; « Réessayer » relance la lecture.
+      S.phase = 'error';
+      S.error = (err && err.message) || api.MESSAGES.generic;
+      rerender(app);
+    })
       .then(() => { starting = false; });
   }
 
@@ -170,7 +176,7 @@ Meleze.views.pro = (function () {
   function renderCode() {
     return '<div class="' + WRAP + ' max-w-md">' +
       loginHead('Votre <span class="mark">code</span>') +
-      '<p class="mt-6 bg-sunk px-5 py-4 text-lg leading-snug text-ink" role="status">Code envoyé à <span class="break-all font-bold">' + esc(S.email) + '</span>. Pensez aux courriers indésirables.</p>' +
+      '<p class="mt-6 bg-sunk px-5 py-4 text-lg leading-snug text-ink" role="status">Code envoyé à <span class="break-words font-bold">' + esc(S.email) + '</span>. Pensez aux courriers indésirables.</p>' +
       '<form class="mt-6 space-y-5" data-form="verify-code" novalidate>' +
         '<div><label class="label text-lg" for="code">Code reçu par e-mail</label>' +
           '<input class="field font-mono text-2xl tracking-[0.3em]" id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="10" required data-keep="code" value="' + esc(S.code) + '" aria-describedby="code-hint' + (S.loginError ? ' login-err' : '') + '"' + (S.loginError ? ' aria-invalid="true"' : '') + '>' +
@@ -191,7 +197,7 @@ Meleze.views.pro = (function () {
       loginHead('Compte non <span class="mark">partenaire</span>') +
       '<div class="mt-8 bg-sunk p-6 sm:p-8">' +
         '<p class="font-display text-[1.75rem] font-bold leading-tight tracking-[-0.02em] text-ink">' + esc(api.MESSAGES.notPartner) + '</p>' +
-        '<p class="mt-3 text-lg leading-snug text-ink">Connecté·e avec <span class="break-all font-bold">' + esc(S.email) + '</span>. ' +
+        '<p class="mt-3 text-lg leading-snug text-ink">Connecté·e avec <span class="break-words font-bold">' + esc(S.email) + '</span>. ' +
           'Pour devenir partenaire, écrivez à l’équipe Mélèze (adresse dans les <a class="underline decoration-accent decoration-2 underline-offset-4 hover:text-brand-ink" href="#/mentions-legales">mentions légales</a>).</p>' +
         '<div class="mt-6 flex flex-col gap-3 sm:flex-row">' +
           '<button type="button" class="btn bg-ink text-surface hover:bg-ink/85" data-action="recheck">Réessayer</button>' +
@@ -248,8 +254,8 @@ Meleze.views.pro = (function () {
       '</div>' +
       '<h3 class="mt-3 break-words text-2xl sm:text-[1.75rem]' + (m.active ? '' : ' text-muted') + '">' + esc(m.title) + '</h3>' +
       (meta ? '<p class="mt-1 text-lg text-ink">' + meta + '</p>' : '') +
-      '<p class="mt-3 text-lg leading-snug text-ink"><span class="text-muted">En échange :</span> <span class="font-bold">' + esc(m.reward.title) + '</span></p>' +
-      '<p class="mt-1 text-lg leading-snug text-ink"><span class="text-muted">Photo attendue :</span> ' + esc(m.photoHint) + '</p>' +
+      '<p class="mt-3 text-lg leading-snug text-ink"><span class="text-muted">En échange :</span> <span class="font-bold">' + esc(m.reward.title) + '</span></p>' +
+      '<p class="mt-1 text-lg leading-snug text-ink"><span class="text-muted">Photo attendue :</span> ' + esc(m.photoHint) + '</p>' +
       (m.active
         ? '<div class="mt-5 flex flex-wrap gap-3">' +
             '<a href="#/missions?focus=' + esc(m.id) + '" class="btn-secondary btn-sm">Voir dans le catalogue</a>' +
@@ -291,7 +297,7 @@ Meleze.views.pro = (function () {
       // Bloc vert plein : boutons blancs explicites (lisibles aussi en mode sombre)
       return '<div id="created" tabindex="-1" class="bg-forest p-6 text-white outline-none sm:p-8">' +
         '<p class="font-display text-lg font-bold">Mission publiée</p>' +
-        '<h2 class="mt-2 break-words text-3xl text-white sm:text-4xl">« ' + esc(S.created.title) + ' »</h2>' +
+        '<h2 class="mt-2 break-words text-3xl text-white sm:text-4xl">« ' + esc(S.created.title) + ' »</h2>' +
         '<p class="mt-3 text-lg text-white">Visible dans le catalogue. Les participants la valident avec une photo, vérifiée par une IA.</p>' +
         '<div class="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">' +
           '<a href="#/missions?focus=' + esc(S.created.id) + '" class="btn btn-light focus-visible:outline-white">Voir dans le catalogue' + icon('arrow', 'h-5 w-5') + '</a>' +
@@ -324,10 +330,10 @@ Meleze.views.pro = (function () {
             DURATIONS.map((d) => '<option value="' + d + '"' + (String(d) === dur ? ' selected' : '') + '>' + duration(d) + '</option>').join('') +
             '<option value="0"' + (dur === '0' ? ' selected' : '') + '>Variable</option>' +
           '</select>') +
-          field('spots', 'Places', '<input class="field" id="spots" name="spots" type="number" min="' + LIMITS.spots.min + '" max="' + LIMITS.spots.max + '" inputmode="numeric" value="' + esc(draft('spots', '10')) + '"' + aria('spots', 'spots', true) + '>', { hint: 'Vide : sans limite' }) +
+          field('spots', 'Places', '<input class="field" id="spots" name="spots" type="number" min="' + LIMITS.spots.min + '" max="' + LIMITS.spots.max + '" inputmode="numeric" value="' + esc(draft('spots', '10')) + '"' + aria('spots', 'spots', true) + '>', { hint: 'Vide : sans limite' }) +
         '</div>' +
         field('location', 'Lieu de rendez-vous', '<input class="field" id="location" name="location" required maxlength="' + LIMITS.location.max + '" placeholder="Ex. Pont de la Pêche" value="' + esc(draft('location', '')) + '"' + aria('location') + '>') +
-        field('schedule', 'Quand ?', '<input class="field" id="schedule" name="schedule" maxlength="' + LIMITS.schedule.max + '" placeholder="Ex. Samedi, 9h30" value="' + esc(draft('schedule', '')) + '"' + aria('schedule') + '>') +
+        field('schedule', 'Quand ?', '<input class="field" id="schedule" name="schedule" maxlength="' + LIMITS.schedule.max + '" placeholder="Ex. Samedi, 9h30" value="' + esc(draft('schedule', '')) + '"' + aria('schedule') + '>') +
         field('description', 'Description', '<textarea class="field min-h-[7rem]" id="description" name="description" required maxlength="' + LIMITS.description.max + '" placeholder="Ce que les participants vont faire…"' + aria('description') + '>' + esc(draft('description', '')) + '</textarea>') +
       '</fieldset>' +
 
@@ -477,7 +483,12 @@ Meleze.views.pro = (function () {
       focusAfter = '#email';
       rerender(app);
     },
-    recheck(el, app) { checkProfile(app); },
+    recheck(el, app) {
+      if (S.email) { checkProfile(app); return; }
+      S.phase = 'init';
+      rerender(app);
+      start(app);
+    },
     reload(el, app) { loadMissions(app); },
     logout(el, app) {
       api.signOut().catch(() => { /* la session locale est effacée quoi qu'il arrive */ }).then(() => {
@@ -492,7 +503,7 @@ Meleze.views.pro = (function () {
       const id = el.dataset.id;
       const m = S.missions && S.missions.find((x) => x.id === id);
       if (!m || S.retiring) return;
-      if (!confirm('Retirer « ' + m.title + ' » ? Elle disparaîtra du catalogue et les inscrits ne pourront plus la valider.')) return;
+      if (!confirm('Retirer « ' + m.title + ' » ? Elle disparaîtra du catalogue et les inscrits ne pourront plus la valider.')) return;
       S.retiring = id;
       rerender(app);
       api.retireMission(id).then(() => {
@@ -546,7 +557,7 @@ Meleze.views.pro = (function () {
       const first = FIELD_ORDER.find(([k]) => errors[k]);
       if (first) {
         focusAfter = first[1];
-        toast('Vérifiez le formulaire : ' + errors[first[0]], 'error');
+        toast('Vérifiez le formulaire : ' + errors[first[0]], 'error');
         rerender(app);
         return;
       }

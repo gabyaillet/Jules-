@@ -8,14 +8,23 @@
    États (`state.status`) :
      idle → loading → ready | error | offline
    `state.known` : true dès qu'on a des données à montrer (cache ou serveur).
+   `state.confirmed` : true seulement après un chargement RÉUSSI depuis le
+   serveur pendant cette visite. Tant qu'il est faux, les données viennent de
+   la copie locale (modifiable par n'importe qui sur son téléphone) : les
+   vues ne présentent alors pas un bon comme « à utiliser » ou « utilisé ».
+   `state.pastMissions` : missions retirées auxquelles le touriste a
+   participé (titre et durée dans « Mon espace »), jamais listées au catalogue.
    Toute ACTION (s'inscrire, vérifier une photo, utiliser un bon…) passe par
    le serveur : sans réseau elle échoue avec « Connexion nécessaire… ».
+   `state.email` : adresse qui garde les bons du touriste ('' = compte
+   anonyme, lié à ce seul navigateur).
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 
 Meleze.store = (function () {
   'use strict';
   const api = Meleze.api;
+  const MAX_ATTEMPTS = Meleze.data.MAX_ATTEMPTS;
 
   const CACHE_KEY = 'meleze:cache:v1';
   // Anciennes versions (données locales de la maquette) : effacées au démarrage.
@@ -30,10 +39,13 @@ Meleze.store = (function () {
     status: 'idle',
     error: null,
     known: false,
+    confirmed: false,
     missions: [],
+    pastMissions: [],
     participations: [],
     vouchers: [],
-    hasAccount: false, // un compte touriste (anonyme) existe dans ce navigateur
+    hasAccount: false, // un compte touriste existe dans ce navigateur (anonyme ou avec e-mail)
+    email: '', // adresse confirmée du compte touriste ('' = anonyme)
     savedAt: 0, // date des données affichées (serveur ou cache)
   };
   let loadedAt = 0; // dernier chargement réussi pendant cette visite
@@ -58,18 +70,22 @@ Meleze.store = (function () {
     try {
       storage('localStorage').setItem(CACHE_KEY, JSON.stringify({
         missions: state.missions,
+        pastMissions: state.pastMissions,
         participations: state.participations,
         vouchers: state.vouchers,
         hasAccount: state.hasAccount,
+        email: state.email,
         savedAt: state.savedAt,
       }));
     } catch (e) { /* stockage plein ou bloqué : l'app marche, sans copie hors connexion */ }
   }
   function applyCache(c) {
     state.missions = c.missions;
+    state.pastMissions = Array.isArray(c.pastMissions) ? c.pastMissions : [];
     state.participations = c.participations;
     state.vouchers = c.vouchers;
     state.hasAccount = !!c.hasAccount;
+    state.email = typeof c.email === 'string' ? c.email : '';
     state.savedAt = Number(c.savedAt) || 0;
     state.known = true;
   }
@@ -135,20 +151,36 @@ Meleze.store = (function () {
     notify();
     const startGen = gen;
     let outdated = false;
-    pending = Promise.all([api.listMissions(), api.hasTouristSession()])
-      .then(([missions, hasAccount]) => Promise.all([
+    // touristAccount() échoue (au lieu de répondre « pas de compte ») si la
+    // session enregistrée ne peut pas être renouvelée : les données affichées
+    // et la copie locale restent alors intactes.
+    pending = Promise.all([api.listMissions(), api.touristAccount()])
+      .then(([missions, account]) => Promise.all([
         missions,
-        hasAccount,
-        hasAccount ? api.myParticipations() : [],
-        hasAccount ? api.myVouchers() : [],
+        account,
+        account ? api.myParticipations() : [],
+        account ? api.myVouchers() : [],
       ]))
-      .then(([missions, hasAccount, participations, vouchers]) => {
+      .then(([missions, account, participations, vouchers]) => {
+        // Missions retirées auxquelles le touriste a participé : lues à part.
+        const active = new Set(missions.map((m) => m.id));
+        const missing = Array.from(new Set(participations.map((p) => p.missionId).filter((id) => id && !active.has(id))));
+        const known = state.pastMissions.filter((m) => missing.includes(m.id));
+        const past = missing.length
+          ? api.missionsByIds(missing).catch(() => known) // facultatif : sans eux, « Mission retirée »
+          : [];
+        return Promise.all([missions, account, participations, vouchers, past]);
+      })
+      .then(([missions, account, participations, vouchers, past]) => {
         if (startGen !== gen) { outdated = true; return; }
         state.missions = missions;
+        state.pastMissions = past;
         state.participations = participations;
         state.vouchers = vouchers;
-        state.hasAccount = hasAccount;
+        state.hasAccount = !!account;
+        state.email = (account && account.email) || '';
         state.status = 'ready';
+        state.confirmed = true;
         loadedAt = Date.now();
         state.savedAt = loadedAt;
         state.known = true;
@@ -185,10 +217,15 @@ Meleze.store = (function () {
   // ------------------------------------------------------------------------
   // Lecture
   // ------------------------------------------------------------------------
+  /** Mission du catalogue (active). */
   const getMission = (id) => state.missions.find((m) => m.id === id) || null;
+  /** Mission active OU retirée (participations de « Mon espace ») ; `active` dit laquelle. */
+  const missionInfo = (id) => getMission(id) || state.pastMissions.find((m) => m.id === id) || null;
   const getParticipation = (id) => state.participations.find((p) => p.id === id) || null;
   /** Participation (en cours ou validée) du touriste pour cette mission. */
   const participationFor = (missionId) => state.participations.find((p) => p.missionId === missionId) || null;
+  /** Des missions ou des bons liés à ce seul navigateur (aucun e-mail pour les retrouver) ? */
+  const hasUnsavedData = () => !state.email && (state.participations.length > 0 || state.vouchers.length > 0);
 
   /** Rechargement discret après une action (compteur d'essais, statut…). */
   function resync() { gen += 1; loadedAt = 0; refresh(); }
@@ -206,7 +243,9 @@ Meleze.store = (function () {
         commit();
         return p;
       }, (err) => {
-        if (err && err.code === 'duplicate') resync(); // déjà inscrit·e (autre onglet) : on recharge
+        // Déjà inscrit·e (autre onglet), mission retirée entre-temps… : on recharge
+        // (sauf sans réseau ni serveur : rien à relire).
+        if (err && err.code !== 'offline' && err.code !== 'unconfigured') resync();
         throw err;
       });
   }
@@ -230,7 +269,7 @@ Meleze.store = (function () {
       .then((res) => {
         const p = getParticipation(participationId);
         if (p) {
-          p.attempts += 1;
+          p.attempts = res.attemptsLeft == null ? p.attempts + 1 : Math.max(p.attempts, MAX_ATTEMPTS - res.attemptsLeft);
           p.lastCheck = { valid: res.valid, reason: res.reason, confidence: res.confidence };
           if (res.valid) { p.status = 'validee'; p.validatedAt = new Date().toISOString(); }
         }
@@ -239,6 +278,8 @@ Meleze.store = (function () {
         resync(); // le serveur fait foi (code du bon, compteur d'essais)
         return res;
       }, (err) => {
+        const p = getParticipation(participationId);
+        if (p && err && err.attemptsLeft != null) { p.attempts = MAX_ATTEMPTS - err.attemptsLeft; commit(); }
         if (err && err.code !== 'offline' && err.code !== 'unconfigured') resync();
         throw err;
       });
@@ -261,9 +302,56 @@ Meleze.store = (function () {
       .then(() => api.deleteMyData())
       .then(() => {
         state.participations = [];
+        state.pastMissions = [];
         state.vouchers = [];
         state.hasAccount = false;
+        state.email = '';
         commit();
+      });
+  }
+
+  // ------------------------------------------------------------------------
+  // E-mail du touriste (facultatif) : garder ses bons, les retrouver ailleurs
+  // ------------------------------------------------------------------------
+  /** Envoie le code de confirmation de l'adresse (le compte anonyme doit exister). */
+  function saveEmailSend(email) {
+    return guard().then(() => api.saveEmailSend(email));
+  }
+
+  /** Code reçu → l'adresse garde désormais les bons de ce compte. */
+  function saveEmailVerify(email, code) {
+    return guard()
+      .then(() => api.saveEmailVerify(email, code))
+      .then((account) => {
+        state.email = account.email;
+        state.hasAccount = true;
+        commit();
+        return account;
+      });
+  }
+
+  /** « Retrouver mes bons » : code envoyé à l'adresse d'un compte existant. */
+  function recoverSend(email) {
+    return guard().then(() => api.recoverSend(email));
+  }
+
+  /**
+   * Code reçu → ce navigateur passe sur le compte de l'adresse. L'appelant a
+   * prévenu avant si des missions non sauvegardées allaient être perdues
+   * (hasUnsavedData). Les données affichées sont rechargées depuis le serveur.
+   */
+  function recoverVerify(email, code) {
+    return guard()
+      .then(() => api.recoverVerify(email, code))
+      .then((account) => {
+        state.participations = [];
+        state.pastMissions = [];
+        state.vouchers = [];
+        state.hasAccount = true;
+        state.email = account.email;
+        commit();
+        loadedAt = 0;
+        return refresh().then(() => account);
       });
   }
 
@@ -271,7 +359,8 @@ Meleze.store = (function () {
     get state() { return state; },
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     refresh, ensureFresh, markOffline,
-    getMission, getParticipation, participationFor,
+    getMission, missionInfo, getParticipation, participationFor, hasUnsavedData,
     join, cancel, verifyPhoto, useVoucher, deleteMyData,
+    saveEmailSend, saveEmailVerify, recoverSend, recoverVerify,
   };
 })();

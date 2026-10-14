@@ -121,7 +121,7 @@
     if (fn) { e.preventDefault(); fn(el, app); }
   });
 
-  // Champs (ex. envoi d'une photo) : <input data-change="proof"> → view.changes.proof(el, app)
+  // Champs : <select data-change="nom"> → view.changes.nom(el, app)
   document.addEventListener('change', (e) => {
     const el = e.target.closest && e.target.closest('[data-change]');
     if (!el) return;

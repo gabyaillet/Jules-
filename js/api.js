@@ -6,7 +6,10 @@
    navigateur, pour qu'une connexion partenaire n'efface jamais la session
    d'un touriste sur le même appareil :
    - « meleze-tourist » : compte ANONYME, créé seulement quand le touriste
-     s'inscrit à sa première mission (jamais pour une simple visite) ;
+     s'inscrit à sa première mission (jamais pour une simple visite). Le
+     touriste peut ensuite y ajouter son e-mail (code à 6 chiffres) : le même
+     compte devient permanent et ses bons se retrouvent sur un autre
+     téléphone (« Retrouver mes bons ») ;
    - « meleze-partner » : connexion par code reçu par e-mail.
 
    Toutes les fonctions renvoient des promesses. En cas d'échec, elles
@@ -20,6 +23,7 @@
                      lastCheck, createdAt, validatedAt }
      voucher       { id, code, missionId, participationId, title, partner,
                      category, createdAt, usedAt }
+     verdict       { valid, confidence, reason, voucher|null, attemptsLeft|null }
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 
@@ -42,7 +46,7 @@ Meleze.api = (function () {
 
   const MESSAGES = {
     unconfigured: 'Bientôt disponible.',
-    offline: 'Connexion nécessaire : vérifiez votre réseau puis réessayez.',
+    offline: 'Connexion nécessaire : vérifiez votre réseau puis réessayez.',
     generic: 'Le service ne répond pas. Réessayez dans un instant.',
     forbidden: 'Action non autorisée.',
     invalid: 'Certaines informations ne sont pas valides.',
@@ -50,7 +54,7 @@ Meleze.api = (function () {
     signin: 'Inscription impossible pour le moment. Réessayez dans un instant.',
     duplicate: 'Vous participez déjà à cette mission.',
     cancel: 'Cette participation ne peut plus être annulée.',
-    voucher: 'Ce bon ne peut pas être utilisé (déjà utilisé ?).',
+    voucher: 'Ce bon ne peut pas être utilisé (déjà utilisé ?).',
     badImage: 'Photo illisible. Reprenez-la.',
     tooLarge: 'Photo trop lourde. Reprenez-la.',
     timeout: 'La vérification prend trop de temps. Réessayez.',
@@ -61,19 +65,43 @@ Meleze.api = (function () {
     badCode: 'Code incorrect ou expiré.',
     notPartner: 'Ce compte n’est pas (encore) partenaire de Mélèze.',
     retire: 'Cette mission ne peut pas être retirée.',
+    emailTaken: 'Cette adresse est déjà utilisée. Choisissez « Retrouver mes bons ».',
+    noSavedVouchers: 'Aucun bon n’est enregistré avec cette adresse.',
+    missionGone: 'Cette mission n’est plus proposée.',
   };
+  /** Qui prévenir quand le service est mal réglé (contact de l'éditeur). */
+  const CONTACT = 'Prévenez l’équipe Mélèze (contact dans les mentions légales).';
 
-  /** Réponses HTTP de la fonction de vérification → message pour le touriste. */
-  const VERIFY_STATUS = {
-    400: MESSAGES.badImage,
-    401: MESSAGES.session,
-    403: 'Plus d’essai possible pour cette mission.',
-    404: 'Participation introuvable. Rechargez la page.',
-    409: 'Cette mission est déjà validée.',
-    413: MESSAGES.tooLarge,
-    422: 'Plus d’essai possible pour cette mission.',
-    429: 'Trop d’essais pour le moment. Réessayez plus tard.',
-    503: 'Service saturé, réessayez dans un instant.',
+  /**
+   * Erreurs de la fonction verify-photo, qui répond { error: <code>, message }
+   * (voir supabase/functions/verify-photo/handler.ts) → phrase courte pour le
+   * touriste. `retry` : panne passagère, la MÊME photo pourra être renvoyée
+   * (« Réessayer l’envoi ») ; sinon il faut reprendre la photo, ou rien à faire.
+   */
+  const VERIFY_ERRORS = {
+    bad_request: { msg: 'Envoi refusé. Rechargez la page puis réessayez.' },
+    bad_image: { msg: MESSAGES.badImage },
+    payload_too_large: { msg: MESSAGES.tooLarge },
+    unauthorized: { msg: MESSAGES.session },
+    origin_not_allowed: { msg: 'Vérification indisponible depuis ce site. ' + CONTACT },
+    method_not_allowed: { msg: MESSAGES.verify, retry: true },
+    not_found: { msg: 'Participation introuvable. Rechargez la page.' },
+    already_validated: { msg: 'Cette mission est déjà validée.' },
+    mission_inactive: { msg: MESSAGES.missionGone },
+    attempts_exhausted: { msg: 'Plus d’essai possible pour cette mission.' },
+    rate_limited: { msg: 'Trop de vérifications aujourd’hui. Réessayez plus tard.', retry: true },
+    config_error: { msg: 'Vérification indisponible pour le moment. ' + CONTACT, retry: true },
+    internal_error: { msg: 'Erreur du serveur. Réessayez dans un instant.', retry: true },
+    upstream_error: { msg: 'La vérification n’a pas abouti. Réessayez.', retry: true },
+    bad_model_output: { msg: 'La vérification n’a pas abouti. Réessayez.', retry: true },
+    upstream_busy: { msg: 'Service saturé, réessayez dans un instant.', retry: true },
+    busy: { msg: 'Service très demandé aujourd’hui. Réessayez plus tard.', retry: true },
+  };
+  /** Statut HTTP → code, quand la réponse n'est pas celle de la fonction (passerelle Supabase…). */
+  const VERIFY_BY_STATUS = {
+    400: 'bad_image', 401: 'unauthorized', 403: 'origin_not_allowed', 404: 'not_found', 405: 'method_not_allowed',
+    409: 'already_validated', 410: 'mission_inactive', 413: 'payload_too_large', 422: 'attempts_exhausted',
+    429: 'rate_limited', 500: 'internal_error', 502: 'upstream_error', 503: 'upstream_busy',
   };
 
   class ApiError extends Error {
@@ -82,6 +110,8 @@ Meleze.api = (function () {
       this.name = 'ApiError';
       this.code = code || 'error';
       this.status = status || 0;
+      this.retry = false; // vérification photo : la même photo peut être renvoyée
+      this.attemptsLeft = null; // vérification photo : essais restants, si le serveur le dit
     }
   }
 
@@ -164,20 +194,67 @@ Meleze.api = (function () {
     return new ApiError(fallback || MESSAGES.generic, code || 'auth', status);
   }
 
+  /** Délai « Retry-After » (secondes) → fin de phrase ; null s'il est illisible. */
+  function retryAfterText(res) {
+    let secs = NaN;
+    try { secs = Number(res && res.headers && res.headers.get('Retry-After')); } catch (e) { /* en-tête non exposé (CORS) */ }
+    if (!Number.isFinite(secs) || secs <= 0) return null;
+    if (secs <= 90) return 'Réessayez dans une minute.';
+    if (secs <= 5400) return 'Réessayez dans une heure.';
+    return 'Réessayez demain.';
+  }
+
   /** Erreur de la fonction verify-photo (supabase-js : FunctionsHttpError…) → ApiError. */
-  function functionError(e) {
+  async function functionError(e) {
     const name = e && e.name;
+    let err;
     if (name === 'FunctionsHttpError') {
-      const status = (e.context && e.context.status) || 0;
-      const message = VERIFY_STATUS[status] || MESSAGES.verify;
-      return new ApiError(message, status === 409 ? 'already_validated' : 'http_' + status, status);
+      const res = e.context;
+      const status = (res && res.status) || 0;
+      let body = null;
+      try { body = res && typeof res.json === 'function' ? await res.json() : null; } catch (x) { body = null; }
+      const code = body && typeof body.error === 'string' && VERIFY_ERRORS[body.error] ? body.error
+        : VERIFY_BY_STATUS[status] || (status >= 500 ? 'internal_error' : '');
+      const known = VERIFY_ERRORS[code];
+      let message = known ? known.msg : MESSAGES.verify;
+      if (code === 'rate_limited') {
+        const when = retryAfterText(res);
+        if (when) message = 'Trop de vérifications aujourd’hui. ' + when;
+      }
+      err = new ApiError(message, code || 'http_' + status, status);
+      err.retry = known ? !!known.retry : status >= 500;
+      if (body && Number.isFinite(body.attemptsLeft)) err.attemptsLeft = Math.max(0, body.attemptsLeft);
+      else if (code === 'attempts_exhausted') err.attemptsLeft = 0;
+      return err;
     }
     if (name === 'FunctionsFetchError') {
       const cause = e.context;
-      if (cause && (cause.name === 'AbortError' || cause.name === 'TimeoutError')) return new ApiError(MESSAGES.timeout, 'timeout');
-      return new ApiError(online() ? MESSAGES.verify : MESSAGES.offline, online() ? 'network' : 'offline');
+      if (cause && (cause.name === 'AbortError' || cause.name === 'TimeoutError')) err = new ApiError(MESSAGES.timeout, 'timeout');
+      else err = new ApiError(online() ? MESSAGES.verify : MESSAGES.offline, online() ? 'network' : 'offline');
+    } else {
+      err = new ApiError(MESSAGES.verify, 'verify'); // FunctionsRelayError, réponse inattendue…
     }
-    return new ApiError(MESSAGES.verify, 'verify');
+    err.retry = true;
+    return err;
+  }
+
+  /** Erreur d'e-mail (ajout d'adresse, code, retrouver ses bons) → ApiError. */
+  function emailError(e, fallback) {
+    if (e instanceof ApiError) return e;
+    const code = String((e && e.code) || '');
+    if (code === 'email_exists' || code === 'user_already_exists' || code === 'identity_already_exists') return new ApiError(MESSAGES.emailTaken, 'email_taken', e.status);
+    if (code === 'otp_disabled' || code === 'signup_disabled' || code === 'user_not_found') return new ApiError(MESSAGES.noSavedVouchers, 'no_account', e.status);
+    if (code === 'email_address_invalid' || code === 'validation_failed') return new ApiError(MESSAGES.email, 'email', e.status);
+    return authError(e, fallback);
+  }
+
+  /** Erreur de code à 6 chiffres → ApiError. */
+  function codeError(e) {
+    if (e instanceof ApiError) return e;
+    const status = e && e.status;
+    if (e && (status === 429 || /rate_limit/.test(e.code || ''))) return new ApiError(MESSAGES.tooMany, 'rate_limit', 429);
+    if (e && (!online() || isNetworkError(e))) return new ApiError(MESSAGES.offline, 'offline');
+    return new ApiError(MESSAGES.badCode, 'bad_code', status);
   }
 
   // ------------------------------------------------------------------------
@@ -268,8 +345,8 @@ Meleze.api = (function () {
     const len = (v) => str(v).trim().length;
     const between = (key, v, lim, label) => {
       const n = len(v);
-      if (lim.min && n < lim.min) errors[key] = lim.min > 1 ? label + ' : ' + lim.min + ' caractères minimum.' : label + ' : obligatoire.';
-      else if (n > lim.max) errors[key] = label + ' : ' + lim.max + ' caractères maximum.';
+      if (lim.min && n < lim.min) errors[key] = lim.min > 1 ? label + ' : ' + lim.min + ' caractères minimum.' : label + ' : obligatoire.';
+      else if (n > lim.max) errors[key] = label + ' : ' + lim.max + ' caractères maximum.';
     };
     between('title', m.title, L.title, 'Intitulé');
     if (!Meleze.data.TYPES.some((t) => t.id === m.type)) errors.type = 'Choisissez un type de mission.';
@@ -277,12 +354,12 @@ Meleze.api = (function () {
     if (!seasons.length || !seasons.every((s) => Meleze.data.SEASONS.some((x) => x.id === s))) errors.seasons = 'Choisissez au moins une saison.';
     const d = Number(m.duration);
     if (!Number.isInteger(d) || d < L.durationMin.min || d > L.durationMin.max) errors.duration = 'Durée non valide.';
-    if (len(m.durationLabel) > L.durationLabel.max) errors.durationLabel = 'Durée : ' + L.durationLabel.max + ' caractères maximum.';
+    if (len(m.durationLabel) > L.durationLabel.max) errors.durationLabel = 'Durée : ' + L.durationLabel.max + ' caractères maximum.';
     between('location', m.location, L.location, 'Lieu');
-    if (len(m.schedule) > L.schedule.max) errors.schedule = 'Quand : ' + L.schedule.max + ' caractères maximum.';
+    if (len(m.schedule) > L.schedule.max) errors.schedule = 'Quand : ' + L.schedule.max + ' caractères maximum.';
     if (m.spots != null && m.spots !== '') {
       const s = Number(m.spots);
-      if (!Number.isInteger(s) || s < L.spots.min || s > L.spots.max) errors.spots = 'Places : entre ' + L.spots.min + ' et ' + L.spots.max + '.';
+      if (!Number.isInteger(s) || s < L.spots.min || s > L.spots.max) errors.spots = 'Places : entre ' + L.spots.min + ' et ' + L.spots.max + '.';
     }
     between('description', m.description, L.description, 'Description');
     between('photoHint', m.photoHint, L.photoHint, 'Photo attendue');
@@ -296,15 +373,35 @@ Meleze.api = (function () {
   // ------------------------------------------------------------------------
   // Sessions
   // ------------------------------------------------------------------------
-  /** Session enregistrée dans ce navigateur (lecture locale, sans réseau sauf renouvellement). */
+  /** Une session est-elle enregistrée dans ce navigateur (même expirée) ? */
+  function hasStoredSession(kind) {
+    try { return !!window.localStorage.getItem(STORAGE_KEYS[kind]); } catch (e) { return false; }
+  }
+
+  /**
+   * Session enregistrée dans ce navigateur (lecture locale, sans réseau sauf
+   * renouvellement du jeton), ou null s'il n'y en a VRAIMENT pas.
+   * Session enregistrée mais impossible à renouveler maintenant (réseau
+   * d'altitude, serveur d'authentification en panne…) : ApiError, surtout pas
+   * null. Sinon l'app croirait qu'il n'y a pas de compte : « Mon espace » vide,
+   * nouveau compte anonyme qui remplacerait l'ancien (bons perdus)…
+   */
   async function session(kind) {
     const { data, error } = await client(kind).auth.getSession();
-    if (error || !data || !data.session) return null;
-    return data.session;
+    if (data && data.session) return data.session;
+    if (!error) return null; // aucune session enregistrée
+    if (!online() || isNetworkError(error)) throw new ApiError(MESSAGES.offline, 'offline');
+    // Jeton refusé pour de bon : supabase-js a effacé la session (plus rien à protéger).
+    if (!hasStoredSession(kind)) return null;
+    throw new ApiError(MESSAGES.generic, 'session_unavailable', error.status);
   }
 
   let anonPending = null;
-  /** Session touriste : créée (compte anonyme) seulement ici, à la première inscription. */
+  /**
+   * Session touriste : créée (compte anonyme) seulement ici, à la première
+   * inscription, et seulement s'il n'y a aucune session enregistrée (une
+   * session impossible à renouveler fait échouer l'appel : voir session()).
+   */
   async function ensureTourist() {
     const s = await session('tourist');
     if (s) return s.user.id;
@@ -331,12 +428,6 @@ Meleze.api = (function () {
     return (data || []).map(toMission);
   }
 
-  /** true si ce navigateur a déjà un compte touriste (aucune création ici). */
-  async function hasTouristSession() {
-    if (!ready()) return false;
-    return !!(await session('tourist'));
-  }
-
   async function myParticipations() {
     const s = await session('tourist');
     if (!s) return [];
@@ -355,12 +446,32 @@ Meleze.api = (function () {
     return (data || []).map(toVoucher);
   }
 
+  /**
+   * Missions par identifiant, retirées comprises : celles auxquelles le
+   * touriste a participé restent lisibles (règle missions_select_joined), pour
+   * afficher leur titre dans « Mon espace » après leur retrait.
+   */
+  async function missionsByIds(ids) {
+    const list = (ids || []).filter((id) => typeof id === 'string' && id);
+    if (!list.length) return [];
+    const s = await session('tourist');
+    if (!s) return [];
+    const { data, error } = await client('tourist').from('missions').select(MISSION_COLUMNS).in('id', list);
+    if (error) throw dbError(error);
+    return (data || []).map(toMission);
+  }
+
   /** Inscription à une mission (crée le compte anonyme au besoin). */
   async function join(missionId) {
     const uid = await ensureTourist();
     const { data, error } = await client('tourist').from('participations')
       .insert({ user_id: uid, mission_id: missionId }).select(PARTICIPATION_COLUMNS);
-    if (error) throw dbError(error, MESSAGES.signin);
+    if (error) {
+      const err = dbError(error, MESSAGES.signin);
+      // Refus de la règle d'inscription : la mission a été retirée entre-temps.
+      if (err.code === 'forbidden') throw new ApiError(MESSAGES.missionGone, 'mission_inactive', 403);
+      throw err;
+    }
     if (!data || !data[0]) throw new ApiError(MESSAGES.signin, 'empty');
     return toParticipation(data[0]);
   }
@@ -380,7 +491,9 @@ Meleze.api = (function () {
    * Envoie la photo à la fonction de vérification (IA).
    * @param {string} participationId
    * @param {string} jpegDataUrl  "data:image/jpeg;base64,…" (réduite à 1024 px, voir js/camera.js)
-   * @returns {Promise<{valid:boolean, confidence:number, reason:string, voucher:object|null}>}
+   * @returns {Promise<{valid:boolean, confidence:number, reason:string, voucher:object|null, attemptsLeft:number|null}>}
+   *   En cas d'échec : ApiError avec `code` (celui du serveur : attempts_exhausted,
+   *   mission_inactive…), `retry` et éventuellement `attemptsLeft`.
    */
   async function verifyPhoto(participationId, jpegDataUrl) {
     const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+=*)$/.exec(String(jpegDataUrl || ''));
@@ -393,7 +506,7 @@ Meleze.api = (function () {
       body: { participationId, image: m[2], mediaType: m[1] },
       timeout: VERIFY_TIMEOUT,
     });
-    if (error) throw functionError(error);
+    if (error) throw await functionError(error);
     let res = data;
     if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) { res = null; } }
     if (!res || typeof res.valid !== 'boolean') throw new ApiError(MESSAGES.verify, 'bad_response');
@@ -402,11 +515,14 @@ Meleze.api = (function () {
       confidence: Math.min(1, Math.max(0, Number(res.confidence) || 0)),
       reason: str(res.reason).slice(0, 300),
       voucher: res.voucher && typeof res.voucher === 'object' ? toVoucher(res.voucher) : null,
+      attemptsLeft: Number.isFinite(res.attemptsLeft) ? Math.max(0, res.attemptsLeft) : null,
     };
   }
 
   /** Utilisation d'un bon (irréversible, une seule fois) : fonction SQL use_voucher. */
   async function useVoucher(id) {
+    const s = await session('tourist');
+    if (!s) throw new ApiError(MESSAGES.session, 'no_session');
     const { data, error } = await client('tourist').rpc('use_voucher', { p_id: id });
     if (error) throw dbError(error, MESSAGES.voucher);
     const row = Array.isArray(data) ? data[0] : data;
@@ -414,10 +530,10 @@ Meleze.api = (function () {
     return toVoucher(row);
   }
 
-  /** « Supprimer mes données » : efface participations, vérifications et bons, puis oublie le compte anonyme. */
+  /** « Supprimer mes données » : efface participations et bons (journal des vérifications anonymisé), puis oublie le compte anonyme. */
   async function deleteMyData() {
-    const s = await session('tourist');
-    if (!s) return true; // rien sur le serveur
+    const s = await session('tourist'); // session impossible à renouveler : erreur, rien n'est effacé
+    if (!s) return true; // aucune session : rien sur le serveur
     const { error } = await client('tourist').rpc('delete_my_data');
     if (error) throw dbError(error);
     await client('tourist').auth.signOut({ scope: 'local' }).catch(() => {});
@@ -425,16 +541,95 @@ Meleze.api = (function () {
   }
 
   // ------------------------------------------------------------------------
-  // Partenaire
+  // Touriste : garder ses bons avec un e-mail (facultatif)
+  // Tout se passe sur le client « tourist » : le compte anonyme reçoit
+  // l'adresse et devient permanent, SANS changer d'identifiant (participations
+  // et bons conservés). Sur un autre appareil, « Retrouver mes bons » ouvre ce
+  // même compte avec un code reçu par e-mail.
   // ------------------------------------------------------------------------
   const normEmail = (email) => str(email).trim().toLowerCase();
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  /** Envoie un code de connexion par e-mail. */
-  async function sendCode(email) {
+  /** Adresse saisie → adresse normalisée, sinon ApiError (adresse, réseau). */
+  function checkEmail(email) {
     const e = normEmail(email);
     if (!EMAIL_RE.test(e) || e.length > 254) throw new ApiError(MESSAGES.email, 'email');
     if (!online()) throw new ApiError(MESSAGES.offline, 'offline');
+    return e;
+  }
+  /** Code saisi → chiffres seuls, sinon ApiError. */
+  function checkToken(code) {
+    const token = str(code).replace(/\s+/g, '');
+    if (!/^\d{6,10}$/.test(token)) throw new ApiError(MESSAGES.badCode, 'bad_code');
+    if (!online()) throw new ApiError(MESSAGES.offline, 'offline');
+    return token;
+  }
+
+  /**
+   * Compte touriste de ce navigateur (lecture locale), ou null.
+   * `email` : adresse confirmée ('' tant que le compte est anonyme).
+   */
+  async function touristAccount() {
+    if (!ready()) return null;
+    const s = await session('tourist');
+    if (!s || !s.user) return null;
+    const u = s.user;
+    return { userId: str(u.id), email: u.is_anonymous ? '' : normEmail(u.email) };
+  }
+
+  /** Étape 1 : Supabase envoie un code à 6 chiffres à cette adresse (modèle « Change Email Address »). */
+  async function saveEmailSend(email) {
+    const e = checkEmail(email);
+    const s = await session('tourist');
+    if (!s) throw new ApiError(MESSAGES.session, 'no_session');
+    const { error } = await client('tourist').auth.updateUser({ email: e });
+    if (error) throw emailError(error, MESSAGES.sendCode);
+    return e;
+  }
+
+  /** Étape 2 : le code confirme l'adresse ; le compte devient permanent, mêmes bons. */
+  async function saveEmailVerify(email, code) {
+    const token = checkToken(code);
+    const e = normEmail(email);
+    const { data, error } = await client('tourist').auth.verifyOtp({ email: e, token, type: 'email_change' });
+    if (error) throw codeError(error);
+    let user = data && data.session && data.session.user;
+    if (!user) {
+      // Réponse sans session (cas rare) : on recharge la session pour lire l'adresse confirmée.
+      const r = await client('tourist').auth.refreshSession();
+      user = r && r.data && r.data.session && r.data.session.user;
+    }
+    if (!user || user.is_anonymous || normEmail(user.email) !== e) throw new ApiError(MESSAGES.badCode, 'bad_code');
+    return { userId: str(user.id), email: e };
+  }
+
+  /** « Retrouver mes bons » : code envoyé seulement si un compte existe déjà avec cette adresse. */
+  async function recoverSend(email) {
+    const e = checkEmail(email);
+    const { error } = await client('tourist').auth.signInWithOtp({ email: e, options: { shouldCreateUser: false } });
+    if (error) throw emailError(error, MESSAGES.sendCode);
+    return e;
+  }
+
+  /**
+   * Code reçu → ce navigateur passe sur le compte de cette adresse. Le compte
+   * anonyme d'avant est abandonné : l'appelant prévient AVANT s'il avait des
+   * missions ou des bons (voir store.hasUnsavedData).
+   */
+  async function recoverVerify(email, code) {
+    const token = checkToken(code);
+    const e = normEmail(email);
+    const { data, error } = await client('tourist').auth.verifyOtp({ email: e, token, type: 'email' });
+    if (error || !data || !data.session) throw codeError(error);
+    return { userId: str(data.session.user.id), email: normEmail(data.session.user.email) || e };
+  }
+
+  // ------------------------------------------------------------------------
+  // Partenaire
+  // ------------------------------------------------------------------------
+  /** Envoie un code de connexion par e-mail. */
+  async function sendCode(email) {
+    const e = checkEmail(email);
     const { error } = await client('partner').auth.signInWithOtp({ email: e, options: { shouldCreateUser: true } });
     if (error) throw authError(error, MESSAGES.sendCode);
     return e;
@@ -442,16 +637,9 @@ Meleze.api = (function () {
 
   /** Vérifie le code reçu (6 chiffres par défaut chez Supabase). */
   async function verifyCode(email, code) {
-    const token = str(code).replace(/\s+/g, '');
-    if (!/^\d{6,10}$/.test(token)) throw new ApiError(MESSAGES.badCode, 'bad_code');
-    if (!online()) throw new ApiError(MESSAGES.offline, 'offline');
+    const token = checkToken(code);
     const { data, error } = await client('partner').auth.verifyOtp({ email: normEmail(email), token, type: 'email' });
-    if (error || !data || !data.session) {
-      const status = error && error.status;
-      if (error && (status === 429 || /rate_limit/.test(error.code || ''))) throw new ApiError(MESSAGES.tooMany, 'rate_limit', 429);
-      if (error && (!online() || isNetworkError(error))) throw new ApiError(MESSAGES.offline, 'offline');
-      throw new ApiError(MESSAGES.badCode, 'bad_code', status);
-    }
+    if (error || !data || !data.session) throw codeError(error);
     return { email: normEmail(data.session.user.email), userId: data.session.user.id };
   }
 
@@ -524,7 +712,8 @@ Meleze.api = (function () {
   return {
     ApiError, MESSAGES, ready, validateMission,
     // touriste
-    listMissions, hasTouristSession, myParticipations, myVouchers, join, cancel, verifyPhoto, useVoucher, deleteMyData,
+    listMissions, myParticipations, myVouchers, missionsByIds, join, cancel, verifyPhoto, useVoucher, deleteMyData,
+    touristAccount, saveEmailSend, saveEmailVerify, recoverSend, recoverVerify,
     // partenaire
     sendCode, verifyCode, partnerSession, partnerProfile, myMissions, createMission, retireMission, signOut,
   };

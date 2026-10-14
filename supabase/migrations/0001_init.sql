@@ -80,7 +80,8 @@ $$;
 -- -----------------------------------------------------------------------------
 create table if not exists public.missions (
   id              uuid primary key default gen_random_uuid(),
-  created_by      uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  -- null seulement si le compte du partenaire a été supprimé (voir plus bas)
+  created_by      uuid default auth.uid() references auth.users (id) on delete set null,
   org             text not null check (char_length(org) between 1 and 80),
   title           text not null check (char_length(btrim(title)) >= 3 and char_length(title) <= 120),
   type            text not null check (type in ('mobilite', 'village', 'nature')),
@@ -102,6 +103,15 @@ create table if not exists public.missions (
   active          boolean not null default true,
   created_at      timestamptz not null default now()
 );
+
+-- Supprimer le compte d'un partenaire (Authentication > Users) ne doit jamais
+-- effacer ses missions, ni donc les participations et les bons des touristes :
+-- la mission reste, sans propriétaire (created_by = null). Les lignes suivantes
+-- mettent aussi à jour une base créée par une version précédente du script.
+alter table public.missions alter column created_by drop not null;
+alter table public.missions drop constraint if exists missions_created_by_fkey;
+alter table public.missions add constraint missions_created_by_fkey
+  foreign key (created_by) references auth.users (id) on delete set null;
 
 create index if not exists missions_active_created_idx on public.missions (active, created_at desc);
 create index if not exists missions_created_by_idx on public.missions (created_by);
@@ -165,26 +175,68 @@ create index if not exists vouchers_user_idx on public.vouchers (user_id);
 -- -----------------------------------------------------------------------------
 -- Vérifications de photo (journal, sans aucune image)
 -- - Une ligne est réservée (pending = true) AVANT l'appel à l'IA, puis complétée :
---   les limites (essais par mission, vérifications par jour) tiennent donc même
---   si plusieurs envois partent en même temps.
--- - participation_id passe à null si le touriste se désinscrit : la ligne reste
---   comptée dans la limite quotidienne (se désinscrire puis se réinscrire ne
---   remet pas le compteur du jour à zéro). « Supprimer mes données » l'efface.
+--   les limites tiennent donc même si plusieurs envois partent en même temps.
+-- - Ce journal sert aussi de compteur pour les limites : essais par mission et
+--   par personne (uses_attempt), vérifications par jour (par personne et pour
+--   tout le service).
+-- - Il survit donc à une désinscription (participation_id passe à null) et à
+--   « Supprimer mes données », qui l'anonymise (plus de lien vers la
+--   participation, plus d'explication) sans l'effacer : sinon se désinscrire,
+--   ou tout effacer, remettrait les compteurs à zéro. Il est purgé après
+--   30 jours, et disparaît avec le compte (entretien : supabase/README.md).
 -- -----------------------------------------------------------------------------
 create table if not exists public.photo_checks (
   id               bigint generated always as identity primary key,
   user_id          uuid not null references auth.users (id) on delete cascade,
   participation_id uuid references public.participations (id) on delete set null,
+  mission_id       uuid references public.missions (id) on delete set null,
   valid            boolean not null default false,
   confidence       real,
   reason           text,
   pending          boolean not null default true,
+  uses_attempt     boolean not null default true, -- false : essai rendu (panne de l'IA)
   created_at       timestamptz not null default now()
 );
+
+-- Base créée par une version précédente du script : colonnes ajoutées puis remplies.
+alter table public.photo_checks add column if not exists mission_id uuid references public.missions (id) on delete set null;
+alter table public.photo_checks add column if not exists uses_attempt boolean not null default true;
+update public.photo_checks pc
+   set mission_id = p.mission_id
+  from public.participations p
+ where pc.mission_id is null
+   and pc.participation_id = p.id;
+update public.photo_checks
+   set uses_attempt = false
+ where uses_attempt
+   and not pending
+   and not valid
+   and reason = 'Vérification interrompue.';
 
 create index if not exists photo_checks_user_created_idx on public.photo_checks (user_id, created_at desc);
 create index if not exists photo_checks_created_idx on public.photo_checks (created_at desc);
 create index if not exists photo_checks_participation_idx on public.photo_checks (participation_id);
+create index if not exists photo_checks_user_mission_idx on public.photo_checks (user_id, mission_id);
+
+-- -----------------------------------------------------------------------------
+-- Missions déjà récompensées, par compte (remplie par complete_participation)
+-- Une mission ne rapporte qu'un bon par compte, même après « Supprimer mes
+-- données » puis une nouvelle inscription. Ni lisible ni modifiable depuis le
+-- navigateur ; disparaît avec le compte.
+-- -----------------------------------------------------------------------------
+create table if not exists public.mission_rewards (
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  mission_id uuid not null references public.missions (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, mission_id)
+);
+
+-- Base créée par une version précédente du script : bons déjà émis.
+insert into public.mission_rewards (user_id, mission_id, created_at)
+select v.user_id, v.mission_id, v.created_at
+  from public.vouchers v
+ where v.mission_id is not null
+on conflict do nothing;
 
 -- -----------------------------------------------------------------------------
 -- Sécurité par ligne et droits
@@ -193,8 +245,10 @@ alter table public.missions enable row level security;
 alter table public.participations enable row level security;
 alter table public.vouchers enable row level security;
 alter table public.photo_checks enable row level security;
+alter table public.mission_rewards enable row level security;
 
-revoke all on table public.missions, public.participations, public.vouchers, public.photo_checks
+revoke all on table public.missions, public.participations, public.vouchers, public.photo_checks,
+  public.mission_rewards
   from anon, authenticated;
 
 -- Missions : tout le monde lit les missions actives ; un partenaire publie ;
@@ -210,7 +264,8 @@ grant select, insert, delete on table public.participations to authenticated;
 grant select on table public.vouchers to authenticated;
 grant select on table public.photo_checks to authenticated;
 
-grant all on table public.missions, public.participations, public.vouchers, public.photo_checks
+grant all on table public.missions, public.participations, public.vouchers, public.photo_checks,
+  public.mission_rewards
   to service_role;
 
 -- Missions
@@ -344,6 +399,14 @@ begin
   if v_part.status <> 'inscrite' then
     return null;
   end if;
+  -- Un seul bon par mission et par compte, même après « Supprimer mes données »
+  -- puis une nouvelle inscription (voir mission_rewards).
+  insert into public.mission_rewards (user_id, mission_id)
+  values (v_part.user_id, v_part.mission_id)
+  on conflict do nothing;
+  if not found then
+    return null;
+  end if;
 
   select * into v_mission from public.missions where id = v_part.mission_id;
   if not found then
@@ -409,8 +472,11 @@ begin
 end;
 $$;
 
--- « Supprimer mes données » : efface les participations, bons et vérifications
--- de la personne connectée (les missions publiées par un partenaire restent).
+-- « Supprimer mes données » : efface les participations et les bons de la
+-- personne connectée (les missions publiées par un partenaire restent).
+-- Le journal des vérifications est anonymisé, pas effacé : il ne garde que la
+-- date, la mission et le résultat (ni explication, ni lien vers la
+-- participation), pour que les limites ne repartent pas de zéro.
 create or replace function public.delete_my_data()
 returns void
 language plpgsql
@@ -423,7 +489,11 @@ begin
   if v_uid is null then
     raise exception 'Vous n’êtes pas connecté.' using errcode = '42501';
   end if;
-  delete from public.photo_checks where user_id = v_uid;
+  update public.photo_checks
+     set participation_id = null,
+         reason = null,
+         confidence = null
+   where user_id = v_uid;
   delete from public.participations where user_id = v_uid; -- supprime aussi les bons (cascade)
   delete from public.vouchers where user_id = v_uid;
 end;
@@ -431,7 +501,9 @@ $$;
 
 -- Réserve une vérification de photo avant l'appel à l'IA (service_role).
 -- Contrôles, dans l'ordre : participation de cet utilisateur, encore
--- « inscrite », essais restants, mission active, limite par personne sur 24 h,
+-- « inscrite », mission pas déjà récompensée pour ce compte, essais restants
+-- pour cette mission (comptés dans le journal : se désinscrire puis se
+-- réinscrire ne les rend pas), mission active, limite par personne sur 24 h,
 -- limite globale sur 24 h (0 = pas de limite). Renvoie
 -- { ok: true, check_id, title, photo_hint, attempts, max_attempts }
 -- ou { ok: false, error: 'not_found' | 'already_validated' | 'attempts_exhausted'
@@ -451,6 +523,7 @@ as $$
 declare
   v_part public.participations%rowtype;
   v_mission public.missions%rowtype;
+  v_used integer;
   v_count integer;
   v_check bigint;
 begin
@@ -464,9 +537,33 @@ begin
   if v_part.status <> 'inscrite' then
     return jsonb_build_object('ok', false, 'error', 'already_validated');
   end if;
-  if v_part.attempts >= p_max_attempts then
+
+  -- Un seul calcul de compteurs à la fois par personne (puis pour tout le service).
+  perform pg_advisory_xact_lock(hashtextextended('meleze:photo-check:' || p_user::text, 0));
+
+  -- Mission déjà récompensée pour ce compte (avant « Supprimer mes données ») : pas de second bon.
+  if exists (
+    select 1 from public.mission_rewards
+     where user_id = p_user
+       and mission_id = v_part.mission_id
+  ) then
+    return jsonb_build_object('ok', false, 'error', 'already_validated');
+  end if;
+
+  -- Essais utilisés pour cette mission par cette personne, toutes participations confondues.
+  select count(*) into v_used
+    from public.photo_checks
+   where user_id = p_user
+     and mission_id = v_part.mission_id
+     and uses_attempt;
+  v_used := greatest(v_used, v_part.attempts);
+  if v_used >= p_max_attempts then
+    update public.participations
+       set attempts = v_used
+     where id = p_participation
+       and attempts <> v_used;
     return jsonb_build_object('ok', false, 'error', 'attempts_exhausted',
-                              'attempts', v_part.attempts, 'max_attempts', p_max_attempts);
+                              'attempts', v_used, 'max_attempts', p_max_attempts);
   end if;
 
   select * into v_mission from public.missions where id = v_part.mission_id;
@@ -474,8 +571,6 @@ begin
     return jsonb_build_object('ok', false, 'error', 'mission_inactive');
   end if;
 
-  -- Un seul calcul de quota à la fois par personne (puis pour tout le service).
-  perform pg_advisory_xact_lock(hashtextextended('meleze:photo-check:' || p_user::text, 0));
   select count(*) into v_count
     from public.photo_checks
    where user_id = p_user
@@ -495,11 +590,11 @@ begin
   end if;
 
   update public.participations
-     set attempts = attempts + 1
+     set attempts = v_used + 1
    where id = p_participation;
 
-  insert into public.photo_checks (user_id, participation_id)
-  values (p_user, p_participation)
+  insert into public.photo_checks (user_id, participation_id, mission_id)
+  values (p_user, p_participation, v_part.mission_id)
   returning id into v_check;
 
   return jsonb_build_object(
@@ -507,7 +602,7 @@ begin
     'check_id', v_check,
     'title', v_mission.title,
     'photo_hint', v_mission.photo_hint,
-    'attempts', v_part.attempts + 1,
+    'attempts', v_used + 1,
     'max_attempts', p_max_attempts
   );
 end;
@@ -549,7 +644,8 @@ $$;
 
 -- Annule une réservation quand l'IA n'a pas pu répondre (service_role) :
 -- l'essai est rendu au touriste. Avec p_count_in_quota = true, la ligne reste
--- comptée dans la limite quotidienne (l'appel a coûté quelque chose).
+-- comptée dans la limite quotidienne (l'appel a coûté quelque chose), mais
+-- plus comme un essai pour la mission (uses_attempt = false).
 create or replace function public.release_photo_check(
   p_check bigint,
   p_count_in_quota boolean default false
@@ -566,6 +662,7 @@ begin
     update public.photo_checks
        set pending = false,
            valid = false,
+           uses_attempt = false,
            reason = 'Vérification interrompue.'
      where id = p_check
        and pending

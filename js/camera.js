@@ -187,7 +187,7 @@ Meleze.camera = (function () {
     } else if (next === 'fallback') {
       over = message(
         '<p class="' + R + '">' + esc(REASONS[reason] || REASONS.unavailable) + '</p>' +
-        '<p class="max-w-sm text-lg leading-snug text-white">Utilisez l’appareil photo du téléphone : la photo sera envoyée pour vérification, sans être enregistrée.</p>' +
+        '<p class="max-w-sm text-lg leading-snug text-white">Utilisez l’appareil photo du téléphone : la photo sera envoyée pour vérification, sans être enregistrée.</p>' +
         (extraError ? '<p class="bg-danger px-3 py-2 font-semibold text-white">' + esc(extraError) + '</p>' : ''));
       ctrl = '<label class="' + BTN_MAIN + ' w-full max-w-md cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-white">' +
         'Ouvrir l’appareil photo' +
@@ -222,7 +222,7 @@ Meleze.camera = (function () {
         '<button type="button" data-cam="close" class="' + BTN_OUTLINE + ' btn-sm">Fermer</button>' +
       '</div>' +
       (hint
-        ? '<p id="cam-hint" class="' + W + ' pt-2 text-base leading-snug text-white"><span class="font-semibold">La photo doit montrer :</span> ' + esc(hint) + '</p>'
+        ? '<p id="cam-hint" class="' + W + ' pt-2 text-base leading-snug text-white"><span class="font-semibold">La photo doit montrer :</span> ' + esc(hint) + '</p>'
         : '') +
       // Aperçu : arrondi comme les photos de l'app
       '<div class="relative mx-auto my-3 min-h-0 w-[calc(100%-2rem)] max-w-3xl flex-1 overflow-hidden rounded-3xl bg-black sm:w-[calc(100%-4rem)]">' +

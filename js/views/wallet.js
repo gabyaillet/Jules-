@@ -5,7 +5,10 @@
    action, « Prendre la photo »), puis les bons (blocs verts). La photo est
    prise avec l'appareil photo intégré (js/camera.js) et vérifiée par le
    serveur (IA) : « Vérification… », puis bon émis, ou explication + reprise.
-   Pas de prénom, pas de compte : tout est lié à ce navigateur.
+   Pas de prénom, pas de compte à créer : tout est lié à ce navigateur. Le
+   touriste peut ajouter son e-mail (« Gardez vos bons ») pour retrouver ses
+   bons sur un autre téléphone (« Retrouver mes bons »), avec un code à 6
+   chiffres reçu par e-mail.
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 Meleze.views = Meleze.views || {};
@@ -25,15 +28,23 @@ Meleze.views.wallet = (function () {
   const checks = {};
   const busy = new Set(); // actions en cours (annuler, utiliser un bon, supprimer) : pas de double envoi
   let focusAfter = null; // sélecteur à focaliser après le prochain rendu
+  /**
+   * Panneau e-mail ouvert, ou null :
+   *   { mode: 'save' (ajouter son e-mail) | 'recover' (retrouver ses bons),
+   *     step: 'email' | 'code', email, code, busy, error }
+   */
+  let mail = null;
 
   // ------------------------------------------------------------------------
   // Missions en cours
   // ------------------------------------------------------------------------
   const BTN_LINK = 'min-h-[44px] font-display text-base font-semibold text-ink underline decoration-2 underline-offset-4 hover:text-brand-ink disabled:opacity-50';
+  /** Bouton contour blanc, sur les aplats verts. */
+  const BTN_WHITE = 'btn border-2 border-white bg-transparent text-white hover:bg-white hover:text-night focus-visible:outline-white';
 
   /** Ce que la photo doit montrer : la consigne écrite par le partenaire. */
   function hintBlock(m) {
-    return '<p class="font-display text-base font-semibold text-ink">La photo doit montrer :</p>' +
+    return '<p class="font-display text-base font-semibold text-ink">La photo doit montrer :</p>' +
       '<p class="mt-1 text-lg font-semibold leading-snug text-ink">' + esc(m.photoHint || 'La mission réalisée.') + '</p>';
   }
 
@@ -70,11 +81,15 @@ Meleze.views.wallet = (function () {
     return '<div id="check-' + esc(p.id) + '" tabindex="-1" class="mt-5 outline-none empty:hidden" aria-live="polite">' + inner + '</div>';
   }
 
-  /** Carte "mission en cours" : photo + type + titre, puis la consigne et l'action. */
+  /**
+   * Carte "mission en cours" : photo + type + titre, puis la consigne et l'action.
+   * `m` : mission active, ou retirée (active === false), ou null si inconnue.
+   */
   function activeCard(p, m) {
     const c = lastVerdict(p);
     const left = Math.max(0, MAX_ATTEMPTS - (Number(p.attempts) || 0));
     const verifying = c && c.phase === 'verifying';
+    const retired = !m || m.active === false;
     const id = esc(p.id);
     const header = m
       ? '<div class="flex items-center gap-4">' +
@@ -82,13 +97,14 @@ Meleze.views.wallet = (function () {
           '<div class="min-w-0 flex-1">' +
             '<span class="tag tag-sign ' + esc(typeOf(m.type).color) + '">' + esc(typeOf(m.type).label) + '</span>' +
             '<h3 class="mt-2 text-2xl leading-[1.05] sm:text-[1.75rem]">' + esc(m.title) + '</h3>' +
+            (retired ? '<span class="tag mt-2 bg-sunk text-ink">Mission retirée</span>' : '') +
           '</div>' +
         '</div>'
       : '<h3 class="text-2xl leading-[1.05] sm:text-[1.75rem]">Mission retirée</h3>';
 
     let body;
-    if (!m) {
-      body = '<p class="text-lg leading-snug text-ink">Le partenaire a retiré cette mission : elle ne peut plus être validée.</p>';
+    if (retired) {
+      body = '<p class="text-lg leading-snug text-ink">Le partenaire a retiré cette mission : elle ne peut plus être validée.</p>';
     } else {
       let actions;
       if (verifying) {
@@ -100,7 +116,7 @@ Meleze.views.wallet = (function () {
           '</div>';
       } else if (left > 0) {
         actions = '<button type="button" class="btn-primary min-h-[60px] w-full text-lg sm:w-auto" data-action="photo" data-id="' + id + '">' +
-          (c && c.phase === 'invalid' ? 'Reprendre la photo' : 'Prendre la photo') + '</button>';
+          (c && (c.phase === 'invalid' || c.phase === 'error') ? 'Reprendre la photo' : 'Prendre la photo') + '</button>';
       } else {
         actions = '<p class="font-display text-lg font-bold text-ink">Vous avez utilisé vos ' + MAX_ATTEMPTS + ' essais pour cette mission.</p>';
       }
@@ -126,12 +142,18 @@ Meleze.views.wallet = (function () {
     return '<li class="flex flex-col" id="participation-' + id + '">' +
       '<div id="check-' + id + '" tabindex="-1" class="bg-forest p-6 text-white outline-none sm:p-7" aria-live="polite">' +
         '<p class="font-display text-base font-semibold">' + esc(m ? m.title : 'Mission') + '</p>' +
-        '<p class="mt-2 font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.02em]">Mission validée !</p>' +
+        '<p class="mt-2 font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.02em]">Mission validée !</p>' +
         (c.reason ? '<p class="mt-2 text-lg leading-snug">' + esc(c.reason) + '</p>' : '') +
         (v
-          ? '<p class="mt-5 text-lg">Votre cadeau : <span class="font-bold">' + esc(v.title) + '</span>, offert par ' + esc(v.partner) + '.</p>' +
-            '<button type="button" class="btn-light mt-6 w-full focus-visible:outline-white sm:w-auto" data-action="show-voucher" data-id="' + esc(v.id) + '">Voir mon bon ' + icon('arrow', 'h-5 w-5') + '</button>'
-          : '<p class="mt-5 text-lg">Votre bon arrive dans « Mes bons ».</p>') +
+          ? '<p class="mt-5 text-lg">Votre cadeau : <span class="font-bold">' + esc(v.title) + '</span>, offert par ' + esc(v.partner) + '.</p>'
+          : '<p class="mt-5 text-lg">Votre bon arrive dans « Mes bons ».</p>') +
+        '<div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap empty:hidden">' +
+          (v ? '<button type="button" class="btn-light w-full focus-visible:outline-white sm:w-auto" data-action="show-voucher" data-id="' + esc(v.id) + '">Voir mon bon ' + icon('arrow', 'h-5 w-5') + '</button>' : '') +
+          // Juste après le gain : proposer de garder ses bons avec un e-mail (facultatif)
+          (!store.state.email && !mail
+            ? '<button type="button" class="' + BTN_WHITE + ' w-full sm:w-auto" data-action="mail-open" data-mode="save">Gardez vos bons : ajoutez votre e-mail</button>'
+            : '') +
+        '</div>' +
       '</div>' +
     '</li>';
   }
@@ -139,9 +161,27 @@ Meleze.views.wallet = (function () {
   // ------------------------------------------------------------------------
   // Bons
   // ------------------------------------------------------------------------
-  /** Bon valable : bloc vert plein, code lisible, « Utiliser mon bon » devant le partenaire. */
-  function voucherCard(v) {
+  /**
+   * Bon valable : bloc vert plein, code lisible, « Utiliser mon bon » devant le partenaire.
+   * `live` : données confirmées par le serveur pendant cette visite. Sinon (copie
+   * locale, modifiable sur le téléphone), ni bouton « Utiliser », ni bloc
+   * « Bon utilisé » présenté comme une preuve.
+   */
+  function voucherCard(v, state) {
     const id = esc(v.id);
+    const live = state.confirmed;
+    if (!live) {
+      const loading = state.status === 'loading' || state.status === 'idle';
+      return '<li id="voucher-' + id + '" tabindex="-1" class="flex flex-col bg-sunk p-6 text-ink outline-none">' +
+        '<p class="font-display text-base font-semibold">' + esc(v.partner) + '</p>' +
+        '<h3 class="mt-3 text-[1.75rem] leading-[1.05] tracking-[-0.025em]">' + esc(v.title) + '</h3>' +
+        '<p class="mt-auto pt-7 font-mono text-2xl font-bold tracking-[0.14em] text-muted"><span class="sr-only">Code du bon : </span>' + esc(v.code) + '</p>' +
+        '<p class="mt-4 flex items-center gap-3 font-display text-base font-semibold">' +
+          (loading ? spinner('h-5 w-5') + 'Vérification du bon…'
+            : (v.usedAt ? 'Utilisé le ' + esc(dateTime(v.usedAt)) + '. ' : '') + 'Connexion nécessaire pour vérifier ce bon.') +
+        '</p>' +
+      '</li>';
+    }
     if (v.usedAt) {
       // Bon utilisé : aplat vert « Bon utilisé » + date et heure (preuve pour le partenaire)
       return '<li id="voucher-' + id + '" tabindex="-1" class="flex flex-col bg-sunk p-6 outline-none">' +
@@ -158,11 +198,77 @@ Meleze.views.wallet = (function () {
     return '<li id="voucher-' + id + '" tabindex="-1" class="flex flex-col bg-forest p-6 text-white outline-none">' +
       '<p class="font-display text-base font-semibold">' + esc(v.partner) + '</p>' +
       '<h3 class="mt-3 text-[1.75rem] leading-[1.05] tracking-[-0.025em]">' + esc(v.title) + '</h3>' +
-      '<p class="mt-auto pt-7 font-mono text-2xl font-bold tracking-[0.14em]"><span class="sr-only">Code du bon : </span>' + esc(v.code) + '</p>' +
+      '<p class="mt-auto pt-7 font-mono text-2xl font-bold tracking-[0.14em]"><span class="sr-only">Code du bon : </span>' + esc(v.code) + '</p>' +
       '<button type="button" class="btn-light mt-5 w-full focus-visible:outline-white" data-action="use" data-id="' + id + '"' + (working ? ' disabled aria-busy="true"' : '') + '>' +
         (working ? spinner('h-5 w-5') + 'Validation…' : 'Utiliser mon bon') + '</button>' +
       '<p class="mt-3 text-base">À faire devant le partenaire.</p>' +
     '</li>';
+  }
+
+  // ------------------------------------------------------------------------
+  // E-mail (facultatif) : garder ses bons, les retrouver sur un autre téléphone
+  // ------------------------------------------------------------------------
+  const LOST_WARNING = 'Les missions et les bons non sauvegardés de cet appareil seront perdus.';
+
+  /** Panneau ouvert : adresse, puis code reçu. */
+  function mailPanel(state) {
+    const save = mail.mode === 'save';
+    const title = save ? 'Gardez vos bons' : 'Retrouver mes bons';
+    const err = mail.error
+      ? '<p id="mail-err" class="bg-danger px-4 py-3 font-semibold leading-snug text-surface" role="alert">' + esc(mail.error) + '</p>'
+      : '';
+    const invalid = mail.error ? ' aria-invalid="true"' : '';
+    const working = mail.busy ? ' disabled aria-busy="true"' : '';
+    let body;
+    if (mail.step === 'email') {
+      body = '<p class="mt-2 max-w-xl text-lg leading-snug text-ink">' +
+          (save ? 'Ajoutez votre e-mail : vous retrouverez vos bons sur un autre téléphone.' : 'Recevez un code sur l’e-mail de vos bons.') + '</p>' +
+        (!save && store.hasUnsavedData()
+          ? '<p class="mt-4 bg-ink px-4 py-3 font-display text-base font-semibold leading-snug text-surface">' + esc(LOST_WARNING) + '</p>'
+          : '') +
+        '<form class="mt-6 max-w-md space-y-4" data-form="mail-send" novalidate>' +
+          '<div><label class="label text-lg" for="mail-email">Votre e-mail</label>' +
+            '<input class="field bg-surface" id="mail-email" name="email" type="email" inputmode="email" autocomplete="email" required maxlength="254" data-keep="email" value="' + esc(mail.email) + '"' +
+            invalid + (mail.error ? ' aria-describedby="mail-err"' : '') + '></div>' +
+          err +
+          '<div class="flex flex-col gap-3 sm:flex-row">' +
+            '<button class="btn-primary"' + working + '>' + (mail.busy ? spinner('h-5 w-5') + 'Envoi…' : 'Recevoir un code') + '</button>' +
+            '<button type="button" class="btn-secondary" data-action="mail-close">Annuler</button>' +
+          '</div>' +
+        '</form>';
+    } else {
+      body = '<p class="mt-4 max-w-xl bg-surface px-5 py-4 text-lg leading-snug text-ink" role="status">Code envoyé à <span class="break-words font-bold">' + esc(mail.email) + '</span>. Pensez aux courriers indésirables.</p>' +
+        '<form class="mt-6 max-w-md space-y-4" data-form="mail-verify" novalidate>' +
+          '<div><label class="label text-lg" for="mail-code">Code reçu par e-mail</label>' +
+            '<input class="field bg-surface font-mono text-2xl tracking-[0.3em]" id="mail-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="10" required data-keep="code" value="' + esc(mail.code) + '"' +
+            ' aria-describedby="mail-code-hint' + (mail.error ? ' mail-err' : '') + '"' + invalid + '>' +
+            '<p class="hint" id="mail-code-hint">6 chiffres</p></div>' +
+          err +
+          '<button class="btn-primary w-full sm:w-auto"' + working + '>' + (mail.busy ? spinner('h-5 w-5') + 'Vérification…' : 'Valider') + '</button>' +
+        '</form>' +
+        '<div class="mt-4 flex flex-wrap gap-x-6 gap-y-1">' +
+          '<button type="button" class="' + BTN_LINK + '" data-action="mail-resend"' + (mail.busy ? ' disabled' : '') + '>Renvoyer le code</button>' +
+          '<button type="button" class="' + BTN_LINK + '" data-action="mail-change">Changer d’adresse</button>' +
+          '<button type="button" class="' + BTN_LINK + '" data-action="mail-close">Annuler</button>' +
+        '</div>';
+    }
+    return '<section id="mail-panel" class="mt-8 bg-sunk p-6 sm:p-8" aria-labelledby="mail-h">' +
+      '<h2 id="mail-h" tabindex="-1" class="text-[1.75rem] outline-none sm:text-3xl">' + title + '</h2>' + body +
+    '</section>';
+  }
+
+  /** Sous l'intro : adresse qui garde les bons, ou les deux liens (ajouter / retrouver). */
+  function accountBlock(state) {
+    if (mail && !(mail.mode === 'save' && state.email)) return mailPanel(state);
+    if (state.email) {
+      return '<p id="mail-saved" tabindex="-1" class="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-lg text-ink outline-none">' +
+        '<span class="tag bg-forest text-white">Bons sauvegardés</span>' +
+        '<span class="min-w-0 break-words font-semibold">' + esc(state.email) + '</span></p>';
+    }
+    return '<div class="mt-4 flex flex-wrap gap-x-6 gap-y-1">' +
+      (state.hasAccount ? '<button type="button" class="' + BTN_LINK + '" data-action="mail-open" data-mode="save">Gardez vos bons : ajoutez votre e-mail</button>' : '') +
+      '<button type="button" class="' + BTN_LINK + '" data-action="mail-open" data-mode="recover">Retrouver mes bons</button>' +
+    '</div>';
   }
 
   // ------------------------------------------------------------------------
@@ -189,7 +295,7 @@ Meleze.views.wallet = (function () {
         '<div class="mt-8" aria-live="polite">' + waiting + '</div></div>';
     }
 
-    const get = (p) => store.getMission(p.missionId);
+    const get = (p) => store.missionInfo(p.missionId); // retirées comprises
     // En cours : inscrites, plus celles validées pendant cette visite (message de succès)
     const ongoing = state.participations.filter((p) => p.status === 'inscrite' || (checks[p.id] && checks[p.id].phase === 'valid'));
     const validated = state.participations
@@ -202,8 +308,8 @@ Meleze.views.wallet = (function () {
     const activeCount = vouchers.filter((v) => !v.usedAt).length;
     const H2 = 'text-[2.5rem] sm:text-5xl';
 
-    let intro = 'Prêt·e pour une première mission ?';
-    if (validated.length) intro = 'Merci pour votre aide !';
+    let intro = 'Prêt·e pour une première mission ?';
+    if (validated.length) intro = 'Merci pour votre aide !';
     else if (ongoing.length || vouchers.length) intro = 'Vos missions et vos bons, au même endroit.';
 
     // Deux repères chiffrés, en blocs pleins (noir, vert)
@@ -221,13 +327,16 @@ Meleze.views.wallet = (function () {
         '</ul>'
       : '';
 
-    const offline = state.status === 'offline'
-      ? '<p class="mt-6 bg-ink px-5 py-3 font-display text-base font-semibold text-surface">Hors connexion : dernières données enregistrées sur cet appareil.</p>'
+    // Données de la copie locale (chargement échoué) : toujours signalé.
+    const offline = state.status === 'offline' || state.status === 'error'
+      ? '<p class="mt-6 bg-ink px-5 py-3 font-display text-base font-semibold text-surface" role="status">' +
+          (state.status === 'offline' ? 'Hors connexion' : 'Serveur injoignable') + ' : dernières données enregistrées sur cet appareil.</p>'
       : '';
 
     return '<div class="mx-auto max-w-app px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">' +
       head +
       '<p class="mt-4 max-w-xl font-display text-xl font-semibold leading-snug tracking-[-0.01em] text-ink sm:text-2xl">' + intro + '</p>' +
+      accountBlock(state) +
       offline +
       stats +
 
@@ -250,7 +359,7 @@ Meleze.views.wallet = (function () {
           '<h2 id="rewards" class="' + H2 + '">Mes bons</h2>' +
           (vouchers.length
             ? '<p class="mt-3 font-display text-xl font-semibold leading-snug text-ink">Montrez le bon au partenaire, puis utilisez-le devant lui.</p>' +
-              '<ul class="mt-7 grid gap-4 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">' + vouchers.map(voucherCard).join('') + '</ul>'
+              '<ul class="mt-7 grid gap-4 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">' + vouchers.map((v) => voucherCard(v, state)).join('') + '</ul>'
             : '<p class="mt-7 bg-sunk p-6 font-display text-xl font-semibold leading-snug text-ink sm:p-8">Vos bons arriveront ici après une mission validée.</p>') +
         '</section>' +
 
@@ -272,7 +381,8 @@ Meleze.views.wallet = (function () {
         (state.hasAccount || state.participations.length || state.vouchers.length
           ? '<section aria-labelledby="data-h" class="bg-sunk p-6 sm:p-8">' +
               '<h2 id="data-h" class="text-[1.75rem] sm:text-3xl">Vos données</h2>' +
-              '<p class="mt-3 max-w-xl text-lg leading-snug text-ink">Sans compte ni e-mail : vos missions et vos bons sont liés à ce navigateur. ' +
+              '<p class="mt-3 max-w-xl text-lg leading-snug text-ink">' +
+                (state.email ? 'Vos missions et vos bons sont liés à votre e-mail. ' : 'Sans compte ni e-mail : vos missions et vos bons sont liés à ce navigateur. ') +
                 '<a class="underline decoration-accent decoration-2 underline-offset-4 hover:text-brand-ink" href="#/mentions-legales">En savoir plus</a></p>' +
               '<button type="button" class="btn-secondary mt-6" data-action="delete-data"' + (busy.has('delete') ? ' disabled aria-busy="true"' : '') + '>Supprimer mes données</button>' +
             '</section>'
@@ -293,17 +403,20 @@ Meleze.views.wallet = (function () {
     store.verifyPhoto(pid, shot).then((res) => {
       if (res.valid) {
         checks[pid] = { phase: 'valid', reason: res.reason, voucherId: res.voucher && res.voucher.id };
-        toast('Mission validée ! Votre bon est arrivé.');
+        toast('Mission validée ! Votre bon est arrivé.');
       } else {
         checks[pid] = { phase: 'invalid', reason: res.reason || 'La photo ne montre pas ce qui est demandé. Reprenez-la.' };
       }
     }, (err) => {
-      if (err && err.code === 'already_validated') {
-        delete checks[pid]; // déjà validée (autre onglet) : le rechargement l'affiche
-        toast(err.message);
+      const code = err && err.code;
+      if (code === 'already_validated' || code === 'mission_inactive') {
+        delete checks[pid]; // validée ailleurs, ou mission retirée : le rechargement l'affiche
+        toast(err.message, code === 'mission_inactive' ? 'error' : undefined);
       } else {
-        // La photo reste en mémoire : « Réessayer l’envoi » sans la reprendre
-        checks[pid] = { phase: 'error', photo: shot, message: (err && err.message) || 'Réessayez dans un instant.' };
+        // Panne passagère : la photo reste en mémoire pour « Réessayer l’envoi ».
+        // Photo illisible, plus d'essai… : il faut la reprendre (ou rien à faire).
+        const keep = !err || err.retry || code === 'offline';
+        checks[pid] = { phase: 'error', photo: keep ? shot : null, message: (err && err.message) || 'Réessayez dans un instant.' };
       }
     }).then(() => {
       focusAfter = '#check-' + CSS.escape(pid);
@@ -311,8 +424,50 @@ Meleze.views.wallet = (function () {
     });
   }
 
+  /** Envoi du code (ajout d'adresse ou « Retrouver mes bons »). */
+  function mailSend(app, email) {
+    if (!mail || mail.busy) return;
+    mail.email = String(email || '').trim();
+    mail.busy = true;
+    mail.error = null;
+    app.rerender();
+    const send = mail.mode === 'save' ? store.saveEmailSend : store.recoverSend;
+    const current = mail;
+    send(mail.email).then((e) => {
+      if (mail !== current) return;
+      mail.email = e;
+      mail.code = '';
+      mail.step = 'code';
+      focusAfter = '#mail-code';
+      toast('Code envoyé. Vérifiez vos e-mails.');
+    }, (err) => {
+      if (mail !== current) return;
+      mail.error = (err && err.message) || Meleze.api.MESSAGES.sendCode;
+      focusAfter = mail.step === 'code' ? '#mail-code' : '#mail-email';
+    }).then(() => { current.busy = false; app.rerender(); });
+  }
+
   const actions = {
     retry() { store.refresh(); },
+
+    'mail-open'(el, app) {
+      if (navigator.onLine === false) { toast(Meleze.api.MESSAGES.offline, 'error'); return; }
+      mail = { mode: el.dataset.mode === 'recover' ? 'recover' : 'save', step: 'email', email: '', code: '', busy: false, error: null };
+      focusAfter = '#mail-h';
+      app.rerender();
+    },
+    'mail-close'(el, app) {
+      mail = null;
+      focusAfter = '#page-title';
+      app.rerender();
+    },
+    'mail-change'(el, app) {
+      if (!mail) return;
+      Object.assign(mail, { step: 'email', code: '', error: null });
+      focusAfter = '#mail-email';
+      app.rerender();
+    },
+    'mail-resend'(el, app) { if (mail) mailSend(app, mail.email); },
 
     photo(el, app) {
       const pid = el.dataset.id;
@@ -333,7 +488,7 @@ Meleze.views.wallet = (function () {
     cancel(el, app) {
       const id = el.dataset.id;
       if (busy.has('cancel:' + id)) return;
-      if (!confirm('Annuler votre participation à cette mission ?')) return;
+      if (!confirm('Annuler votre participation à cette mission ?')) return;
       busy.add('cancel:' + id);
       app.rerender();
       store.cancel(id)
@@ -345,11 +500,11 @@ Meleze.views.wallet = (function () {
     use(el, app) {
       const id = el.dataset.id;
       if (busy.has('use:' + id)) return;
-      if (!confirm('À faire devant le partenaire : une fois utilisé, ce bon ne pourra plus servir.')) return;
+      if (!confirm('À faire devant le partenaire : une fois utilisé, ce bon ne pourra plus servir.')) return;
       busy.add('use:' + id);
       app.rerender();
       store.useVoucher(id)
-        .then(() => { toast('Bon utilisé. Merci !'); focusAfter = '#voucher-' + CSS.escape(id); },
+        .then(() => { toast('Bon utilisé. Merci !'); focusAfter = '#voucher-' + CSS.escape(id); },
           (err) => toast((err && err.message) || 'Ce bon ne peut pas être utilisé.', 'error'))
         .then(() => { busy.delete('use:' + id); app.rerender(); });
     },
@@ -363,7 +518,10 @@ Meleze.views.wallet = (function () {
 
     'delete-data'(el, app) {
       if (busy.has('delete')) return;
-      if (!confirm('Supprimer vos missions, vos vérifications et vos bons ? C’est définitif.')) return;
+      const keepsEmail = store.state.email
+        ? ' Votre e-mail reste enregistré : pour le supprimer, écrivez à l’éditeur (mentions légales).'
+        : '';
+      if (!confirm('Supprimer vos missions, vos vérifications et vos bons ? C’est définitif.' + keepsEmail)) return;
       busy.add('delete');
       app.rerender();
       store.deleteMyData()
@@ -376,7 +534,40 @@ Meleze.views.wallet = (function () {
     },
   };
 
+  /** Formulaires du panneau e-mail. */
+  const forms = {
+    'mail-send'(form, app) {
+      mailSend(app, new FormData(form).get('email'));
+    },
+    'mail-verify'(form, app) {
+      if (!mail || mail.busy) return;
+      mail.code = String(new FormData(form).get('code') || '').replace(/\s+/g, '');
+      const recover = mail.mode === 'recover';
+      // Changer de compte abandonne les missions et bons de ce navigateur : jamais sans prévenir.
+      if (recover && store.hasUnsavedData() && !confirm(LOST_WARNING + ' Continuer ?')) return;
+      mail.busy = true;
+      mail.error = null;
+      app.rerender();
+      const current = mail;
+      (recover ? store.recoverVerify : store.saveEmailVerify)(mail.email, mail.code).then(() => {
+        if (mail !== current) return;
+        mail = null;
+        Object.keys(checks).forEach((k) => delete checks[k]);
+        toast(recover ? 'Vos bons sont de retour.' : 'C’est fait : vos bons sont gardés avec votre e-mail.');
+        focusAfter = recover ? '#page-title' : '#mail-saved';
+      }, (err) => {
+        if (mail !== current) return;
+        mail.error = (err && err.message) || Meleze.api.MESSAGES.badCode;
+        focusAfter = '#mail-code';
+      }).then(() => { current.busy = false; app.rerender(); });
+    },
+  };
+
   function mounted(root) {
+    // Saisie conservée si l'écran se redessine (chargement en arrière-plan…)
+    root.querySelectorAll('#mail-panel [data-keep]').forEach((input) => {
+      input.addEventListener('input', () => { if (mail) mail[input.dataset.keep] = input.value; });
+    });
     if (!focusAfter) return;
     const el = root.querySelector(focusAfter);
     focusAfter = null;
@@ -390,9 +581,10 @@ Meleze.views.wallet = (function () {
   /** Page quittée : caméra coupée, messages de succès oubliés (les bons restent). */
   function unmount() {
     if (Meleze.camera) Meleze.camera.close(null);
+    if (mail && !mail.busy) mail = null;
     Object.keys(checks).forEach((k) => { if (checks[k].phase === 'valid' || checks[k].phase === 'invalid') delete checks[k]; });
     focusAfter = null;
   }
 
-  return { title: 'Mon espace', render, actions, mounted, unmount };
+  return { title: 'Mon espace', render, actions, forms, mounted, unmount };
 })();
