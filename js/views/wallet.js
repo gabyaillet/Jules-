@@ -76,6 +76,8 @@ Meleze.views.wallet = (function () {
       inner = '<div class="bg-ink p-5 text-surface">' +
           '<p class="font-display text-xl font-bold">Envoi impossible</p>' +
           '<p class="mt-1 text-lg leading-snug">' + esc(c.message || 'Réessayez dans un instant.') + '</p>' +
+          // Code technique discret : à transmettre à l'équipe pour un diagnostic rapide.
+          (c.tech ? '<p class="mt-2 text-sm text-surface/75">Code technique : ' + esc(c.tech) + '</p>' : '') +
         '</div>';
     }
     return '<div id="check-' + esc(p.id) + '" tabindex="-1" class="mt-5 outline-none empty:hidden" aria-live="polite">' + inner + '</div>';
@@ -416,7 +418,8 @@ Meleze.views.wallet = (function () {
         // Panne passagère : la photo reste en mémoire pour « Réessayer l’envoi ».
         // Photo illisible, plus d'essai… : il faut la reprendre (ou rien à faire).
         const keep = !err || err.retry || code === 'offline';
-        checks[pid] = { phase: 'error', photo: keep ? shot : null, message: (err && err.message) || 'Réessayez dans un instant.' };
+        const tech = [code, err && err.status ? 'HTTP ' + err.status : ''].filter(Boolean).join(' · ');
+        checks[pid] = { phase: 'error', photo: keep ? shot : null, message: (err && err.message) || 'Réessayez dans un instant.', tech };
       }
     }).then(() => {
       focusAfter = '#check-' + CSS.escape(pid);
