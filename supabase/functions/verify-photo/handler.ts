@@ -335,6 +335,17 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
     if (error) log("release_failed", { checkId, code: error.code });
   }
 
+  async function recordCheck(checkId: number, verdict: Verdict, record: Record<string, unknown>) {
+    const { error } = await deps.db.rpc("finish_photo_check", {
+      p_check: checkId,
+      p_valid: verdict.valid,
+      p_confidence: verdict.confidence,
+      p_reason: verdict.reason,
+      p_verdict: record,
+    });
+    if (error) log("db_error", { step: "finish_photo_check", code: error.code });
+  }
+
   return async function handle(req: Request): Promise<Response> {
     const origin = req.headers.get("origin");
     const originAllowed = origin !== null && allowedOrigins.includes(origin);
@@ -499,8 +510,9 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
         p_verdict: record,
       });
       if (done.error) {
+        // Panne côté base : l'essai est rendu (l'appel compte dans la limite du jour).
         log("db_error", { step: "complete_participation", code: done.error.code });
-        await recordCheck(checkId, verdict, record);
+        await release(checkId, true);
         return fail("internal_error", cors);
       }
       const row = (Array.isArray(done.data) ? done.data[0] : done.data) as Record<string, unknown> | null;
@@ -524,15 +536,4 @@ export function createHandler(deps: HandlerDeps): (req: Request) => Promise<Resp
       attemptsLeft: verdict.valid ? 0 : attemptsLeft,
     }, cors);
   };
-
-  async function recordCheck(checkId: number, verdict: Verdict, record: Record<string, unknown>) {
-    const { error } = await deps.db.rpc("finish_photo_check", {
-      p_check: checkId,
-      p_valid: verdict.valid,
-      p_confidence: verdict.confidence,
-      p_reason: verdict.reason,
-      p_verdict: record,
-    });
-    if (error) log("db_error", { step: "finish_photo_check", code: error.code });
-  }
 }
