@@ -1,15 +1,17 @@
 /* ==========================================================================
    Vue : Catalogue des missions (filtres Saison + Type)
    Fiche courte : photo, type, titre, UNE ligne (durée · lieu), contrepartie
-   dans un bloc vert plein, gros bouton noir. Le reste (quand, validation,
-   encadrant, places, saisons) est replié dans « Plus d’infos ».
+   dans un bloc vert plein, gros bouton noir. Le reste (quand, photo attendue,
+   organisateur, places, saisons) est replié dans « Plus d’infos ».
+   Les missions viennent du serveur (store) ; « Je participe » inscrit le
+   touriste (compte anonyme créé à ce moment-là, jamais avant).
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 Meleze.views = Meleze.views || {};
 
 Meleze.views.catalogue = (function () {
   'use strict';
-  const { esc, icon, photo, missionDuration, date, typeOf, seasonLabel, toast } = Meleze.ui;
+  const { esc, icon, photo, missionDuration, date, typeOf, seasonLabel, toast, spinner, notice, soon } = Meleze.ui;
   const store = Meleze.store;
 
   /** Conteneur commun : même largeur et mêmes marges que les autres pages. */
@@ -19,6 +21,7 @@ Meleze.views.catalogue = (function () {
 
   // Filtres conservés pendant la navigation (pas besoin de les persister)
   const filters = { season: 'all', type: 'all' };
+  let joining = null; // mission en cours d'inscription (un seul envoi à la fois)
 
   function chip(group, value, label, active) {
     return '<button type="button" class="chip min-h-[48px] border-transparent bg-sunk px-5 text-base" data-action="filter" data-group="' + group + '" data-value="' + esc(value) + '" aria-pressed="' + active + '">' + label + '</button>';
@@ -36,36 +39,37 @@ Meleze.views.catalogue = (function () {
     '</dl>';
   }
 
-  /** Libellé du bouton quand une participation est en cours (lien vers « Mon espace »). */
+  /** Libellé du bouton quand le touriste participe déjà (lien vers « Mon espace »). */
   const ACTIVE_LABEL = {
-    inscrite: 'Inscrit·e, voir mon espace',
-    preuve: 'Justificatif envoyé',
-    refusee: 'Justificatif refusé, à renvoyer',
+    inscrite: 'Inscrit·e : prendre la photo',
+    validee: 'Mission validée : voir mon bon',
   };
 
-  /** Dernière participation validée pour cette mission (historique du touriste). */
-  function lastValidated(state, missionId) {
-    return state.participations
-      .filter((x) => x.missionId === missionId && x.status === 'validee')
-      .sort((a, b) => String(b.validatedAt || '').localeCompare(String(a.validatedAt || '')))[0];
-  }
+  /** « Nouveau » pendant deux semaines après la publication. */
+  const isNew = (m) => {
+    const t = Date.parse(m.createdAt || '');
+    return !isNaN(t) && Date.now() - t < 14 * 24 * 3600 * 1000;
+  };
 
   function card(state, m, focusId) {
     const t = typeOf(m.type);
-    const isPhoto = m.proof === 'photo';
     const p = store.participationFor(m.id);
-    const done = !p && lastValidated(state, m.id);
     // Gros bouton pilule : noir pour participer, gris plein si déjà inscrit·e
     const BIG = 'btn min-h-[60px] w-full text-lg';
-    const cta = p
-      ? '<a href="#/wallet" class="' + BIG + ' bg-sunk text-ink hover:bg-line">' + (ACTIVE_LABEL[p.status] || ACTIVE_LABEL.inscrite) + '</a>'
-      : '<button type="button" class="' + BIG + ' bg-ink text-surface hover:bg-ink/85" data-action="join" data-id="' + esc(m.id) + '">Je participe ' + icon('arrow', 'h-5 w-5') + '</button>';
+    let cta;
+    if (p) {
+      cta = '<a href="#/wallet" class="' + BIG + ' bg-sunk text-ink hover:bg-line">' + (ACTIVE_LABEL[p.status] || ACTIVE_LABEL.inscrite) + '</a>';
+    } else if (joining === m.id) {
+      cta = '<button type="button" class="' + BIG + ' bg-ink text-surface" data-action="join" data-id="' + esc(m.id) + '" disabled aria-busy="true">' + spinner('h-5 w-5') + 'Inscription…</button>';
+    } else {
+      cta = '<button type="button" class="' + BIG + ' bg-ink text-surface hover:bg-ink/85" data-action="join" data-id="' + esc(m.id) + '"' + (joining ? ' disabled' : '') + '>Je participe ' + icon('arrow', 'h-5 w-5') + '</button>';
+    }
 
     return '<li id="mission-' + esc(m.id) + '" class="group flex scroll-mt-24 flex-col md:scroll-mt-48">' +
       '<div class="ph ph-zoom aspect-[4/3]">' + photo(m, { sizes: '(min-width:1024px) 30vw, (min-width:640px) 45vw, 100vw' }) +
         '<div class="absolute inset-x-3 top-3 flex items-start justify-between gap-2">' +
           '<span class="' + PILL + ' ' + t.color + '">' + esc(t.label) + '</span>' +
-          (m.isNew ? '<span class="sticker rotate-3 bg-forest text-white">Nouveau</span>' : '') +
+          (isNew(m) ? '<span class="sticker rotate-3 bg-forest text-white">Nouveau</span>' : '') +
         '</div>' +
       '</div>' +
 
@@ -96,11 +100,11 @@ Meleze.views.catalogue = (function () {
             '<div class="mt-5">' + facts([
               m.location && m.durationLabel ? ['Où', esc(m.location)] : null,
               m.schedule ? ['Quand', esc(m.schedule)] : null,
-              ['Validation', isPhoto ? 'Justificatif photo' : 'QR code sur place'],
-              m.host ? [isPhoto ? 'Vérifié par' : 'Encadré par', esc(m.host)] : null,
+              m.photoHint ? ['Photo', esc(m.photoHint)] : null,
+              m.host ? ['Avec', esc(m.host)] : null,
               m.spots != null && m.spots !== '' ? ['Places', esc(m.spots)] : null,
               ['Saisons', (m.seasons || []).map((s) => esc(seasonLabel(s))).join(', ')],
-              done ? ['Déjà faite', done.validatedAt ? 'le ' + esc(date(done.validatedAt)) : 'oui'] : null,
+              p && p.status === 'validee' ? ['Déjà faite', p.validatedAt ? 'le ' + esc(date(p.validatedAt)) : 'oui'] : null,
             ]) + '</div>' +
           '</div>' +
         '</details>' +
@@ -116,8 +120,38 @@ Meleze.views.catalogue = (function () {
   let handledFocus = null;
   let scrollPending = false;
 
+  /** Bandeau discret : données affichées depuis la copie locale (hors connexion). */
+  function offlineBanner(state) {
+    if (state.status !== 'offline' || !state.known) return '';
+    return '<p class="mt-6 bg-ink px-5 py-3 font-display text-base font-semibold text-surface">Hors connexion : dernières missions enregistrées sur cet appareil.</p>';
+  }
+
+  /** Page sans liste : bientôt disponible, chargement ou erreur. */
+  function statusPage(state) {
+    if (!state.configured) return soon('Les premières missions arrivent très bientôt.');
+    if (!state.known && (state.status === 'loading' || state.status === 'idle')) {
+      return notice({ title: 'Chargement des missions…', busy: true });
+    }
+    if (!state.known) {
+      return notice({
+        title: 'Missions indisponibles',
+        text: state.error || 'Vérifiez votre connexion.',
+        extra: '<button type="button" class="btn mt-6 min-h-[56px] bg-ink text-surface hover:bg-ink/85" data-action="retry">Réessayer</button>',
+      });
+    }
+    return '';
+  }
+
   function render(state, params) {
     const { SEASONS, TYPES } = Meleze.data;
+    const head = '<section class="' + WRAP + ' pt-12 lg:pt-20">' +
+      '<h1 id="page-title" tabindex="-1" class="text-5xl font-extrabold sm:text-7xl">Les <span class="mark">missions</span></h1>' +
+      '<p class="mt-4 max-w-xl font-display text-xl font-semibold leading-snug tracking-[-0.01em] text-ink sm:text-2xl">Choisissez une mission, recevez un cadeau en échange.</p>' +
+      offlineBanner(state) +
+    '</section>';
+    const waiting = statusPage(state);
+    if (waiting) return head + '<section class="' + WRAP + ' pb-16 pt-8 lg:pb-24" aria-live="polite">' + waiting + '</section>';
+
     if (params.focus && params.focus !== handledFocus) {
       handledFocus = params.focus;
       scrollPending = true;
@@ -133,10 +167,7 @@ Meleze.views.catalogue = (function () {
       (filters.type === 'all' || m.type === filters.type));
     const filtered = filters.season !== 'all' || filters.type !== 'all';
 
-    return '<section class="' + WRAP + ' pt-12 lg:pt-20">' +
-      '<h1 id="page-title" tabindex="-1" class="text-5xl font-extrabold sm:text-7xl">Les <span class="mark">missions</span></h1>' +
-      '<p class="mt-4 max-w-xl font-display text-xl font-semibold leading-snug tracking-[-0.01em] text-ink sm:text-2xl">Choisissez une mission, recevez un cadeau en échange.</p>' +
-    '</section>' +
+    return head +
 
     '<div class="mt-7 md:sticky md:top-[65px] md:z-30 md:bg-surface/95 md:backdrop-blur" role="group" aria-label="Filtres">' +
       '<div class="mx-auto max-w-app space-y-1 py-2">' +
@@ -156,10 +187,12 @@ Meleze.views.catalogue = (function () {
       '</div>' +
       (list.length
         ? '<ul class="mt-6 grid gap-x-6 gap-y-16 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-20">' + list.map((m) => card(state, m, params.focus)).join('') + '</ul>'
-        : '<div class="mt-6 bg-sunk px-6 py-14 text-center sm:py-20">' +
-            '<p class="mx-auto max-w-md font-display text-[1.75rem] font-bold leading-tight tracking-[-0.02em] sm:text-3xl">Aucune mission ne correspond à ces filtres.</p>' +
-            '<button type="button" class="btn mt-7 min-h-[56px] bg-ink text-surface hover:bg-ink/85" data-action="clear-filters">Voir toutes les missions</button>' +
-          '</div>') +
+        : state.missions.length
+          ? '<div class="mt-6 bg-sunk px-6 py-14 text-center sm:py-20">' +
+              '<p class="mx-auto max-w-md font-display text-[1.75rem] font-bold leading-tight tracking-[-0.02em] sm:text-3xl">Aucune mission ne correspond à ces filtres.</p>' +
+              '<button type="button" class="btn mt-7 min-h-[56px] bg-ink text-surface hover:bg-ink/85" data-action="clear-filters">Voir toutes les missions</button>' +
+            '</div>'
+          : '<div class="mt-6">' + notice({ title: 'Aucune mission pour le moment', text: 'Revenez bientôt : de nouvelles missions arrivent.' }) + '</div>') +
     '</section>';
   }
 
@@ -172,12 +205,17 @@ Meleze.views.catalogue = (function () {
       filters.season = 'all'; filters.type = 'all';
       app.rerender();
     },
-    join(el) {
+    retry() { store.refresh(); },
+    join(el, app) {
       const m = store.getMission(el.dataset.id);
-      if (!m || !store.join(m.id)) return;
-      toast(m.proof === 'photo'
-        ? 'C’est noté. Envoyez votre justificatif depuis « Mon espace ».'
-        : 'C’est noté : le QR code de « ' + m.title + ' » est dans « Mon espace ».');
+      if (!m || joining || el.disabled) return; // un seul envoi à la fois
+      if (store.participationFor(m.id)) { app.go('#/wallet'); return; }
+      joining = m.id;
+      app.rerender();
+      store.join(m.id)
+        .then(() => toast('C’est noté ! Prenez la photo depuis « Mon espace ».'),
+          (err) => toast((err && err.message) || 'Inscription impossible. Réessayez.', 'error'))
+        .then(() => { joining = null; app.rerender(); });
     },
   };
 

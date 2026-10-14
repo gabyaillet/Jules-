@@ -27,7 +27,11 @@ begin
     raise exception 'Remplacez d’abord « remplacez-moi@exemple.fr » par l’e-mail du partenaire (ligne v_email).';
   end if;
 
-  select id into v_user from auth.users where lower(email) = v_email limit 1;
+  select id into v_user
+    from auth.users
+   where lower(email) = v_email
+     and coalesce(is_anonymous, false) = false
+   limit 1;
   if v_user is null then
     raise exception 'Aucun compte avec l’e-mail % dans Authentication > Users. Créez-le (« Add user ») ou demandez au partenaire de se connecter une fois.', v_email;
   end if;

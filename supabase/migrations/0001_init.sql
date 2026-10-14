@@ -224,15 +224,27 @@ create policy missions_select_own on public.missions
   for select to authenticated
   using (created_by = (select auth.uid()));
 
--- Un touriste continue de voir une mission à laquelle il a participé, même retirée.
+-- Un touriste continue de voir une mission à laquelle il a participé, même
+-- retirée. (Fonction security definer : évite une boucle entre les règles de
+-- « missions » et de « participations ».)
+create or replace function public.has_joined_mission(p_mission uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.participations p
+     where p.mission_id = p_mission
+       and p.user_id = auth.uid()
+  );
+$$;
+
 drop policy if exists missions_select_joined on public.missions;
 create policy missions_select_joined on public.missions
   for select to authenticated
-  using (exists (
-    select 1 from public.participations p
-     where p.mission_id = missions.id
-       and p.user_id = (select auth.uid())
-  ));
+  using (public.has_joined_mission(id));
 
 drop policy if exists missions_insert_partner on public.missions;
 create policy missions_insert_partner on public.missions
@@ -581,6 +593,9 @@ revoke execute on function public.generate_voucher_code() from public, anon, aut
 
 revoke execute on function public.current_partner_org() from public, anon;
 grant execute on function public.current_partner_org() to authenticated, service_role;
+
+revoke execute on function public.has_joined_mission(uuid) from public, anon;
+grant execute on function public.has_joined_mission(uuid) to authenticated, service_role;
 
 revoke execute on function public.use_voucher(uuid) from public, anon;
 grant execute on function public.use_voucher(uuid) to authenticated;

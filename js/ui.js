@@ -169,7 +169,7 @@ Meleze.ui = (function () {
       icon(error ? 'alert' : 'check', 'h-4 w-4') + '</span>' +
       '<span class="font-display text-[0.95rem] font-semibold leading-snug">' + esc(message) + '</span></div>';
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { host.innerHTML = ''; }, 3800);
+    toastTimer = setTimeout(() => { host.innerHTML = ''; }, error ? 6000 : 3800); // erreurs : le temps de lire
   }
 
   // --- Photos responsives -------------------------------------------------------

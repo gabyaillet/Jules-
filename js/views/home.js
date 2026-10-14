@@ -4,6 +4,8 @@
    titre en blanc posé dessus) ; sur mobile, hero « direct » : le titre puis
    les 3 missions, visibles dès l'arrivée. Le mot « Vanoise » de l'appel final
    est rempli par une photo (background-clip: text).
+   Les missions viennent du serveur (store) ; tant qu'il n'est pas branché,
+   la liste laisse place à « Bientôt disponible ».
    Peu de texte, une idée par bloc, des APLATS pleins (vert, noir, gris clair)
    plutôt que des filets. Photos arrondies ; tous les autres blocs sont carrés.
    ========================================================================== */
@@ -12,7 +14,7 @@ Meleze.views = Meleze.views || {};
 
 Meleze.views.home = (function () {
   'use strict';
-  const { esc, icon, photo, photoUrl, missionDuration, typeOf, currentSeason } = Meleze.ui;
+  const { esc, icon, photo, photoUrl, missionDuration, typeOf, currentSeason, spinner } = Meleze.ui;
 
   /** Conteneur commun : même largeur et mêmes marges sur toute la page. */
   const WRAP = 'mx-auto max-w-app px-5 sm:px-8';
@@ -33,15 +35,16 @@ Meleze.views.home = (function () {
 
   /** Trois étapes, trois aplats : gris clair, vert, noir (inversé en thème sombre). */
   const STEPS = [
-    { title: 'Choisissez une mission', text: 'Marché, sentiers ou trajet sans voiture.', cls: 'bg-sunk text-ink', sub: 'text-ink' },
-    { title: 'Faites-la avec un local', text: 'Un commerçant ou un garde du Parc vous guide.', cls: 'bg-forest text-white', sub: 'text-white' },
-    { title: 'Recevez votre bon', text: 'Il arrive dans « Mon espace ».', cls: 'bg-ink text-surface', sub: 'text-surface' },
+    { title: 'Choisissez une mission', text: 'Utile au village et à la montagne, en une à deux heures.', cls: 'bg-sunk text-ink', sub: 'text-ink' },
+    { title: 'Prenez la photo', text: 'Une IA la vérifie en quelques secondes.', cls: 'bg-forest text-white', sub: 'text-white' },
+    { title: 'Recevez votre cadeau', text: 'Montrez votre bon au partenaire.', cls: 'bg-ink text-surface', sub: 'text-surface' },
   ];
 
   const FAQ = [
     ['C’est vraiment gratuit ?', 'Oui. On ne vous demande jamais de carte bancaire.'],
-    ['Où est le QR de ma mission ?', 'Dans « Mon espace ». Montrez-le au référent à la fin.'],
-    ['Je viens en train ou en covoiturage ?', 'Envoyez une photo de votre billet depuis « Mon espace ».'],
+    ['Comment ma mission est-elle validée ?', 'Dans « Mon espace », prenez la photo demandée. Une IA la vérifie en quelques secondes.'],
+    ['Ma photo est-elle gardée ?', 'Non. Elle sert seulement à la vérification : Mélèze ne la conserve pas.'],
+    ['Comment utiliser mon bon ?', 'Devant le partenaire, appuyez sur « Utiliser mon bon ». Il ne sert qu’une fois.'],
   ];
 
   /** Carte mission : grande photo + type, titre, durée. (La contrepartie est dans le bandeau vert.) */
@@ -65,14 +68,8 @@ Meleze.views.home = (function () {
     '</li>';
   }
 
-  /** Contrepartie en version courte pour les lignes du hero mobile (sinon : le titre, tronqué). */
-  const SHORT_REWARD = {
-    'm-sentiers': 'Aller-retour Mont Bochor',
-    'm-marche': 'Beaufort offert',
-    'm-transport': 'Patinoire offerte',
-  };
-  /** Participation en cours : pastille noire à la place de la contrepartie. */
-  const STATUS = { inscrite: 'Inscrit·e', preuve: 'Justificatif envoyé', refusee: 'Justificatif refusé' };
+  /** Participation du touriste : pastille noire à la place de la contrepartie. */
+  const STATUS = { inscrite: 'Inscrit·e', validee: 'Validée' };
 
   /**
    * Ligne mission du hero mobile : vignette, titre, puis durée + contrepartie (ou statut)
@@ -85,7 +82,7 @@ Meleze.views.home = (function () {
     const badge = p
       ? '<span class="' + PILL + ' bg-ink text-surface">' + esc(STATUS[p.status] || STATUS.inscrite) + '</span>'
       : '<span class="sr-only">En échange : ' + esc(m.reward.title) + '</span>' +
-        '<span class="' + PILL + ' bg-forest text-white" aria-hidden="true">' + esc(SHORT_REWARD[m.id] || m.reward.title) + '</span>';
+        '<span class="' + PILL + ' bg-forest text-white" aria-hidden="true">' + esc(m.reward.title) + '</span>';
     return '<li><a href="#/missions?focus=' + esc(m.id) + '" class="flex items-center gap-3 bg-sunk p-2 pr-2.5 transition-colors hover:bg-line">' +
       '<div class="ph ph-sm h-16 w-16 shrink-0 min-[360px]:h-[4.75rem] min-[360px]:w-[4.75rem] min-[375px]:h-[5.5rem] min-[375px]:w-[5.5rem]">' + photo(m, { sizes: '88px', alt: '' }) + '</div>' +
       '<div class="min-w-0 flex-1 py-1">' +
@@ -99,16 +96,44 @@ Meleze.views.home = (function () {
     '</a></li>';
   }
 
+  /**
+   * À la place de la liste des missions : bientôt disponible, chargement,
+   * erreur ou aucune mission. Renvoie '' quand il y a des missions à montrer.
+   * @param {boolean} compact  version courte (hero mobile)
+   */
+  function missionsState(state, compact) {
+    const BOX = 'bg-sunk ' + (compact ? 'p-5' : 'p-6 sm:p-8');
+    const TITLE = 'flex items-center gap-3 font-display font-bold leading-tight tracking-[-0.02em] text-ink ' + (compact ? 'text-2xl' : 'text-[1.75rem]');
+    const TEXT = 'mt-1.5 text-lg leading-snug text-ink';
+    if (!state.configured) {
+      return '<div class="' + BOX + '"><p class="' + TITLE + '">Bientôt disponible</p>' +
+        '<p class="' + TEXT + '">Les premières missions arrivent très bientôt.</p></div>';
+    }
+    if (state.missions.length) return '';
+    if (!state.known && (state.status === 'loading' || state.status === 'idle')) {
+      return '<div class="' + BOX + '" role="status"><p class="' + TITLE + '">' + spinner() + 'Chargement des missions…</p></div>';
+    }
+    if (!state.known) {
+      return '<div class="' + BOX + '"><p class="' + TITLE + '">Missions indisponibles</p>' +
+        '<p class="' + TEXT + '">' + esc(state.error || 'Vérifiez votre connexion.') + '</p>' +
+        '<button type="button" class="btn mt-4 bg-ink text-surface hover:bg-ink/85" data-action="retry">Réessayer</button></div>';
+    }
+    return '<div class="' + BOX + '"><p class="' + TITLE + '">Aucune mission pour le moment</p>' +
+      '<p class="' + TEXT + '">Revenez bientôt : de nouvelles missions arrivent.</p></div>';
+  }
+
   function render(state) {
-    // Les missions (3 pour l'instant) : celles de la saison en cours d'abord.
+    // Les 3 missions mises en avant : celles de la saison en cours d'abord.
     const season = currentSeason();
     const inSeason = (m) => ((m.seasons || []).includes(season) ? 0 : 1);
-    const picks = state.missions
+    const picks = (state.configured ? state.missions : [])
       .map((m, i) => ({ m, i }))
       .sort((a, b) => inSeason(a.m) - inSeason(b.m) || a.i - b.i)
       .slice(0, 3)
       .map((x) => x.m);
     const more = state.missions.length > picks.length;
+    const empty = missionsState(state, false);
+    const emptyCompact = missionsState(state, true);
 
     return (
       // ---- Hero : une seule section, deux mises en page -------------------------------------
@@ -149,8 +174,10 @@ Meleze.views.home = (function () {
           '</div>' +
           // Mobile : les missions tout de suite, puis le bouton (« Mon espace » est dans la barre du bas)
           '<h2 class="sr-only md:hidden">Les missions</h2>' +
-          '<ul class="mt-5 grid grid-cols-1 gap-2 md:hidden">' + picks.map(missionRow).join('') + '</ul>' +
-          '<a href="#/missions" class="btn-primary mt-3 w-full md:hidden">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>' +
+          (picks.length
+            ? '<ul class="mt-5 grid grid-cols-1 gap-2 md:hidden">' + picks.map(missionRow).join('') + '</ul>' +
+              '<a href="#/missions" class="btn-primary mt-3 w-full md:hidden">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>'
+            : '<div class="mt-5 md:hidden">' + emptyCompact + '</div>') +
           // Bas (≥ md, comme Campus) : le début de la suite, un pan blanc aux coins arrondis
           // (même arrondi que les photos) qui recouvre le bas de la vidéo et invite à défiler.
           '<div class="absolute inset-x-0 bottom-0 hidden h-10 rounded-t-3xl bg-surface md:block lg:h-12 lg:rounded-t-4xl" aria-hidden="true"></div>' +
@@ -174,20 +201,24 @@ Meleze.views.home = (function () {
       '<section class="' + WRAP + ' hidden pb-14 md:block lg:pb-24" aria-labelledby="now">' +
         '<div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">' +
           '<h2 id="now" class="' + H2 + '">Les missions</h2>' +
-          '<a href="#/missions" class="link text-lg">' + (more ? 'Voir les ' + state.missions.length + ' missions' : 'Toutes les missions') + ' ' + icon('arrow', 'h-5 w-5') + '</a>' +
+          (picks.length ? '<a href="#/missions" class="link text-lg">' + (more ? 'Voir les ' + state.missions.length + ' missions' : 'Toutes les missions') + ' ' + icon('arrow', 'h-5 w-5') + '</a>' : '') +
         '</div>' +
-        '<ul class="-mx-5 mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:scroll-px-8 sm:px-8 md:mt-10 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">' +
-          picks.map(missionCard).join('') +
-        '</ul>' +
+        (picks.length
+          ? '<ul class="-mx-5 mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:scroll-px-8 sm:px-8 md:mt-10 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">' +
+              picks.map(missionCard).join('') +
+            '</ul>'
+          : '<div class="mt-8 md:mt-10">' + empty + '</div>') +
       '</section>' +
 
-      // ---- Contreparties : bandeau vert plein, tuiles blanches carrées ----------------------
-      '<section class="bg-forest py-14 text-white lg:py-24" aria-labelledby="gifts">' +
-        '<div class="' + WRAP + '">' +
-          '<h2 id="gifts" class="max-w-3xl ' + H2 + '">Ce que les commerçants vous offrent</h2>' +
-          '<ul class="mt-8 grid gap-3 sm:grid-cols-3 sm:gap-4 md:mt-10">' + picks.map(rewardTile).join('') + '</ul>' +
-        '</div>' +
-      '</section>' +
+      // ---- Contreparties : bandeau vert plein, tuiles blanches carrées (s'il y a des missions) ----
+      (picks.length
+        ? '<section class="bg-forest py-14 text-white lg:py-24" aria-labelledby="gifts">' +
+            '<div class="' + WRAP + '">' +
+              '<h2 id="gifts" class="max-w-3xl ' + H2 + '">Ce que les partenaires vous offrent</h2>' +
+              '<ul class="mt-8 grid gap-3 sm:grid-cols-3 sm:gap-4 md:mt-10">' + picks.map(rewardTile).join('') + '</ul>' +
+            '</div>' +
+          '</section>'
+        : '') +
 
       // ---- Pourquoi Mélèze : une photo, une phrase -------------------------------------------
       '<section class="' + SECTION + ' grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16" aria-labelledby="why">' +
@@ -280,5 +311,9 @@ Meleze.views.home = (function () {
     if (heroObserver) { heroObserver.disconnect(); heroObserver = null; }
   }
 
-  return { title: 'Accueil', render, mounted, unmount };
+  const actions = {
+    retry() { Meleze.store.refresh(); },
+  };
+
+  return { title: 'Accueil', render, actions, mounted, unmount };
 })();
