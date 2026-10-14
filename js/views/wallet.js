@@ -1,162 +1,210 @@
 /* ==========================================================================
-   Vue : Mon espace (profil / wallet du touriste)
+   Vue : Mon espace (missions et bons du touriste)
    Peu de texte, de grands blocs pleins : une carte par mission en cours
-   (photo + titre, puis un bloc noir avec le QR à montrer au référent, ou un
-   bloc gris pour envoyer le justificatif photo du trajet), puis les bons
-   (blocs verts, QR dans un carré blanc). Une seule consigne par carte.
-   Pas d'icônes décoratives : la typographie porte l'information.
+   (photo + titre, puis un bloc gris : ce que la photo doit montrer et UNE
+   action, « Prendre la photo »), puis les bons (blocs verts). La photo est
+   prise avec l'appareil photo intégré (js/camera.js) et vérifiée par le
+   serveur (IA) : « Vérification… », puis bon émis, ou explication + reprise.
+   Pas de prénom, pas de compte : tout est lié à ce navigateur.
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 Meleze.views = Meleze.views || {};
 
 Meleze.views.wallet = (function () {
   'use strict';
-  const { esc, icon, qr, photo, duration, date, typeOf, toast, compressImage } = Meleze.ui;
+  const { esc, icon, photo, duration, date, dateTime, typeOf, toast, spinner, notice, soon } = Meleze.ui;
   const store = Meleze.store;
-
-  const ACTIVE = ['inscrite', 'preuve', 'refusee'];
-  const isPhoto = (m) => m && m.proof === 'photo';
+  const MAX_ATTEMPTS = Meleze.data.MAX_ATTEMPTS;
   const s = (n) => (n > 1 ? 's' : '');
 
   /**
-   * Bouton d'envoi de photo : un <label> en forme de bouton qui contient le
-   * vrai <input type="file"> (masqué mais focalisable au clavier).
-   * L'input déclenche view.changes.proof via data-change.
+   * Vérifications de cette visite, par participation :
+   *   { phase: 'verifying' | 'invalid' | 'error' | 'valid', photo?, reason?, message?, voucherId? }
+   * La photo n'est gardée qu'en mémoire (pour « Réessayer l’envoi »), jamais enregistrée.
    */
-  function uploadControl(p, text, cls) {
-    return '<label class="' + cls + ' cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">' +
-      '<span data-upload-text>' + text + '</span>' +
-      '<input type="file" accept="image/*" class="sr-only" data-change="proof" data-id="' + esc(p.id) + '">' +
-    '</label>';
+  const checks = {};
+  const busy = new Set(); // actions en cours (annuler, utiliser un bon, supprimer) : pas de double envoi
+  let focusAfter = null; // sélecteur à focaliser après le prochain rendu
+
+  // ------------------------------------------------------------------------
+  // Missions en cours
+  // ------------------------------------------------------------------------
+  const BTN_LINK = 'min-h-[44px] font-display text-base font-semibold text-ink underline decoration-2 underline-offset-4 hover:text-brand-ink disabled:opacity-50';
+
+  /** Ce que la photo doit montrer : la consigne écrite par le partenaire. */
+  function hintBlock(m) {
+    return '<p class="font-display text-base font-semibold text-ink">La photo doit montrer :</p>' +
+      '<p class="mt-1 text-lg font-semibold leading-snug text-ink">' + esc(m.photoHint || 'La mission réalisée.') + '</p>';
   }
 
-  /**
-   * Qui vérifie le justificatif : l'organisateur de la mission (l'Office de
-   * tourisme pour le transport). Texte brut : à échapper avant affichage.
-   */
-  function checker(m) {
-    const host = String((m && m.host) || '').trim();
-    if (!host) return 'l’organisateur';
-    if (/^(l[’']\s*)?office de tourisme$/i.test(host)) return 'l’Office de tourisme';
-    return 'l’organisateur (' + host + ')';
-  }
-
-  /** L'unique consigne d'une mission photo : quoi photographier. */
-  function proofHint(m) {
-    if (m.type === 'mobilite') {
-      return 'Envoyez une photo de votre billet de train ou de car, de votre covoiturage, ou de vous à deux en voiture.';
+  /** Résultat de la dernière vérification (cette visite, sinon celui enregistré par le serveur). */
+  function lastVerdict(p) {
+    const c = checks[p.id];
+    if (c) return c;
+    const lc = p.lastCheck;
+    if (lc && lc.valid === false && typeof lc.reason === 'string' && lc.reason.trim()) {
+      return { phase: 'invalid', reason: lc.reason };
     }
-    return 'Envoyez une photo de la mission réalisée.';
+    return null;
   }
 
-  /** Se désinscrire : action secondaire, simple texte souligné (cible ≥ 44 px). */
-  const cancelButton = (p) =>
-    '<button type="button" class="min-h-[44px] font-display text-base font-semibold text-ink underline decoration-2 underline-offset-4 hover:text-brand-ink" data-action="cancel" data-id="' + esc(p.id) + '">Me désinscrire</button>';
-
-  /**
-   * Mission validée par QR : grand bloc noir, QR propre à cette participation
-   * (blanc, marge de lecture comprise). 240 px dès 360 px d'écran, 176 px en dessous.
-   */
-  function qrBlock(p) {
-    return '<div class="mt-5 flex flex-col items-center bg-ink px-6 pb-7 pt-8 text-center text-surface">' +
-        '<div class="bg-white">' + qr(p.code, { size: 'w-44 min-[360px]:w-60' }) + '</div>' +
-        '<p class="mt-5 font-mono text-2xl font-bold tracking-[0.16em]">' + esc(p.code) + '</p>' +
-        '<p class="mt-2 font-display text-lg font-semibold leading-snug">À montrer au référent à la fin de la mission.</p>' +
-      '</div>' +
-      '<div class="mt-2">' + cancelButton(p) + '</div>';
-  }
-
-  /** Mission validée par justificatif photo (billet, covoiturage…) : bloc gris plein. */
-  function photoBlock(p, m) {
-    if (p.status === 'preuve') {
-      const proof = p.proof || {};
-      return '<div class="mt-5 bg-sunk p-6">' +
-          '<div class="flex items-start gap-4">' +
-            (proof.image
-              ? '<div class="w-24 shrink-0 bg-card p-1 sm:w-28">' +
-                  '<img src="' + esc(proof.image) + '" alt="Votre justificatif" class="block aspect-[4/3] w-full object-contain" decoding="async">' +
-                '</div>'
-              : '') +
-            '<div class="min-w-0 self-center">' +
-              '<p class="font-display text-xl font-bold leading-tight text-ink">Justificatif envoyé</p>' +
-            '</div>' +
-          '</div>' +
-          '<p class="mt-4 text-lg leading-snug text-ink">Il est en cours de vérification par ' + esc(checker(m)) + '.</p>' +
-          '<div class="mt-5">' + uploadControl(p, 'Remplacer la photo', 'btn-secondary') + '</div>' +
+  /** Zone de résultat (focalisée après chaque étape : les lecteurs d'écran la lisent). */
+  function checkArea(p, c) {
+    let inner = '';
+    if (c && c.phase === 'verifying') {
+      inner = '<div class="flex items-center gap-4 bg-ink p-5 text-surface">' +
+          (c.photo ? '<img src="' + esc(c.photo) + '" alt="" class="h-16 w-16 shrink-0 rounded-2xl object-cover">' : '') +
+          '<p class="flex items-center gap-3 font-display text-xl font-bold">' + spinner() + 'Vérification…</p>' +
+        '</div>';
+    } else if (c && c.phase === 'invalid') {
+      inner = '<div class="bg-danger p-5 text-surface">' +
+          '<p class="font-display text-xl font-bold">Photo non validée</p>' +
+          '<p class="mt-1 text-lg leading-snug">' + esc(c.reason || 'Elle ne montre pas ce qui est demandé.') + '</p>' +
+        '</div>';
+    } else if (c && c.phase === 'error') {
+      inner = '<div class="bg-ink p-5 text-surface">' +
+          '<p class="font-display text-xl font-bold">Envoi impossible</p>' +
+          '<p class="mt-1 text-lg leading-snug">' + esc(c.message || 'Réessayez dans un instant.') + '</p>' +
         '</div>';
     }
+    return '<div id="check-' + esc(p.id) + '" tabindex="-1" class="mt-5 outline-none empty:hidden" aria-live="polite">' + inner + '</div>';
+  }
 
-    // Refus : bandeau rouge plein au-dessus du bloc d'envoi
-    const refused = p.status === 'refusee'
-      ? '<div class="mt-5 bg-danger px-6 py-4 text-surface" role="status">' +
-          '<p class="font-display text-lg font-bold">Justificatif refusé</p>' +
-          '<p class="mt-0.5">' + esc(String(p.refusedReason || 'Justificatif illisible ou non conforme').replace(/[\s.]+$/, '')) + '.</p>' +
+  /** Carte "mission en cours" : photo + type + titre, puis la consigne et l'action. */
+  function activeCard(p, m) {
+    const c = lastVerdict(p);
+    const left = Math.max(0, MAX_ATTEMPTS - (Number(p.attempts) || 0));
+    const verifying = c && c.phase === 'verifying';
+    const id = esc(p.id);
+    const header = m
+      ? '<div class="flex items-center gap-4">' +
+          '<div class="ph ph-sm aspect-square w-20 shrink-0 sm:w-24">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
+          '<div class="min-w-0 flex-1">' +
+            '<span class="tag tag-sign ' + esc(typeOf(m.type).color) + '">' + esc(typeOf(m.type).label) + '</span>' +
+            '<h3 class="mt-2 text-2xl leading-[1.05] sm:text-[1.75rem]">' + esc(m.title) + '</h3>' +
+          '</div>' +
         '</div>'
-      : '';
+      : '<h3 class="text-2xl leading-[1.05] sm:text-[1.75rem]">Mission retirée</h3>';
 
-    return refused +
-      '<div class="' + (refused ? '' : 'mt-5 ') + 'bg-sunk p-6">' +
-        '<p class="text-lg font-semibold leading-snug text-ink">' + proofHint(m) + '</p>' +
-        '<div class="mt-5 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-6">' +
-          uploadControl(p, 'Envoyer mon justificatif', 'btn-primary min-h-[56px] w-full text-lg sm:w-auto') +
-          cancelButton(p) +
-        '</div>' +
-      '</div>';
-  }
+    let body;
+    if (!m) {
+      body = '<p class="text-lg leading-snug text-ink">Le partenaire a retiré cette mission : elle ne peut plus être validée.</p>';
+    } else {
+      let actions;
+      if (verifying) {
+        actions = ''; // pas de second envoi pendant la vérification
+      } else if (c && c.phase === 'error' && c.photo) {
+        actions = '<div class="flex flex-col gap-3 sm:flex-row">' +
+            '<button type="button" class="btn-primary min-h-[60px] w-full text-lg sm:w-auto" data-action="resend" data-id="' + id + '">Réessayer l’envoi</button>' +
+            '<button type="button" class="btn-secondary min-h-[60px] w-full text-lg sm:w-auto" data-action="photo" data-id="' + id + '">Reprendre la photo</button>' +
+          '</div>';
+      } else if (left > 0) {
+        actions = '<button type="button" class="btn-primary min-h-[60px] w-full text-lg sm:w-auto" data-action="photo" data-id="' + id + '">' +
+          (c && c.phase === 'invalid' ? 'Reprendre la photo' : 'Prendre la photo') + '</button>';
+      } else {
+        actions = '<p class="font-display text-lg font-bold text-ink">Vous avez utilisé vos ' + MAX_ATTEMPTS + ' essais pour cette mission.</p>';
+      }
+      body = hintBlock(m) +
+        checkArea(p, c) +
+        (actions ? '<div class="mt-5">' + actions + '</div>' : '') +
+        (left > 0 && !verifying
+          ? '<p class="mt-3 text-base text-ink">' + (left === MAX_ATTEMPTS ? left + ' essais possibles' : 'Encore ' + left + ' essai' + s(left)) + '</p>'
+          : '');
+    }
 
-  /** Carte "mission en cours" : photo + type + titre, puis le QR ou le justificatif. */
-  function participationCard({ participation: p, mission: m }) {
-    const t = typeOf(m.type);
-    return '<li class="flex flex-col" id="participation-' + esc(p.id) + '">' +
-      '<div class="flex items-center gap-4">' +
-        '<div class="ph ph-sm aspect-square w-20 shrink-0 sm:w-24">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
-        '<div class="min-w-0 flex-1">' +
-          '<span class="tag tag-sign ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
-          '<h3 class="mt-2 text-2xl leading-[1.05] sm:text-[1.75rem]">' + esc(m.title) + '</h3>' +
-        '</div>' +
-      '</div>' +
-      (isPhoto(m) ? photoBlock(p, m) : qrBlock(p)) +
+    return '<li class="flex flex-col" id="participation-' + id + '">' +
+      header +
+      '<div class="mt-5 bg-sunk p-6">' + body + '</div>' +
+      (verifying ? '' : '<div class="mt-2"><button type="button" class="' + BTN_LINK + '" data-action="cancel" data-id="' + id + '"' + (busy.has('cancel:' + p.id) ? ' disabled' : '') + '>Annuler ma participation</button></div>') +
     '</li>';
   }
 
-  /**
-   * Bon façon ticket, comme les tuiles de l'accueil : bloc vert plein, texte
-   * blanc, QR dans un carré blanc. Bon utilisé : bloc gris, titre barré.
-   */
+  /** Mission tout juste validée (cette visite) : succès en vert plein + accès au bon. */
+  function successCard(p, m, c) {
+    const v = store.state.vouchers.find((x) => x.id === c.voucherId || x.participationId === p.id);
+    const id = esc(p.id);
+    return '<li class="flex flex-col" id="participation-' + id + '">' +
+      '<div id="check-' + id + '" tabindex="-1" class="bg-forest p-6 text-white outline-none sm:p-7" aria-live="polite">' +
+        '<p class="font-display text-base font-semibold">' + esc(m ? m.title : 'Mission') + '</p>' +
+        '<p class="mt-2 font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.02em]">Mission validée !</p>' +
+        (c.reason ? '<p class="mt-2 text-lg leading-snug">' + esc(c.reason) + '</p>' : '') +
+        (v
+          ? '<p class="mt-5 text-lg">Votre cadeau : <span class="font-bold">' + esc(v.title) + '</span>, offert par ' + esc(v.partner) + '.</p>' +
+            '<button type="button" class="btn-light mt-6 w-full focus-visible:outline-white sm:w-auto" data-action="show-voucher" data-id="' + esc(v.id) + '">Voir mon bon ' + icon('arrow', 'h-5 w-5') + '</button>'
+          : '<p class="mt-5 text-lg">Votre bon arrive dans « Mes bons ».</p>') +
+      '</div>' +
+    '</li>';
+  }
+
+  // ------------------------------------------------------------------------
+  // Bons
+  // ------------------------------------------------------------------------
+  /** Bon valable : bloc vert plein, code lisible, « Utiliser mon bon » devant le partenaire. */
   function voucherCard(v) {
-    const used = v.status === 'consomme';
-    return '<li class="flex flex-col p-6 ' + (used ? 'bg-sunk text-muted' : 'bg-forest text-white') + '">' +
-      '<p class="font-display text-base font-semibold">' + esc(v.partner) + '</p>' +
-      '<h3 class="mt-3 text-[1.75rem] leading-[1.05] tracking-[-0.025em]' + (used ? ' line-through decoration-2' : '') + '">' + esc(v.title) + '</h3>' +
-      '<div class="mt-auto flex items-end justify-between gap-4 pt-7">' +
-        '<div class="min-w-0">' +
-          '<p class="font-mono text-lg font-bold tracking-[0.12em]">' + esc(v.code) + '</p>' +
-          '<p class="mt-1 font-display text-base font-semibold">' + (used ? 'Utilisé le ' + esc(date(v.usedAt)) : 'Valable') + '</p>' +
+    const id = esc(v.id);
+    if (v.usedAt) {
+      // Bon utilisé : aplat vert « Bon utilisé » + date et heure (preuve pour le partenaire)
+      return '<li id="voucher-' + id + '" tabindex="-1" class="flex flex-col bg-sunk p-6 outline-none">' +
+        '<div class="bg-forest px-5 py-4 text-white">' +
+          '<p class="font-display text-2xl font-bold leading-tight">Bon utilisé</p>' +
+          '<p class="mt-1 font-display text-lg font-semibold">le ' + esc(dateTime(v.usedAt)) + '</p>' +
         '</div>' +
-        '<div class="shrink-0 bg-white p-1.5' + (used ? ' opacity-60' : '') + '">' + qr(v.code, { size: 'w-32', muted: used }) + '</div>' +
-      '</div>' +
+        '<p class="mt-5 font-display text-base font-semibold text-ink">' + esc(v.partner) + '</p>' +
+        '<h3 class="mt-2 text-2xl leading-[1.05] tracking-[-0.025em] text-ink">' + esc(v.title) + '</h3>' +
+        '<p class="mt-4 font-mono text-lg font-bold tracking-[0.12em] text-muted">' + esc(v.code) + '</p>' +
+      '</li>';
+    }
+    const working = busy.has('use:' + v.id);
+    return '<li id="voucher-' + id + '" tabindex="-1" class="flex flex-col bg-forest p-6 text-white outline-none">' +
+      '<p class="font-display text-base font-semibold">' + esc(v.partner) + '</p>' +
+      '<h3 class="mt-3 text-[1.75rem] leading-[1.05] tracking-[-0.025em]">' + esc(v.title) + '</h3>' +
+      '<p class="mt-auto pt-7 font-mono text-2xl font-bold tracking-[0.14em]"><span class="sr-only">Code du bon : </span>' + esc(v.code) + '</p>' +
+      '<button type="button" class="btn-light mt-5 w-full focus-visible:outline-white" data-action="use" data-id="' + id + '"' + (working ? ' disabled aria-busy="true"' : '') + '>' +
+        (working ? spinner('h-5 w-5') + 'Validation…' : 'Utiliser mon bon') + '</button>' +
+      '<p class="mt-3 text-base">À faire devant le partenaire.</p>' +
     '</li>';
+  }
+
+  // ------------------------------------------------------------------------
+  // Page
+  // ------------------------------------------------------------------------
+  function waitingPage(state) {
+    if (!state.configured) return soon('Votre espace ouvrira avec les premières missions.');
+    if (!state.known && (state.status === 'loading' || state.status === 'idle')) return notice({ title: 'Chargement…', busy: true });
+    if (!state.known) {
+      return notice({
+        title: 'Données indisponibles',
+        text: state.error || 'Vérifiez votre connexion.',
+        extra: '<button type="button" class="btn mt-6 min-h-[56px] bg-ink text-surface hover:bg-ink/85" data-action="retry">Réessayer</button>',
+      });
+    }
+    return '';
   }
 
   function render(state) {
-    const u = state.user || {};
-    const active = state.participations
-      .filter((p) => ACTIVE.includes(p.status))
-      .map((p) => ({ participation: p, mission: store.getMission(p.missionId) }))
-      .filter((x) => x.mission);
+    const head = '<h1 id="page-title" tabindex="-1" class="text-5xl font-extrabold sm:text-6xl lg:text-7xl">Mon <span class="mark">espace</span></h1>';
+    const waiting = waitingPage(state);
+    if (waiting) {
+      return '<div class="mx-auto max-w-app px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">' + head +
+        '<div class="mt-8" aria-live="polite">' + waiting + '</div></div>';
+    }
+
+    const get = (p) => store.getMission(p.missionId);
+    // En cours : inscrites, plus celles validées pendant cette visite (message de succès)
+    const ongoing = state.participations.filter((p) => p.status === 'inscrite' || (checks[p.id] && checks[p.id].phase === 'valid'));
     const validated = state.participations
       .filter((p) => p.status === 'validee')
-      .map((p) => ({ participation: p, mission: store.getMission(p.missionId) }))
-      .filter((x) => x.mission)
-      .sort((a, b) => String(b.participation.validatedAt || '').localeCompare(String(a.participation.validatedAt || '')));
-    const minutes = validated.reduce((sum, x) => sum + (Number(x.mission.duration) || 0), 0);
-    const vouchers = state.vouchers.slice().sort((a, b) => (a.status === b.status ? 0 : a.status === 'actif' ? -1 : 1));
-    const activeCount = vouchers.filter((v) => v.status === 'actif').length;
+      .sort((a, b) => String(b.validatedAt || '').localeCompare(String(a.validatedAt || '')));
+    const minutes = validated.reduce((sum, p) => sum + ((get(p) && Number(get(p).duration)) || 0), 0);
+    const vouchers = state.vouchers.slice().sort((a, b) =>
+      (a.usedAt ? 1 : 0) - (b.usedAt ? 1 : 0) ||
+      String(b.usedAt || b.createdAt || '').localeCompare(String(a.usedAt || a.createdAt || '')));
+    const activeCount = vouchers.filter((v) => !v.usedAt).length;
     const H2 = 'text-[2.5rem] sm:text-5xl';
 
     let intro = 'Prêt·e pour une première mission ?';
     if (validated.length) intro = 'Merci pour votre aide !';
-    else if (active.length || vouchers.length) intro = 'Vos missions et vos bons, au même endroit.';
+    else if (ongoing.length || vouchers.length) intro = 'Vos missions et vos bons, au même endroit.';
 
     // Deux repères chiffrés, en blocs pleins (noir, vert)
     const TILE = 'flex min-w-0 flex-col justify-between gap-3 p-5 sm:p-6';
@@ -173,101 +221,178 @@ Meleze.views.wallet = (function () {
         '</ul>'
       : '';
 
+    const offline = state.status === 'offline'
+      ? '<p class="mt-6 bg-ink px-5 py-3 font-display text-base font-semibold text-surface">Hors connexion : dernières données enregistrées sur cet appareil.</p>'
+      : '';
+
     return '<div class="mx-auto max-w-app px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">' +
-      '<h1 id="page-title" tabindex="-1" class="text-5xl font-extrabold sm:text-6xl lg:text-7xl">Bonjour <span class="mark">' + esc(u.firstName) + '</span></h1>' +
+      head +
       '<p class="mt-4 max-w-xl font-display text-xl font-semibold leading-snug tracking-[-0.01em] text-ink sm:text-2xl">' + intro + '</p>' +
+      offline +
       stats +
 
       '<div class="mt-14 space-y-16 lg:mt-20 lg:space-y-20">' +
-        // ---- Missions en cours : un QR (ou un justificatif) par mission ------------
+        // ---- Missions en cours : la photo à prendre ---------------------------------------
         '<section aria-labelledby="ongoing">' +
           '<h2 id="ongoing" class="' + H2 + '">Mes missions</h2>' +
-          (active.length
-            ? '<ul class="mt-7 grid gap-14 lg:grid-cols-2 lg:gap-x-8">' + active.map(participationCard).join('') + '</ul>'
+          (ongoing.length
+            ? '<ul class="mt-7 grid gap-14 lg:grid-cols-2 lg:gap-x-8">' +
+                ongoing.map((p) => (checks[p.id] && checks[p.id].phase === 'valid' ? successCard(p, get(p), checks[p.id]) : activeCard(p, get(p)))).join('') +
+              '</ul>'
             : '<div class="mt-7 bg-sunk p-6 sm:p-8">' +
                 '<p class="font-display text-[1.75rem] font-bold leading-tight tracking-[-0.02em] text-ink">Aucune mission en cours.</p>' +
                 '<a href="#/missions" class="btn mt-6 min-h-[56px] bg-ink text-lg text-surface hover:bg-ink/85">Trouver une mission ' + icon('arrow', 'h-5 w-5') + '</a>' +
               '</div>') +
         '</section>' +
 
-        // ---- Bons de récompense (h2 → p → ul) ------------------------------------------
+        // ---- Bons : valables d'abord, puis utilisés -----------------------------------------
         '<section aria-labelledby="rewards">' +
           '<h2 id="rewards" class="' + H2 + '">Mes bons</h2>' +
           (vouchers.length
-            ? '<p class="mt-3 font-display text-xl font-semibold leading-snug text-ink">Le commerçant scanne le QR du bon.</p>' +
+            ? '<p class="mt-3 font-display text-xl font-semibold leading-snug text-ink">Montrez le bon au partenaire, puis utilisez-le devant lui.</p>' +
               '<ul class="mt-7 grid gap-4 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">' + vouchers.map(voucherCard).join('') + '</ul>'
             : '<p class="mt-7 bg-sunk p-6 font-display text-xl font-semibold leading-snug text-ink sm:p-8">Vos bons arriveront ici après une mission validée.</p>') +
         '</section>' +
 
-        // ---- Historique (tuiles grises) ------------------------------------------------
+        // ---- Historique (tuiles grises) ----------------------------------------------------
         (validated.length
           ? '<section aria-labelledby="validated">' +
               '<h2 id="validated" class="text-[1.75rem] sm:text-3xl">Missions validées</h2>' +
               '<ul class="mt-5 space-y-2">' +
-                validated.map(({ participation: p, mission: m }) =>
+                validated.map((p) =>
                   '<li class="flex flex-col gap-0.5 bg-sunk px-5 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">' +
-                    '<span class="font-display text-lg font-semibold leading-snug text-ink">' + esc(m.title) + '</span>' +
+                    '<span class="font-display text-lg font-semibold leading-snug text-ink">' + esc(get(p) ? get(p).title : 'Mission retirée') + '</span>' +
                     '<span class="shrink-0 text-muted">' + (p.validatedAt ? 'Validée le ' + esc(date(p.validatedAt)) : 'Validée') + '</span>' +
                   '</li>').join('') +
               '</ul>' +
             '</section>'
           : '') +
 
-        '<div>' +
-          '<button type="button" class="min-h-[44px] text-sm text-muted underline underline-offset-4 hover:text-ink" data-action="reset">Réinitialiser les données de démo</button>' +
-        '</div>' +
+        // ---- Données : liées à ce navigateur, effaçables d'un geste -------------------------
+        (state.hasAccount || state.participations.length || state.vouchers.length
+          ? '<section aria-labelledby="data-h" class="bg-sunk p-6 sm:p-8">' +
+              '<h2 id="data-h" class="text-[1.75rem] sm:text-3xl">Vos données</h2>' +
+              '<p class="mt-3 max-w-xl text-lg leading-snug text-ink">Sans compte ni e-mail : vos missions et vos bons sont liés à ce navigateur. ' +
+                '<a class="underline decoration-accent decoration-2 underline-offset-4 hover:text-brand-ink" href="#/mentions-legales">En savoir plus</a></p>' +
+              '<button type="button" class="btn-secondary mt-6" data-action="delete-data"' + (busy.has('delete') ? ' disabled aria-busy="true"' : '') + '>Supprimer mes données</button>' +
+            '</section>'
+          : '') +
       '</div>' +
     '</div>';
   }
 
+  // ------------------------------------------------------------------------
+  // Vérification de la photo
+  // ------------------------------------------------------------------------
+  /** Envoie la photo au serveur ; une seule vérification à la fois par mission. */
+  function submit(pid, shot, app) {
+    if (checks[pid] && checks[pid].phase === 'verifying') return;
+    checks[pid] = { phase: 'verifying', photo: shot };
+    focusAfter = '#check-' + CSS.escape(pid);
+    app.rerender();
+    store.verifyPhoto(pid, shot).then((res) => {
+      if (res.valid) {
+        checks[pid] = { phase: 'valid', reason: res.reason, voucherId: res.voucher && res.voucher.id };
+        toast('Mission validée ! Votre bon est arrivé.');
+      } else {
+        checks[pid] = { phase: 'invalid', reason: res.reason || 'La photo ne montre pas ce qui est demandé. Reprenez-la.' };
+      }
+    }, (err) => {
+      if (err && err.code === 'already_validated') {
+        delete checks[pid]; // déjà validée (autre onglet) : le rechargement l'affiche
+        toast(err.message);
+      } else {
+        // La photo reste en mémoire : « Réessayer l’envoi » sans la reprendre
+        checks[pid] = { phase: 'error', photo: shot, message: (err && err.message) || 'Réessayez dans un instant.' };
+      }
+    }).then(() => {
+      focusAfter = '#check-' + CSS.escape(pid);
+      app.rerender();
+    });
+  }
+
   const actions = {
-    cancel(el) {
-      if (store.cancel(el.dataset.id)) toast('Vous êtes désinscrit·e de cette mission.');
-      else toast('Impossible de se désinscrire d’une mission déjà validée.', 'error');
+    retry() { store.refresh(); },
+
+    photo(el, app) {
+      const pid = el.dataset.id;
+      const p = store.getParticipation(pid);
+      const m = p && store.getMission(p.missionId);
+      if (!p || !m || (checks[pid] && checks[pid].phase === 'verifying') || Meleze.camera.isOpen()) return;
+      if (navigator.onLine === false) { toast(Meleze.api.MESSAGES.offline, 'error'); return; }
+      Meleze.camera.open({ hint: m.photoHint }).then((shot) => {
+        if (shot && store.getParticipation(pid)) submit(pid, shot, app);
+      });
     },
-    reset() {
-      if (confirm('Remettre toutes les données de démonstration à zéro ?')) { store.reset(); toast('Données de démo réinitialisées.'); }
+
+    resend(el, app) {
+      const c = checks[el.dataset.id];
+      if (c && c.phase === 'error' && c.photo) submit(el.dataset.id, c.photo, app);
+    },
+
+    cancel(el, app) {
+      const id = el.dataset.id;
+      if (busy.has('cancel:' + id)) return;
+      if (!confirm('Annuler votre participation à cette mission ?')) return;
+      busy.add('cancel:' + id);
+      app.rerender();
+      store.cancel(id)
+        .then(() => { delete checks[id]; toast('Participation annulée.'); focusAfter = '#page-title'; },
+          (err) => toast((err && err.message) || 'Annulation impossible.', 'error'))
+        .then(() => { busy.delete('cancel:' + id); app.rerender(); });
+    },
+
+    use(el, app) {
+      const id = el.dataset.id;
+      if (busy.has('use:' + id)) return;
+      if (!confirm('À faire devant le partenaire : une fois utilisé, ce bon ne pourra plus servir.')) return;
+      busy.add('use:' + id);
+      app.rerender();
+      store.useVoucher(id)
+        .then(() => { toast('Bon utilisé. Merci !'); focusAfter = '#voucher-' + CSS.escape(id); },
+          (err) => toast((err && err.message) || 'Ce bon ne peut pas être utilisé.', 'error'))
+        .then(() => { busy.delete('use:' + id); app.rerender(); });
+    },
+
+    'show-voucher'(el) {
+      const target = document.getElementById('voucher-' + el.dataset.id);
+      if (!target) return;
+      target.scrollIntoView({ block: 'center' });
+      target.focus({ preventScroll: true });
+    },
+
+    'delete-data'(el, app) {
+      if (busy.has('delete')) return;
+      if (!confirm('Supprimer vos missions, vos vérifications et vos bons ? C’est définitif.')) return;
+      busy.add('delete');
+      app.rerender();
+      store.deleteMyData()
+        .then(() => {
+          Object.keys(checks).forEach((k) => delete checks[k]);
+          toast('Vos données ont été supprimées.');
+          focusAfter = '#page-title';
+        }, (err) => toast((err && err.message) || 'Suppression impossible. Réessayez.', 'error'))
+        .then(() => { busy.delete('delete'); app.rerender(); });
     },
   };
 
-  // Envoi du justificatif : compression (JPEG ~1280 px, sans EXIF) puis store.
-  let sending = false;
-  const changes = {
-    proof(input) {
-      const file = input.files && input.files[0];
-      if (!file || sending) return;
-      sending = true;
-      const label = input.closest('label');
-      const text = label && label.querySelector('[data-upload-text]');
-      const before = text ? text.textContent : '';
-      if (label) { label.setAttribute('aria-busy', 'true'); label.classList.add('pointer-events-none', 'opacity-60'); }
-      if (text) text.textContent = 'Envoi en cours…';
+  function mounted(root) {
+    if (!focusAfter) return;
+    const el = root.querySelector(focusAfter);
+    focusAfter = null;
+    if (el) {
+      el.focus({ preventScroll: true });
+      const r = el.getBoundingClientRect();
+      if (r.top < 64 || r.bottom > window.innerHeight) el.scrollIntoView({ block: 'center' });
+    }
+  }
 
-      const restore = () => {
-        sending = false;
-        if (!input.isConnected) return; // la vue a déjà été redessinée
-        input.value = '';
-        if (label) { label.removeAttribute('aria-busy'); label.classList.remove('pointer-events-none', 'opacity-60'); }
-        if (text) text.textContent = before;
-      };
+  /** Page quittée : caméra coupée, messages de succès oubliés (les bons restent). */
+  function unmount() {
+    if (Meleze.camera) Meleze.camera.close(null);
+    Object.keys(checks).forEach((k) => { if (checks[k].phase === 'valid' || checks[k].phase === 'invalid') delete checks[k]; });
+    focusAfter = null;
+  }
 
-      compressImage(file)
-        .then((dataUrl) => {
-          const id = input.dataset.id;
-          const res = store.submitProof(id, dataUrl);
-          if (!res || !res.ok) {
-            toast((res && res.reason) || 'Envoi impossible, réessayez.', 'error');
-          } else if (res.persisted === false) {
-            toast('Justificatif envoyé, mais le stockage du téléphone est plein : la photo n’est gardée que pour cette session.', 'error');
-          } else {
-            const p = store.state.participations.find((x) => x.id === id);
-            toast('Justificatif envoyé. Il sera vérifié par ' + checker(p && store.getMission(p.missionId)) + '.'); // toast() échappe
-          }
-        })
-        .catch((err) => toast((err && err.message) || 'Impossible de lire cette photo.', 'error'))
-        .then(restore);
-    },
-  };
-
-  return { title: 'Mon espace', render, actions, changes };
+  return { title: 'Mon espace', render, actions, mounted, unmount };
 })();

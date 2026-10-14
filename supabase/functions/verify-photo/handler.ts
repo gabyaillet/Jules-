@@ -275,9 +275,7 @@ export function interpretResponse(response: Anthropic.Beta.Messages.BetaMessage)
   if (typeof valid !== "boolean" || typeof reason !== "string") return null;
   if (typeof confidence !== "number" || !Number.isFinite(confidence)) return null;
 
-  // Un pourcentage (ex. 85) est ramené à 0,85, puis tout est borné à [0, 1].
-  const scaled = confidence > 1 && confidence <= 100 ? confidence / 100 : confidence;
-  const c = Math.min(1, Math.max(0, scaled));
+  const c = Math.min(1, Math.max(0, confidence));
   const accepted = valid && c >= MIN_CONFIDENCE;
 
   let text = cleanReason(reason);
