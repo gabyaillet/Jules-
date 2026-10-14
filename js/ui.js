@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Mélèze — utilitaires d'interface partagés (icônes, QR codes, photos, toasts…)
+   Mélèze — utilitaires d'interface partagés (icônes, photos, toasts, états…)
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 
@@ -30,70 +30,17 @@ Meleze.ui = (function () {
       'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (PATHS[name] || '') + '</svg>';
   }
 
-  // --- QR code réel ------------------------------------------------------------
-  // Encodeur « qrcode-generator » (js/vendor/qrcode.min.js, global `qrcode`),
-  // niveau de correction M. Rendu en SVG : un seul <path> (modules noirs
-  // regroupés par lignes), marge blanche de 4 modules pour la lecture caméra.
-  const qrCache = new Map(); // code → { n, d } (les vues se re-rendent souvent)
-
-  function qrMatrix(code) {
-    if (qrCache.has(code)) return qrCache.get(code);
-    const q = window.qrcode(0, 'M'); // 0 = version (taille) automatique
-    q.addData(code);
-    q.make();
-    const n = q.getModuleCount();
-    let d = '';
-    for (let y = 0; y < n; y++) {
-      for (let x = 0; x < n; x++) {
-        if (!q.isDark(y, x)) continue;
-        let run = 1;
-        while (x + run < n && q.isDark(y, x + run)) run++;
-        d += 'M' + x + ' ' + y + 'h' + run + 'v1h-' + run + 'z';
-        x += run - 1;
-      }
-    }
-    const out = { n, d };
-    if (qrCache.size > 50) qrCache.clear();
-    qrCache.set(code, out);
-    return out;
-  }
-
+  // --- Photo de vérification (repli sans caméra intégrée, voir js/camera.js) ---
   /**
-   * QR code lisible par une caméra.
-   * @param {string} code
-   * @param {{size?:string, muted?:boolean}} opts  size : classes de largeur (ex. "w-44")
-   */
-  function qr(code, opts) {
-    const o = Object.assign({ size: 'w-40', muted: false }, opts);
-    const text = String(code == null ? '' : code);
-    const tone = o.muted ? 'text-muted opacity-40' : 'text-night';
-    let m = null;
-    if (typeof window.qrcode === 'function') {
-      try { m = qrMatrix(text); } catch (e) { m = null; }
-    }
-    if (!m) {
-      // Repli (encodeur absent) : un carré blanc avec le code en clair.
-      return '<div class="' + o.size + ' ' + tone + ' flex aspect-square items-center justify-center bg-white p-2 text-center font-mono text-xs font-semibold" role="img" aria-label="QR code ' + esc(text) + '">' + esc(text) + '</div>';
-    }
-    const Q = 4; // marge (quiet zone) en modules
-    const box = m.n + Q * 2;
-    return '<svg class="' + o.size + ' ' + tone + '" viewBox="' + (-Q) + ' ' + (-Q) + ' ' + box + ' ' + box +
-      '" role="img" aria-label="QR code ' + esc(text) + '" shape-rendering="crispEdges">' +
-      '<rect x="' + (-Q) + '" y="' + (-Q) + '" width="' + box + '" height="' + box + '" fill="#FFFFFF"/>' +
-      '<path fill="currentColor" d="' + m.d + '"/></svg>';
-  }
-
-  // --- Photos envoyées par le touriste (justificatifs) -------------------------
-  /**
-   * Réduit et ré-encode une photo en JPEG avant de la stocker : ~100-300 ko au
-   * lieu de plusieurs Mo, et le ré-encodage supprime les métadonnées EXIF
-   * (dont la position GPS) de la photo d'origine.
+   * Réduit et ré-encode une photo en JPEG avant l'envoi : ~100-250 ko au lieu
+   * de plusieurs Mo, et le ré-encodage supprime les métadonnées EXIF (dont la
+   * position GPS) de la photo d'origine.
    * @param {File|Blob} file
    * @param {{max?:number, quality?:number}} opts  max : plus grand côté en px
    * @returns {Promise<string>} data URL "data:image/jpeg;base64,…"
    */
   function compressImage(file, opts) {
-    const o = Object.assign({ max: 1280, quality: 0.72 }, opts);
+    const o = Object.assign({ max: 1024, quality: 0.8 }, opts);
     const notImage = () => new Error('Ce fichier n’est pas une image.');
     if (!file || (file.type && !/^image\//i.test(file.type))) return Promise.reject(notImage());
 
@@ -155,10 +102,24 @@ Meleze.ui = (function () {
   /** Durée affichée d'une mission : libellé libre (ex. "Le temps du trajet") sinon minutes. */
   const missionDuration = (m) => (m && m.durationLabel) || duration(m && m.duration);
 
+  /** "AAAA-MM-JJ" (date seule) ou horodatage ISO du serveur → objet Date (null si illisible). */
+  function toDate(iso) {
+    if (!iso) return null;
+    const s = String(iso);
+    const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(s) ? s + 'T12:00:00' : s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  /** "14 octobre" */
   function date(iso) {
-    if (!iso) return '';
-    const d = new Date(iso + 'T12:00:00');
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+    const d = toDate(iso);
+    return d ? d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : '';
+  }
+  /** "14 octobre 2026 à 10:32" (heure locale) : preuve qu'un bon vient d'être utilisé. */
+  function dateTime(iso) {
+    const d = toDate(iso);
+    if (!d) return '';
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) + ' à ' +
+      d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   }
   const typeOf = (id) => Meleze.data.TYPES.find((t) => t.id === id) || { label: id, num: '', color: 'bg-ink text-surface' };
   const seasonLabel = (id) => (Meleze.data.SEASONS.find((s) => s.id === id) || { label: id }).label;
@@ -170,6 +131,31 @@ Meleze.ui = (function () {
     if (m >= 6 && m <= 8) return 'ete';
     if (m >= 9 && m <= 11) return 'automne';
     return 'hiver';
+  }
+
+  // --- États d'une page (chargement, erreur, bientôt disponible) --------------
+  /** Petit cercle qui tourne (immobile si « moins d'animations »). */
+  function spinner(cls) {
+    return '<span class="' + (cls || 'h-6 w-6') + ' inline-block shrink-0 animate-spin rounded-full border-[3px] border-current border-r-transparent" aria-hidden="true"></span>';
+  }
+
+  /**
+   * Bloc gris plein : un titre, une phrase, éventuellement un bouton.
+   * `title` et `text` sont échappés ; `extra` est du HTML déjà sûr.
+   * @param {{title:string, text?:string, extra?:string, busy?:boolean, cls?:string}} o
+   */
+  function notice(o) {
+    return '<div class="bg-sunk p-6 sm:p-8 ' + (o.cls || '') + '"' + (o.busy ? ' role="status"' : '') + '>' +
+      '<p class="flex items-center gap-3 font-display text-[1.75rem] font-bold leading-tight tracking-[-0.02em] text-ink">' +
+        (o.busy ? spinner() : '') + '<span>' + esc(o.title) + '</span></p>' +
+      (o.text ? '<p class="mt-2 max-w-xl text-lg leading-snug text-ink">' + esc(o.text) + '</p>' : '') +
+      (o.extra || '') +
+    '</div>';
+  }
+
+  /** « Bientôt disponible » : serveur pas encore branché (js/config.js vide). */
+  function soon(text) {
+    return notice({ title: 'Bientôt disponible', text: text || 'Les premières missions arrivent très bientôt.' });
   }
 
   // --- Toast accessible (annoncé par les lecteurs d'écran) -------------------
@@ -231,5 +217,8 @@ Meleze.ui = (function () {
       (o.eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async">';
   }
 
-  return { esc, icon, qr, compressImage, duration, missionDuration, date, typeOf, seasonLabel, currentSeason, toast, photo, photoUrl };
+  return {
+    esc, icon, compressImage, duration, missionDuration, date, dateTime, typeOf, seasonLabel, currentSeason,
+    toast, photo, photoUrl, spinner, notice, soon,
+  };
 })();
