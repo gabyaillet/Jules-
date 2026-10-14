@@ -174,7 +174,7 @@ npx supabase functions deploy verify-photo --project-ref VOTRE_REF --no-verify-j
 | `ALLOWED_ORIGINS` | `https://gabyaillet.github.io` (sans chemin ; votre propre domaine si vous en avez un, voir 3.4). Pour tester en local (`npm run serve`, port 5173), ajoutez l'adresse séparée par une virgule : `https://gabyaillet.github.io,http://localhost:5173` |
 | `DAILY_GLOBAL_LIMIT` | facultatif : nombre maximal de vérifications par 24 h pour tout le service (défaut `500`, `0` = sans limite) |
 
-`SUPABASE_URL`, `SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY` sont fournis automatiquement par Supabase : ne les ajoutez pas.
+`SUPABASE_URL` et les clés d'API du projet (nouvelles clés `SUPABASE_PUBLISHABLE_KEYS` / `SUPABASE_SECRET_KEYS`, ou anciennes `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`) sont fournis automatiquement par Supabase : ne les ajoutez pas. La fonction utilise les nouvelles clés quand elles existent.
 
 En ligne de commande :
 

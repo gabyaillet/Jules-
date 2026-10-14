@@ -1,8 +1,9 @@
 // Mélèze — fonction Edge « verify-photo » (Supabase, Deno).
 //
 // Branche les vrais clients sur la logique de handler.ts.
-// Variables fournies par Supabase : SUPABASE_URL, SUPABASE_ANON_KEY,
-// SUPABASE_SERVICE_ROLE_KEY.
+// Variables fournies par Supabase : SUPABASE_URL et les clés d'API
+// (SUPABASE_PUBLISHABLE_KEYS / SUPABASE_SECRET_KEYS, ou les anciennes
+// SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY).
 // Secrets à définir (Edge Functions > Secrets) : ANTHROPIC_API_KEY,
 // ALLOWED_ORIGINS (facultatif, défaut « https://gabyaillet.github.io »),
 // DAILY_GLOBAL_LIMIT (facultatif, défaut 500 vérifications par 24 h, 0 = sans limite).
@@ -11,9 +12,26 @@ import Anthropic from "npm:@anthropic-ai/sdk@0.133.0";
 import { createClient } from "npm:@supabase/supabase-js@2.117.3";
 import { createHandler, DEFAULT_GLOBAL_DAILY_LIMIT, parseAllowedOrigins, parseLimit } from "./handler.ts";
 
+/**
+ * Clé d'API fournie par Supabase. Les nouvelles clés (`sb_publishable_…`, `sb_secret_…`)
+ * arrivent dans SUPABASE_PUBLISHABLE_KEYS / SUPABASE_SECRET_KEYS, un objet JSON indexé
+ * par nom (`default` par défaut) : on les préfère, car les anciennes clés (anon,
+ * service_role) peuvent être désactivées. Repli sur les anciennes sinon.
+ */
+function supabaseKey(newKeysVar: string, legacyVar: string): string {
+  try {
+    const keys = JSON.parse(Deno.env.get(newKeysVar) ?? "{}") as Record<string, unknown>;
+    const key = typeof keys.default === "string" ? keys.default : Object.values(keys).find((v) => typeof v === "string");
+    if (typeof key === "string" && key) return key;
+  } catch {
+    // Variable absente ou illisible : on passe aux anciennes clés.
+  }
+  return Deno.env.get(legacyVar) ?? "";
+}
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SUPABASE_ANON_KEY = supabaseKey("SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_ANON_KEY");
+const SUPABASE_SERVICE_ROLE_KEY = supabaseKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 
 const noSession = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false };
