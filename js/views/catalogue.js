@@ -65,7 +65,7 @@ Meleze.views.catalogue = (function () {
       cta = '<button type="button" class="' + BIG + ' bg-ink text-surface hover:bg-ink/85" data-action="join" data-id="' + esc(m.id) + '"' + (joining ? ' disabled' : '') + '>Je participe ' + icon('arrow', 'h-5 w-5') + '</button>';
     }
 
-    return '<li id="mission-' + esc(m.id) + '" class="group flex scroll-mt-24 flex-col md:scroll-mt-48">' +
+    return '<li id="mission-' + esc(m.id) + '" class="group flex scroll-mt-24 flex-col">' +
       '<div class="ph ph-zoom aspect-[16/10]">' + photo(m, { sizes: '(min-width:1024px) 30vw, (min-width:640px) 45vw, 100vw' }) +
         '<div class="absolute inset-x-3 top-3 flex items-start justify-between gap-2">' +
           '<span class="' + PILL + ' ' + t.color + '">' + esc(t.label) + '</span>' +
@@ -170,7 +170,7 @@ Meleze.views.catalogue = (function () {
 
     return head +
 
-    '<div class="mt-7 md:sticky md:top-[65px] md:z-30 md:bg-surface/95 md:backdrop-blur" role="group" aria-label="Filtres">' +
+    '<div class="mt-7" role="group" aria-label="Filtres">' +
       '<div class="mx-auto max-w-app space-y-1 py-2">' +
         chipRow('Saison',
           chip('season', 'all', 'Toute l’année', filters.season === 'all') +
