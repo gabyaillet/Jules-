@@ -6,7 +6,7 @@
    JAMAIS intercepté ni mis en cache : seules les requêtes GET du site lui-même
    (et les photos Unsplash) passent par ici. La copie hors connexion des
    missions et des bons est gérée par js/store.js. */
-const VERSION = 'meleze-v20';
+const VERSION = 'meleze-v21';
 const SHELL = [
   './', './index.html', './dist/styles.css', './icon.svg', './manifest.webmanifest',
   './fonts/bricolage-grotesque-latin-wght-normal.woff2', './fonts/source-sans-3-latin-wght-normal.woff2',

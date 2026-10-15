@@ -244,3 +244,40 @@
   @keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.09); } }
   @media (prefers-reduced-motion: reduce) { .hero-kenburns > img { animation: none; } }
 }
+
+/* --------------------------------------------------------------------------
+   3. Téléphones (< 640 px) : échelle plus petite et plus lisible, même DA.
+   Hors des couches Tailwind, donc après les utilitaires : ces règles ne
+   s'appliquent qu'aux petits écrans ; tablette et ordinateur ne changent pas
+   (les classes sm:/md:/lg: reprennent la main dès 640 px).
+   -------------------------------------------------------------------------- */
+@media (max-width: 639px) {
+  /* Titres : moins massifs, hiérarchie conservée */
+  .text-8xl, .text-7xl { font-size: 3.25rem; line-height: 0.9; }
+  .text-6xl { font-size: 2.5rem; line-height: 1; }
+  .text-5xl { font-size: 2.25rem; line-height: 1.02; }
+  .text-\[2\.5rem\] { font-size: 1.875rem; line-height: 1.05; }
+  .text-4xl { font-size: 1.875rem; line-height: 1.05; }
+  .text-3xl { font-size: 1.5rem; line-height: 1.1; }
+  .text-\[1\.75rem\] { font-size: 1.375rem; line-height: 1.12; }
+  .text-\[2rem\] { font-size: 1.5rem; line-height: 1.08; }
+  .text-2xl { font-size: 1.25rem; line-height: 1.25; }
+  .text-xl { font-size: 1.125rem; line-height: 1.35; }
+  /* Texte courant : 17 px, confortable à lire */
+  .text-lg { font-size: 1.0625rem; line-height: 1.5; }
+
+  /* Espacements verticaux resserrés */
+  .py-14 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+  .pb-14 { padding-bottom: 2.5rem; }
+  .pt-12 { padding-top: 2rem; }
+  .pb-16 { padding-bottom: 3rem; }
+  .mt-14 { margin-top: 2.5rem; }
+  .mt-10 { margin-top: 1.75rem; }
+  .mt-8 { margin-top: 1.5rem; }
+  .p-6 { padding: 1.25rem; }
+
+  /* Boutons et filtres : toujours ≥ 44 px de haut, moins imposants */
+  .btn { min-height: 48px; padding-left: 1.25rem; padding-right: 1.25rem; font-size: 1rem; }
+  .min-h-\[60px\], .min-h-\[56px\] { min-height: 48px; }
+  .chip { min-height: 40px; padding-left: 0.875rem; padding-right: 0.875rem; font-size: 0.9375rem; }
+}
