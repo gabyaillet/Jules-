@@ -55,7 +55,7 @@ Meleze.views.catalogue = (function () {
     const t = typeOf(m.type);
     const p = store.participationFor(m.id);
     // Gros bouton pilule : noir pour participer, gris plein si déjà inscrit·e
-    const BIG = 'btn min-h-[60px] w-full text-lg';
+    const BIG = 'btn min-h-[52px] w-full text-base';
     let cta;
     if (p) {
       cta = '<a href="#/wallet" class="' + BIG + ' bg-sunk text-ink hover:bg-line">' + (ACTIVE_LABEL[p.status] || ACTIVE_LABEL.inscrite) + '</a>';
@@ -66,35 +66,35 @@ Meleze.views.catalogue = (function () {
     }
 
     return '<li id="mission-' + esc(m.id) + '" class="group flex scroll-mt-24 flex-col md:scroll-mt-48">' +
-      '<div class="ph ph-zoom aspect-[4/3]">' + photo(m, { sizes: '(min-width:1024px) 30vw, (min-width:640px) 45vw, 100vw' }) +
+      '<div class="ph ph-zoom aspect-[16/10]">' + photo(m, { sizes: '(min-width:1024px) 30vw, (min-width:640px) 45vw, 100vw' }) +
         '<div class="absolute inset-x-3 top-3 flex items-start justify-between gap-2">' +
           '<span class="' + PILL + ' ' + t.color + '">' + esc(t.label) + '</span>' +
           (isNew(m) ? '<span class="sticker rotate-3 bg-forest text-white">Nouveau</span>' : '') +
         '</div>' +
       '</div>' +
 
-      '<h2 class="mt-6 text-[2rem] leading-[1.02] sm:text-[2.15rem]">' + esc(m.title) + '</h2>' +
+      '<h2 class="mt-4 text-[1.375rem] leading-[1.1] sm:text-[1.6rem]">' + esc(m.title) + '</h2>' +
       // Une seule ligne d'infos : durée · lieu (« Durée » reste lu par les lecteurs d'écran ;
       // durée libre, ex. « Le temps du trajet » : le lieu passe dans « Plus d’infos »)
-      '<p class="mt-3 font-display text-lg font-semibold leading-snug text-ink">' +
+      '<p class="mt-2 font-display text-base font-semibold leading-snug text-ink">' +
         '<span class="sr-only">Durée </span>' + esc(missionDuration(m) || 'Variable') +
         (m.location && !m.durationLabel ? ' · ' + esc(m.location) : '') +
       '</p>' +
 
       // Bas de fiche (contrepartie, bouton, détails) calé en bas : les blocs
       // s'alignent d'une carte à l'autre sur une même rangée.
-      '<div class="mt-auto pt-6">' +
+      '<div class="mt-auto pt-4">' +
         // Contrepartie : bloc vert plein, texte blanc
-        '<div class="bg-forest p-6 text-white sm:min-h-[12.25rem]">' +
-          '<p class="font-display text-base font-semibold">En échange</p>' +
-          '<p class="mt-2 font-display text-[1.6rem] font-bold leading-[1.08] tracking-[-0.02em]">' + esc(m.reward.title) + '</p>' +
-          '<p class="mt-2 text-base">offert par ' + esc(m.reward.partner) + '</p>' +
+        '<div class="bg-forest p-4 text-white sm:min-h-[8.5rem] sm:p-5">' +
+          '<p class="font-display text-sm font-semibold">En échange</p>' +
+          '<p class="mt-1 font-display text-[1.2rem] font-bold leading-[1.15] tracking-[-0.015em]">' + esc(m.reward.title) + '</p>' +
+          '<p class="mt-1 text-sm">offert par ' + esc(m.reward.partner) + '</p>' +
         '</div>' +
 
-        '<div class="mt-4">' + cta + '</div>' +
+        '<div class="mt-3">' + cta + '</div>' +
 
         '<details class="acc mt-2"' + (focusId === m.id ? ' open' : '') + '>' +
-          '<summary class="min-h-[56px] py-2 font-display text-lg font-bold">Plus d’infos<span class="acc-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sunk text-ink">' + icon('plus', 'h-5 w-5') + '</span></summary>' +
+          '<summary class="min-h-[48px] py-2 font-display text-base font-bold">Plus d’infos<span class="acc-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sunk text-ink">' + icon('plus', 'h-5 w-5') + '</span></summary>' +
           '<div class="pb-2 pt-1">' +
             '<p class="text-ink">' + esc(m.description) + '</p>' +
             '<div class="mt-5">' + facts([
@@ -187,7 +187,7 @@ Meleze.views.catalogue = (function () {
         (filtered && list.length ? '<button type="button" class="link min-h-[44px]" data-action="clear-filters">Effacer les filtres</button>' : '') +
       '</div>' +
       (list.length
-        ? '<ul class="mt-6 grid gap-x-6 gap-y-16 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-20">' + list.map((m) => card(state, m, params.focus)).join('') + '</ul>'
+        ? '<ul class="mt-6 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-14">' + list.map((m) => card(state, m, params.focus)).join('') + '</ul>'
         : state.missions.length
           ? '<div class="mt-6 bg-sunk px-6 py-14 text-center sm:py-20">' +
               '<p class="mx-auto max-w-md font-display text-[1.75rem] font-bold leading-tight tracking-[-0.02em] sm:text-3xl">Aucune mission ne correspond à ces filtres.</p>' +

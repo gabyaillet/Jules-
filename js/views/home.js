@@ -53,11 +53,11 @@ Meleze.views.home = (function () {
     const t = typeOf(m.type);
     return '<li class="w-[85%] shrink-0 snap-start sm:w-[46%] lg:w-auto">' +
       '<a href="#/missions?focus=' + esc(m.id) + '" class="group block">' +
-        '<div class="ph ph-zoom aspect-[5/4]">' + photo(m, { sizes: '(min-width:1024px) 30vw, 85vw', alt: '' }) +
+        '<div class="ph ph-zoom aspect-[16/10]">' + photo(m, { sizes: '(min-width:1024px) 30vw, 85vw', alt: '' }) +
           '<span class="tag tag-sign absolute left-3 top-3 ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
         '</div>' +
-        '<h3 class="mt-5 text-[1.75rem] leading-[1.05] group-hover:underline group-hover:decoration-accent group-hover:decoration-[3px] group-hover:underline-offset-4">' + esc(m.title) + '</h3>' +
-        '<p class="mt-2 font-display text-lg font-semibold text-ink">' + esc(missionDuration(m)) + '</p>' +
+        '<h3 class="mt-4 text-[1.375rem] leading-[1.1] group-hover:underline group-hover:decoration-accent group-hover:decoration-[3px] group-hover:underline-offset-4">' + esc(m.title) + '</h3>' +
+        '<p class="mt-1 font-display text-base font-semibold text-ink">' + esc(missionDuration(m)) + '</p>' +
       '</a></li>';
   }
 
