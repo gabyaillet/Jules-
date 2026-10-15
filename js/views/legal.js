@@ -21,18 +21,18 @@ Meleze.views.legal = (function () {
 
   // ---- Éditeur du site : à remplir ------------------------------------------------------
   const EDITEUR = {
-    nom: '', // ex. « Gabriel Martin » (particulier) ou « Association Mélèze »
-    statut: '', // ex. « Particulier », « Association loi 1901 », « Micro-entreprise »
-    adresse: '', // adresse postale (siège pour une association / entreprise)
-    email: '', // adresse de contact (sert aussi aux demandes RGPD)
-    telephone: '', // obligatoire pour une association ou une entreprise
-    siret: '', // si l'éditeur est immatriculé (sinon, laisser vide et retirer la ligne)
-    directeur: '', // directeur·rice de la publication (souvent la même personne)
-    photos: '', // auteur ou source des photos du covoiturage et du marché
-    video: '', // auteur ou source de la vidéo de l'accueil, ex. « Prénom Nom » ou « Pexels – Nom »
+    nom: 'Aillet', // ex. « Gabriel Martin » (particulier) ou « Association Mélèze »
+    statut: 'Micro-entreprise', // ex. « Particulier », « Association loi 1901 », « Micro-entreprise »
+    adresse: '167 rue de la ferrière', // adresse postale (siège pour une association / entreprise)
+    email: 'gaby.aillet@gmail.com', // adresse de contact (sert aussi aux demandes RGPD)
+    telephone: '0779377597', // obligatoire pour une association ou une entreprise
+   // si l'éditeur est immatriculé (sinon, laisser vide et retirer la ligne)
+    directeur: 'Aillet Gabriel', // directeur·rice de la publication (souvent la même personne)
+    photos: 'Pinterest', // auteur ou source des photos du covoiturage et du marché
+    video: 'Pinterest', // auteur ou source de la vidéo de l'accueil, ex. « Prénom Nom » ou « Pexels – Nom »
     telephoneHebergeur: '', // téléphone de GitHub, Inc. (la loi le demande) : à vérifier avant de le mettre
-    regionDonnees: '', // région du projet Supabase (choisie à sa création), ex. « Union européenne (Francfort) »
-    envoiEmails: '', // service qui envoie les codes par e-mail (SMTP réglé dans Supabase), ex. « Brevo (Sendinblue SAS, France) »
+    regionDonnees: 'Union Europeen', // région du projet Supabase (choisie à sa création), ex. « Union européenne (Francfort) »
+    envoiEmails: 'gaby.aillet@gmaiom.com', // service qui envoie les codes par e-mail (SMTP réglé dans Supabase), ex. « Brevo (Sendinblue SAS, France) »
     // Garanties qui encadrent les transferts hors UE, à remplir APRÈS avoir accepté l'accord de traitement
     // (DPA) de chaque prestataire (voir supabase/README.md, « Contrats avec les prestataires »), ex.
     // « clauses contractuelles types de la Commission européenne, incluses dans l'accord de traitement de chaque prestataire »
