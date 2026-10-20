@@ -222,7 +222,7 @@ Meleze.camera = (function () {
         '<button type="button" data-cam="close" class="' + BTN_OUTLINE + ' btn-sm">Fermer</button>' +
       '</div>' +
       (hint
-        ? '<p id="cam-hint" class="' + W + ' pt-2 text-base leading-snug text-white"><span class="font-semibold">La photo doit montrer :</span> ' + esc(hint) + '</p>'
+        ? '<p id="cam-hint" class="c-cam-hint ' + W + ' pt-2 text-base leading-snug text-white"><span class="c-cam-k font-semibold">La photo doit montrer :</span> ' + esc(hint) + '</p>'
         : '') +
       // Aperçu : arrondi comme les photos de l'app
       '<div class="relative mx-auto my-3 min-h-0 w-[calc(100%-2rem)] max-w-3xl flex-1 overflow-hidden rounded-3xl bg-black sm:w-[calc(100%-4rem)]">' +

@@ -168,10 +168,13 @@
   .nav-link { @apply px-3 py-2 font-display font-semibold text-ink/70 transition-colors hover:text-ink; }
   .nav-link[aria-current='page'] { @apply text-ink underline decoration-accent decoration-2 underline-offset-[10px]; }
 
-  /* Barre d'onglets mobile : texte seul, onglet actif marqué d'un trait vert */
-  .tab-link { @apply relative flex min-h-[56px] flex-1 items-center justify-center whitespace-nowrap px-2 font-display text-[0.95rem] font-semibold leading-none tracking-[-0.01em] text-muted transition-colors hover:text-ink; }
+  /* Barre d'onglets mobile (concept « Cartes ») : icône au-dessus du libellé ;
+     onglet actif = pilule noire autour de l'icône, libellé en gras. 50 px de haut. */
+  .tab-link { @apply flex h-[50px] flex-1 flex-col items-center gap-[3px] whitespace-nowrap px-1 font-display text-[0.875rem] font-semibold leading-[17px] tracking-[-0.005em] text-muted transition-colors hover:text-ink; }
+  .tab-ic { @apply flex h-[30px] w-[58px] items-center justify-center rounded-full transition-colors; }
+  .tab-ic svg { @apply h-[22px] w-[22px]; }
   .tab-link[aria-current='page'] { @apply font-bold text-ink; }
-  .tab-link[aria-current='page']::before { content: ''; @apply absolute inset-x-4 top-0 h-[3px] bg-accent; }
+  .tab-link[aria-current='page'] .tab-ic { @apply bg-ink text-surface; }
 
   /* Accordéon natif (<details>) */
   .acc summary { @apply flex cursor-pointer list-none items-center justify-between gap-4; }
@@ -246,12 +249,26 @@
 }
 
 /* --------------------------------------------------------------------------
-   3. Téléphones (< 640 px) : échelle plus petite et plus lisible, même DA.
-   Hors des couches Tailwind, donc après les utilitaires : ces règles ne
-   s'appliquent qu'aux petits écrans ; tablette et ordinateur ne changent pas
-   (les classes sm:/md:/lg: reprennent la main dès 640 px).
+   Variantes Tailwind (sm:, md:, hover:, disabled:…) : écrites ICI, avant les
+   sections 3 et 4. Sans cette directive, Tailwind les ajoute tout à la fin du
+   fichier et les sm: (≥ 640 px) l'emporteraient sur le téléphone entre 640 et
+   767 px (téléphones à l'horizontale). À partir de 768 px, rien ne change :
+   les sections 3 et 4 ne s'appliquent pas.
    -------------------------------------------------------------------------- */
-@media (max-width: 639px) {
+@tailwind variants;
+
+/* --------------------------------------------------------------------------
+   3. Téléphones (< 768 px) : échelle plus petite et plus lisible, même DA.
+   Hors des couches Tailwind et après les variantes : ces règles l'emportent
+   sur les utilitaires, sm: compris, jusqu'à 767 px ; tablette et ordinateur
+   (≥ 768 px) ne changent pas. Elles règlent les blocs génériques (bas de
+   l'accueil, partenaires, mentions légales…) ; le concept « Cartes »
+   (section 4, plus bas) l'emporte là où il s'applique.
+   -------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  /* Marges latérales : 20 px, comme les filtres et la pilule « Je participe » */
+  .sm\:px-8 { padding-left: 1.25rem; padding-right: 1.25rem; }
+
   /* Titres : moins massifs, hiérarchie conservée */
   .text-8xl, .text-7xl { font-size: 3.25rem; line-height: 0.9; }
   .text-6xl { font-size: 2.5rem; line-height: 1; }
@@ -276,8 +293,238 @@
   .mt-8 { margin-top: 1.5rem; }
   .p-6 { padding: 1.25rem; }
 
-  /* Boutons et filtres : toujours ≥ 44 px de haut, moins imposants */
+  /* Boutons : toujours ≥ 44 px de haut, moins imposants (filtres : section 4) */
   .btn { min-height: 48px; padding-left: 1.25rem; padding-right: 1.25rem; font-size: 1rem; }
   .min-h-\[60px\], .min-h-\[56px\] { min-height: 48px; }
-  .chip { min-height: 40px; padding-left: 0.875rem; padding-right: 0.875rem; font-size: 0.9375rem; }
+}
+
+/* --------------------------------------------------------------------------
+   4. Téléphones (< 768 px) : concept « Cartes »
+   Accueil (grandes cartes photo qui défilent), Missions (cartes empilées et
+   pilule verte « Je participe » fixe en bas, qui agit sur la mission à
+   l'écran), Mon espace (mission en cours en bloc noir, bons en blocs verts),
+   barre d'onglets à icônes. Même HTML que l'ordinateur : ces règles ne
+   s'appliquent que sous 768 px et viennent après tout le reste, variantes
+   comprises (@tailwind variants, plus haut) : elles l'emportent sur les
+   utilitaires sm: et hover: aussi entre 640 et 767 px. Tablette et
+   ordinateur (≥ 768 px) ne changent pas d'un pixel.
+   Repères de la maquette : marge 20 px, pancartes carrées 30 px, pilules
+   rondes, photos arrondies 24-28 px, textes ≥ 16 px (petits ≥ 14 px),
+   cibles tactiles ≥ 44 px.
+   -------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  :root {
+    /* Barre d'onglets : filet 1 px + 6 px + onglets 50 px + bas (≥ 6 px, zone iOS comprise) */
+    --tabbar-h: calc(57px + max(0.375rem, env(safe-area-inset-bottom)));
+    /* Pilule fixe « Je participe » : 60 px + 14 px dessous + 14 px de marge */
+    --dock-h: 88px;
+  }
+  /* Éléments propres à l'ordinateur */
+  .c-desk { display: none !important; }
+  /* Focus clavier, ancres : jamais caché sous la barre d'onglets ni sous la pilule fixe */
+  html { scroll-padding-bottom: var(--tabbar-h); }
+  html.has-dock { scroll-padding-bottom: calc(var(--tabbar-h) + var(--dock-h)); }
+
+  /* ---- En-tête : le logo seul, qui défile avec la page ---- */
+  .site-header { position: static; border-bottom-color: transparent; }
+  .site-bar { height: 3.5rem; }
+  .site-logo { font-size: 1.75rem; }
+  /* Cibles tactiles ≥ 44 px : logo, liens du pied de page, liens seuls (hors phrases) */
+  .site-bar > a { min-height: 44px; }
+  footer nav a, dd > a, a[class~='link'] { display: inline-flex; align-items: center; min-height: 44px; }
+  footer nav li + li { margin-top: 0 !important; }
+
+  /* ---- Titres de page : 34 px, extra-gras, tout en noir ---- */
+  .c-h1 { font-size: 2.125rem; line-height: 1.05; letter-spacing: -0.04em; font-weight: 800; }
+  .c-h1 .mark { color: inherit; }
+  /* Petit titre de rubrique (« Mission en cours », « Mes bons »…) */
+  .c-label { font-size: 1.0625rem; line-height: 1.3; letter-spacing: -0.01em; font-weight: 700; }
+
+  /* ---- Pancarte (type de mission) : carré noir, 30 px ---- */
+  .c-sign { display: inline-flex; align-items: center; height: 30px; padding: 0 10px; font-size: 0.875rem; line-height: 1; letter-spacing: -0.005em; }
+
+  /* ---- Ligne « cadeau » : carré vert + texte ---- */
+  .c-gift { display: flex; width: 28px; height: 28px; flex: none; align-items: center; justify-content: center; background: #178350; color: #fff; }
+  .c-gift svg { width: 17px; height: 17px; stroke-width: 2.2; }
+
+  /* ================= Accueil ================= */
+  .c-hero { padding-top: 6px; padding-bottom: 2.75rem; }
+  .c-hero-title { max-width: none; font-size: clamp(1.875rem, 8.46vw, 2.0625rem); line-height: 1; letter-spacing: -0.04em; }
+  .c-rail { scrollbar-width: none; scroll-padding-inline: 1.25rem; overscroll-behavior-x: contain; }
+  .c-rail::-webkit-scrollbar { display: none; }
+  .c-dot { width: 8px; height: 8px; border-radius: 9999px; background: rgb(var(--c-line)); transition: width 0.2s, background-color 0.2s; }
+  .c-dot.is-on { width: 24px; background: rgb(var(--c-ink)); }
+
+  /* ================= Missions ================= */
+  .c-head { padding-top: 0.625rem; }
+  .c-headrow { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
+  .c-headrow .c-h1 { flex: none; }
+  .c-h1 .c-cap { text-transform: capitalize; }
+  .c-count { font-family: theme('fontFamily.display'); font-weight: 600; font-size: 1rem; color: rgb(var(--c-muted)); text-align: right; }
+
+  /* Filtres : UNE rangée qui défile (Toutes, types, puis saisons après un filet) */
+  .c-filters { margin-top: 0.5rem; }
+  .c-filters-in {
+    display: flex; gap: 0.5rem; overflow-x: auto; padding: 6px 1.25rem; scroll-padding-inline: 1.25rem;
+    scrollbar-width: none; reading-flow: flex-visual; /* ordre de tabulation = ordre affiché */
+  }
+  .c-filters-in::-webkit-scrollbar { display: none; }
+  .c-filters-in > * + * { margin-top: 0 !important; }
+  .c-filters-in > [role='group'] { flex: none; overflow: visible; padding: 0; gap: 0.5rem; }
+  .c-filters-in > .c-row-type { order: -1; }
+  .c-filters-in > .c-row-season { border-left: 1px solid rgb(var(--c-line)); padding-left: 0.5rem; margin-left: 0; }
+  .c-filters [class~='chip'] { min-height: 44px; padding: 0 18px; border-width: 0; font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
+
+  .c-list-sec { padding-top: 0.75rem; }
+  /* Cartes empilées : une seule colonne jusqu'à 767 px (la pilule agit sur LA carte à l'écran) */
+  .c-list { margin-top: 0; grid-template-columns: minmax(0, 1fr); row-gap: 1.875rem; }
+  .c-signs { left: 14px; right: 14px; top: 14px; }
+  .c-card-title { margin-top: 14px; font-size: 1.4375rem; line-height: 1.08; letter-spacing: -0.03em; }
+  .c-meta { margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 1rem; line-height: 1.35; letter-spacing: -0.005em; }
+  .c-meta-i { display: inline-flex; align-items: center; gap: 6px; }
+  .c-meta-i svg { width: 18px; height: 18px; flex: none; color: rgb(var(--c-muted)); }
+  .c-card-foot { padding-top: 0.75rem; }
+  .c-reward { display: flex; align-items: flex-start; gap: 10px; min-height: 0; padding: 0; background: transparent; color: rgb(var(--c-ink)); }
+  .c-reward-k { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+  .c-reward-t { margin-top: 0; padding-top: 4px; font-size: 1rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; text-wrap: balance; }
+  .c-reward-by { margin-top: 3px; font-size: 0.9375rem; line-height: 1.3; color: rgb(var(--c-muted)); }
+  .c-more-info { margin-top: 0.375rem; }
+
+  /* Pilule fixe « Je participe » : seule celle de la mission à l'écran est affichée
+     (js/views/catalogue.js, IntersectionObserver), au-dessus de la barre d'onglets.
+     Les boutons des autres fiches restent dans la page, masqués comme .sr-only : ils gardent
+     leur place dans l'ordre de tabulation et pour les lecteurs d'écran. Dès qu'un bouton
+     reçoit le focus, sa fiche devient la mission à l'écran et il s'affiche en pilule. */
+  .c-dock:not(.is-current) {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;
+  }
+  .c-dock.is-current {
+    display: block; position: fixed; left: 0; right: 0; bottom: var(--tabbar-h); z-index: 30; margin: 0;
+    padding: 28px 1.25rem 14px; pointer-events: none;
+    background: linear-gradient(to bottom, rgb(var(--c-surface) / 0), rgb(var(--c-surface)) 34%);
+  }
+  .c-dock.is-current > * { pointer-events: auto; }
+  .c-cta {
+    min-height: 60px; width: 100%; justify-content: space-between; gap: 0; padding: 0 22px 0 8px;
+    border-radius: 9999px; font-size: 1.1875rem; line-height: 1.15;
+    box-shadow: 0 8px 24px rgb(15 20 18 / 0.18);
+  }
+  .c-cta-go { background-color: rgb(var(--c-brand)); color: rgb(var(--c-on-brand)); }
+  .c-cta-go:hover:not(:disabled) { background-color: rgb(var(--c-brand-hover)); }
+  .c-cta-done { background-color: rgb(var(--c-ink)); color: rgb(var(--c-surface)); font-size: 1rem; }
+  .c-cta.c-cta-done:hover { background-color: rgb(var(--c-ink) / 0.88); color: rgb(var(--c-surface)); }
+  /* Inscription en cours : la pilule reste verte et opaque (jamais un vert pâle), le sablier tourne.
+     Les autres pilules, inactives pendant ce temps, passent en gris plein. */
+  .c-dock .c-cta:disabled { opacity: 1; }
+  .c-dock .c-cta:disabled:not([aria-busy='true']) { background-color: rgb(var(--c-sunk)); color: rgb(var(--c-muted)); }
+  .c-cta > svg { width: 22px; height: 22px; stroke-width: 2.4; flex: none; }
+  /* Libellé sur 2 lignes équilibrées s'il ne tient pas (jamais un mot seul en bas) */
+  .c-cta-label { flex: 1; min-width: 0; padding-left: 12px; text-align: left; text-wrap: balance; }
+  .c-cta [class~='animate-spin'] { order: 2; }
+  .c-thumb { position: relative; display: block; width: 44px; height: 44px; flex: none; overflow: hidden; border-radius: 9999px; border: 2px solid rgb(255 255 255 / 0.9); background: rgb(var(--c-sunk)); }
+  .c-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* La pilule ne cache jamais le contenu : marge en bas de page, notifications au-dessus */
+  .has-dock footer > div { padding-bottom: calc(5rem + var(--dock-h) + env(safe-area-inset-bottom)); }
+  .has-dock #toast { bottom: calc(var(--tabbar-h) + var(--dock-h) + 0.5rem); }
+
+  /* ================= Mon espace ================= */
+  .c-page { padding-top: 0.625rem; }
+  .c-account { column-gap: 1.25rem; row-gap: 0; }
+  .c-saved { margin-top: 0.75rem; font-size: 1rem; }
+  .c-banner { margin-top: 0.875rem; }
+  .c-secs { margin-top: 0.875rem; }
+  .c-secs > * + * { margin-top: 1.5rem !important; }
+  .c-label ~ * { margin-top: 0.625rem !important; }
+  .c-empty { padding: 18px; }
+  .c-empty [class~='text-[1.75rem]'] { font-size: 1.375rem; }
+
+  /* Mission en cours : bloc quasi noir (gris foncé en thème sombre, comme .night-block) */
+  .c-shoot { background: #0F1412; color: #fff; padding: 18px 18px 12px; }
+  :root[data-theme='dark'] .c-shoot { background: rgb(var(--c-sunk)); }
+  .c-shoot-head { gap: 14px; }
+  .c-shoot-ph { width: 66px; border-radius: 16px; }
+  .c-shoot .c-sign { height: 26px; padding: 0 8px; background: #fff; color: #0F1412; }
+  .c-shoot-title { margin-top: 6px; font-size: 1.1875rem; line-height: 1.1; letter-spacing: -0.02em; color: #fff; }
+  .c-shoot .c-retired { background: rgb(255 255 255 / 0.14); color: #fff; }
+  .c-shoot-body { margin-top: 16px; padding: 14px 0 0; background: transparent; border-top: 1px solid rgb(255 255 255 / 0.16); color: #fff; }
+  .c-shoot-body [class~='text-ink'] { color: #fff; }
+  .c-need-k { font-family: theme('fontFamily.sans'); font-weight: 400; font-size: 1rem; color: rgb(255 255 255 / 0.72) !important; }
+  .c-need-v { margin-top: 2px; font-family: theme('fontFamily.display'); font-weight: 700; font-size: 1.3125rem; line-height: 1.15; letter-spacing: -0.02em; }
+  .c-check { margin-top: 16px; }
+  .c-check > [class~='bg-ink'] { background: rgb(255 255 255 / 0.08); color: #fff; }
+  .c-check [class~='text-surface/75'] { color: rgb(255 255 255 / 0.75); }
+  .c-shoot-actions { margin-top: 16px; }
+  .c-shoot-actions > div { flex-direction: column; }
+  .c-shoot-actions [class~='btn'], .c-shoot-actions [class~='btn-primary'], .c-shoot-actions [class~='btn-secondary'] { width: 100%; min-height: 60px; font-size: 1.1875rem; }
+  .c-shoot-actions button svg { width: 24px; height: 24px; }
+  .c-shoot-actions [class~='btn-secondary'] { border-color: #fff; color: #fff; }
+  .c-shoot-actions [class~='btn-secondary']:hover { background: #fff; color: #0F1412; }
+  .c-shoot-note { margin-top: 10px; text-align: center; font-size: 0.9375rem; color: rgb(255 255 255 / 0.72); }
+  .c-tries { margin-top: 2px; text-align: center; font-size: 0.9375rem; color: rgb(255 255 255 / 0.72) !important; }
+  .c-shoot-cancel { margin-top: 4px; text-align: center; }
+  .c-shoot-cancel button { color: rgb(255 255 255 / 0.85); font-size: 0.9375rem; font-weight: 600; text-decoration-color: rgb(255 255 255 / 0.4); }
+  .c-shoot-cancel button:hover { color: #fff; }
+  .c-shoot :focus-visible { outline-color: #fff; }
+
+  /* Mission tout juste validée : bloc quasi noir (comme « Mission en cours ») et carré vert
+     coché, pour ne pas se confondre avec le bon vert juste en dessous */
+  .c-win { padding: 18px; background: #0F1412; color: #fff; }
+  :root[data-theme='dark'] .c-win { background: rgb(var(--c-sunk)); }
+  .c-win-k { color: rgb(255 255 255 / 0.72); }
+  .c-win-h { display: flex; align-items: center; gap: 12px; }
+  .c-win-ok { display: flex; width: 36px; height: 36px; flex: none; align-items: center; justify-content: center; background: #178350; color: #fff; }
+  .c-win-ok svg { width: 22px; height: 22px; stroke-width: 2.8; }
+  .c-win [class~='text-[2rem]'] { font-size: 1.75rem; }
+  .c-win button { width: 100%; padding: 10px 16px; line-height: 1.2; text-wrap: balance; }
+
+  /* Bons : bloc vert, filet pointillé « à détacher », code + « Utiliser mon bon » côte à côte */
+  .c-vch { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 16px 18px 18px; }
+  .c-vch-k { grid-column: 1 / -1; grid-row: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: theme('fontFamily.display'); font-weight: 700; font-size: 0.9375rem; }
+  .c-vch-k > span:first-child { display: inline-flex; align-items: center; gap: 8px; }
+  .c-vch-k svg { width: 18px; height: 18px; }
+  .c-vch-pill { display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 9999px; background: rgb(255 255 255 / 0.18); font-size: 0.875rem; }
+  .c-vch-title { grid-column: 1 / -1; grid-row: 2; margin-top: 10px; font-size: 1.5625rem; font-weight: 800; line-height: 1.05; letter-spacing: -0.035em; }
+  .c-vch-partner { grid-column: 1 / -1; grid-row: 3; margin-top: 6px; font-family: theme('fontFamily.sans'); font-size: 1rem; font-weight: 600; opacity: 0.9; }
+  .c-vch-cut { grid-column: 1 / -1; grid-row: 4; margin-top: 16px; border-top: 2px dashed rgb(255 255 255 / 0.45); }
+  .c-vch-code { grid-column: 1; grid-row: 5; align-self: center; margin-top: 14px; padding-top: 0; font-family: theme('fontFamily.display'); font-size: 1.1875rem; font-weight: 700; line-height: 1.2; letter-spacing: 0.04em; overflow-wrap: anywhere; }
+  .c-vch-codek { display: block; font-family: theme('fontFamily.sans'); font-size: 0.875rem; font-weight: 400; letter-spacing: 0; opacity: 0.8; }
+  .c-vch-use { grid-column: 2; grid-row: 5; align-self: center; margin-top: 14px; width: auto; min-height: 48px; padding: 0 20px; font-size: 1rem; color: #126B41; }
+  .c-vch-note { grid-column: 1 / -1; grid-row: 6; margin-top: 10px; font-size: 0.9375rem; opacity: 0.85; }
+  /* Bon utilisé ou à vérifier : bloc gris, même plan */
+  .c-vch-off .c-vch-cut { border-top-color: rgb(var(--c-ink) / 0.25); }
+  .c-vch-stamp { grid-column: 1 / -1; grid-row: 1; padding: 12px 16px; }
+  .c-vch-stamp [class~='text-2xl'] { font-size: 1.25rem; }
+  .c-vch-stamp [class~='text-lg'] { font-size: 1rem; }
+  .c-vch-off .c-vch-title { font-size: 1.375rem; margin-top: 12px; }
+  .c-vch-off .c-vch-partner { color: rgb(var(--c-muted)); opacity: 1; }
+  .c-vch-off .c-vch-code { font-size: 1.0625rem; color: rgb(var(--c-muted)); }
+  .c-vch-state { grid-column: 1 / -1; grid-row: 6; margin-top: 12px; font-size: 1rem; }
+
+  /* Temps donné à la montagne (les repères chiffrés de l'ordinateur sont masqués) */
+  .c-given { font-size: 1rem; line-height: 1.35; color: rgb(var(--c-ink)); }
+  .c-given strong { font-family: theme('fontFamily.display'); font-weight: 800; }
+  .c-history li { padding: 14px 16px; }
+  .c-history [class~='text-lg'] { font-size: 1.0625rem; }
+  .c-data { padding: 18px; }
+  .c-data h2 { font-size: 1.375rem; }
+  .c-mail { margin-top: 0.875rem; padding: 18px; }
+  .c-mail h2 { font-size: 1.5rem; }
+
+  /* ================= Appareil photo ================= */
+  /* Consigne comme dans le bloc « Mission en cours » : libellé discret, puis la consigne en gras */
+  .c-cam-hint { padding-top: 6px; font-family: theme('fontFamily.display'); font-weight: 700; font-size: 1.125rem; line-height: 1.2; letter-spacing: -0.015em; }
+  .c-cam-k { display: block; margin-bottom: 2px; font-family: theme('fontFamily.sans'); font-weight: 400; font-size: 0.9375rem; letter-spacing: 0; color: rgb(255 255 255 / 0.72); }
+}
+/* Téléphone à l'horizontale (peu de hauteur) : pilule « Je participe » plus compacte */
+@media (max-width: 767px) and (max-height: 500px) {
+  :root { --dock-h: 70px; }
+  .c-dock.is-current { padding-top: 14px; padding-bottom: 8px; }
+  .c-cta { min-height: 52px; }
+}
+/* Code + bouton côte à côte seulement s'il y a la place (≥ 380 px) */
+@media (max-width: 379px) {
+  .c-vch-code { grid-column: 1 / -1; }
+  .c-vch-use { grid-column: 1 / -1; grid-row: 6; width: 100%; }
+  .c-vch-note, .c-vch-state { grid-row: 7; }
 }

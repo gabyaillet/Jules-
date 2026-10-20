@@ -14,8 +14,9 @@ Meleze.ui = (function () {
   }
 
   // --- Icônes : SVG inline en trait, ~150 octets chacune, aucune requête -----
-  // Seulement les icônes fonctionnelles : accordéon, thème, statut des toasts
-  // et flèche des appels à l'action principaux. Pas d'icônes décoratives.
+  // Seulement des icônes qui portent un sens : accordéon, thème, statut des
+  // toasts, flèche des appels à l'action ; sur téléphone (concept « Cartes »),
+  // durée, lieu, cadeau et appareil photo à côté de leur texte.
   const PATHS = {
     plus: '<path d="M12 5v14M5 12h14"/>',
     check: '<path d="M20 6 9 17l-5-5"/>',
@@ -23,6 +24,10 @@ Meleze.ui = (function () {
     arrow: '<path d="M5 12h14M13 5l7 7-7 7"/>',
     moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    pin: '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+    gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.5"/>',
   };
 
   function icon(name, cls) {

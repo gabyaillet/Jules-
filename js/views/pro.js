@@ -148,7 +148,7 @@ Meleze.views.pro = (function () {
   /** Titre des écrans de connexion ; le petit libellé « Espace partenaires » sauf s'il répète le titre. */
   function loginHead(title, noKicker) {
     return (noKicker ? '' : kicker('Espace partenaires')) +
-      '<h1 id="page-title" tabindex="-1" class="' + (noKicker ? '' : 'mt-6 ') + 'text-5xl font-extrabold sm:text-6xl">' + title + '</h1>';
+      '<h1 id="page-title" tabindex="-1" class="c-h1 ' + (noKicker ? '' : 'mt-6 ') + 'text-5xl font-extrabold sm:text-6xl">' + title + '</h1>';
   }
 
   function loginError() {
@@ -233,7 +233,7 @@ Meleze.views.pro = (function () {
         kicker(esc(S.profile.email), 'text-[0.95rem]') +
         '<button type="button" class="link min-h-[44px] shrink-0 text-[0.95rem]" data-action="logout">Se déconnecter</button>' +
       '</div>' +
-      '<h1 id="page-title" tabindex="-1" class="mt-4 break-words text-[2.5rem] font-extrabold sm:text-5xl">' + esc(S.profile.org) + '</h1>' +
+      '<h1 id="page-title" tabindex="-1" class="c-h1 mt-4 break-words text-[2.5rem] font-extrabold sm:text-5xl">' + esc(S.profile.org) + '</h1>' +
       '<nav class="mt-8 flex gap-1" aria-label="Outils partenaires">' +
         tabLink('#/pro', 'missions', 'Mes missions') +
         tabLink('#/pro/creer', 'creer', 'Créer<span class="hidden min-[400px]:inline">&nbsp;une mission</span>', 'Créer une mission') +

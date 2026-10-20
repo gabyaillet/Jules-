@@ -1,8 +1,8 @@
 /* ==========================================================================
    Vue : Accueil touriste — base blanche, titres gras quasi noirs, un seul
    accent vert. Hero « Plein écran » sur tablette / ordinateur (grande photo,
-   titre en blanc posé dessus) ; sur mobile, hero « direct » : le titre puis
-   les 3 missions, visibles dès l'arrivée. Le mot « Vanoise » de l'appel final
+   titre en blanc posé dessus) ; sur téléphone (concept « Cartes »), le titre
+   puis « Missions du moment » en grandes cartes photo qui défilent de côté. Le mot « Vanoise » de l'appel final
    est rempli par une photo (background-clip: text).
    Les missions viennent du serveur (store) ; tant qu'il n'est pas branché,
    la liste laisse place à « Bientôt disponible ».
@@ -69,32 +69,32 @@ Meleze.views.home = (function () {
     '</li>';
   }
 
-  /** Participation du touriste : pastille noire à la place de la contrepartie. */
+  /** Participation du touriste : pastille verte posée sur la photo. */
   const STATUS = { inscrite: 'Inscrit·e', validee: 'Validée' };
 
   /**
-   * Ligne mission du hero mobile : vignette, titre, puis durée + contrepartie (ou statut)
-   * sur une même ligne quand il y a la place, flèche. Une tuile gris clair carrée,
-   * entièrement cliquable.
+   * Carte du téléphone (concept « Cartes ») : grande photo arrondie avec la pancarte du type
+   * et la durée en pilule blanche, puis le titre et la contrepartie (carré vert + cadeau).
+   * Les cartes défilent à l'horizontale (on voit le début de la suivante) ; toute la carte
+   * mène à la mission dans le catalogue.
    */
-  function missionRow(m) {
+  function railCard(m) {
+    const t = typeOf(m.type);
     const p = Meleze.store.participationFor(m.id);
-    const PILL = 'tag block min-w-0 max-w-full truncate px-2.5 py-0.5 text-[0.875rem] max-[359px]:px-2 max-[359px]:text-[0.8125rem]';
-    const badge = p
-      ? '<span class="' + PILL + ' bg-ink text-surface">' + esc(STATUS[p.status] || STATUS.inscrite) + '</span>'
-      : '<span class="sr-only">En échange : ' + esc(m.reward.title) + '</span>' +
-        '<span class="' + PILL + ' bg-forest text-white" aria-hidden="true">' + esc(m.reward.title) + '</span>';
-    return '<li><a href="#/missions?focus=' + esc(m.id) + '" class="flex items-center gap-3 bg-sunk p-2 pr-2.5 transition-colors hover:bg-line">' +
-      '<div class="ph ph-sm h-16 w-16 shrink-0 min-[360px]:h-[4.75rem] min-[360px]:w-[4.75rem] min-[375px]:h-[5.5rem] min-[375px]:w-[5.5rem]">' + photo(m, { sizes: '88px', alt: '' }) + '</div>' +
-      '<div class="min-w-0 flex-1 py-1">' +
-        '<h3 class="line-clamp-3 text-[1.1rem] leading-[1.1] tracking-[-0.02em] text-ink">' + esc(m.title) + '</h3>' +
-        '<div class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">' +
-          '<p class="font-display text-[0.95rem] font-semibold leading-tight text-ink"><span class="sr-only">Durée : </span>' + esc(missionDuration(m) || 'Variable') + '</p>' +
-          badge +
+    return '<li class="w-[75vw] max-w-[20rem] shrink-0 snap-start">' +
+      '<a href="#/missions?focus=' + esc(m.id) + '" class="group block">' +
+        '<div class="ph aspect-[292/280] rounded-[28px]">' + photo(m, { sizes: '(max-width:767px) 75vw, 320px', alt: '' }) +
+          '<span class="c-sign absolute left-3.5 top-3.5 font-display font-bold ' + esc(t.color) + '">' + esc(t.label) + '</span>' +
+          (p ? '<span class="absolute right-3.5 top-3.5 inline-flex h-[30px] items-center rounded-full bg-forest px-3 font-display text-sm font-bold text-white">' + esc(STATUS[p.status] || STATUS.inscrite) + '</span>' : '') +
+          '<span class="absolute bottom-3.5 left-3.5 inline-flex h-8 max-w-[calc(100%-1.75rem)] items-center gap-1.5 rounded-full bg-white pl-2.5 pr-3 font-display text-sm font-bold leading-none text-night">' +
+            icon('clock', 'h-[17px] w-[17px] shrink-0') + '<span class="sr-only">Durée : </span><span class="truncate">' + esc(missionDuration(m) || 'Variable') + '</span></span>' +
         '</div>' +
-      '</div>' +
-      icon('arrow', 'h-5 w-5 shrink-0 text-ink') +
-    '</a></li>';
+        '<h3 class="mt-3.5 text-[1.3125rem] leading-[1.1] tracking-[-0.025em] text-ink group-hover:underline group-hover:decoration-accent group-hover:decoration-2 group-hover:underline-offset-4">' + esc(m.title) + '</h3>' +
+        '<div class="mt-2.5 flex items-start gap-2.5">' +
+          '<span class="c-gift" aria-hidden="true">' + icon('gift') + '</span>' +
+          '<p class="pt-1 font-display text-base font-semibold leading-[1.2] tracking-[-0.01em] text-ink [text-wrap:balance]"><span class="sr-only">En échange : </span>' + esc(m.reward.title) + '</p>' +
+        '</div>' +
+      '</a></li>';
   }
 
   /**
@@ -138,14 +138,14 @@ Meleze.views.home = (function () {
 
     return (
       // ---- Hero : une seule section, deux mises en page -------------------------------------
-      // · Mobile (< md) « direct » : le lieu, le titre, puis tout de suite les 3 missions en
-      //   lignes compactes et le bouton, le tout visible sur le premier écran.
+      // · Téléphone (< md), concept « Cartes » : le lieu, le titre, puis « Missions du moment »
+      //   (+ « Tout voir ») en grandes cartes photo qui défilent de côté, avec des points.
       // · Tablette / ordinateur (≥ md) « Vidéo plein écran » (inspiration Campus) : une vidéo de
       //   nature en fond, bord à bord, assombrie ; au centre, le lieu, le titre en capitales
       //   blanches et les deux boutons. Tant qu'aucune vidéo n'est fournie (Meleze.media.heroVideo),
       //   la photo HD s'affiche avec un lent zoom (« Ken Burns »).
       // Un seul <h1 id="page-title"> : seule sa mise en forme change selon la largeur.
-      '<section class="' + WRAP + ' pb-14 pt-4 sm:pt-6 md:max-w-none md:px-0 md:pb-4 md:pt-0 lg:pb-12">' +
+      '<section class="c-hero ' + WRAP + ' pb-14 pt-4 sm:pt-6 md:max-w-none md:px-0 md:pb-4 md:pt-0 lg:pb-12">' +
         '<div class="md:relative md:isolate md:flex md:h-[calc(100svh-4rem)] md:max-h-[62rem] md:min-h-[34rem] md:flex-col md:items-center md:justify-center md:overflow-hidden md:pb-10 md:text-center lg:pb-12">' +
           // Fond (≥ md) : photo HD (chargement différé → jamais téléchargée sur mobile, où ce
           // bloc est masqué) + vidéo éventuelle par-dessus + voile léger pour la lisibilité.
@@ -162,23 +162,27 @@ Meleze.views.home = (function () {
             '<div class="pointer-events-none absolute inset-0 bg-black/20 bg-[image:radial-gradient(70%_40%_at_50%_46%,rgb(0_0_0/0.35),transparent)]" aria-hidden="true"></div>' +
           '</div>' +
           // Mobile : le lieu, avec un trait vert (sur ordinateur, il est au-dessus du titre)
-          '<p class="flex items-center gap-3 font-display text-base font-bold leading-tight tracking-[-0.005em] text-ink md:hidden">' +
-            '<span class="h-[3px] w-8 shrink-0 bg-accent" aria-hidden="true"></span>Pralognan-la-Vanoise</p>' +
+          '<p class="flex items-center gap-2.5 font-display text-[0.9375rem] font-bold leading-tight tracking-[-0.005em] text-ink md:hidden">' +
+            '<span class="h-[3px] w-[26px] shrink-0 bg-accent" aria-hidden="true"></span>Pralognan-la-Vanoise</p>' +
           // Centre (≥ md) : le lieu, le titre et les boutons, avec une ombre douce sous le texte.
           '<div class="mt-2.5 md:mt-0 md:flex md:flex-col md:items-center md:px-8">' +
             '<p class="hidden font-display text-sm font-bold uppercase tracking-[0.28em] text-white [text-shadow:0_1px_3px_rgb(0_0_0/0.5),0_0_20px_rgb(0_0_0/0.45)] md:block lg:text-base">Pralognan-la-Vanoise · Savoie</p>' +
-            '<h1 id="page-title" tabindex="-1" class="max-w-[17ch] text-[length:clamp(1.75rem,7.7vw,1.9rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink sm:text-[2.25rem] md:mt-6 md:max-w-none md:text-[3.25rem] md:uppercase md:leading-[0.95] md:tracking-[-0.03em] md:text-white md:[text-shadow:0_2px_4px_rgb(0_0_0/0.25),0_2px_30px_rgb(0_0_0/0.4)] lg:text-[4.25rem] xl:text-[5rem]">Une heure pour la montagne,<br class="hidden md:block"> une expérience en retour.</h1>' +
+            '<h1 id="page-title" tabindex="-1" class="c-hero-title max-w-[17ch] text-[length:clamp(1.75rem,7.7vw,1.9rem)] font-extrabold leading-[1.02] tracking-[-0.035em] text-ink sm:text-[2.25rem] md:mt-6 md:max-w-none md:text-[3.25rem] md:uppercase md:leading-[0.95] md:tracking-[-0.03em] md:text-white md:[text-shadow:0_2px_4px_rgb(0_0_0/0.25),0_2px_30px_rgb(0_0_0/0.4)] lg:text-[4.25rem] xl:text-[5rem]">Une heure pour la montagne,<br class="hidden md:block"> une expérience en retour.</h1>' +
             '<div class="hidden gap-4 md:mt-10 md:flex md:flex-wrap md:items-center md:justify-center">' +
               '<a href="#/missions" class="btn-primary">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>' +
               '<a href="#/wallet" class="btn border-2 border-white text-white hover:bg-white hover:text-night">Mon espace</a>' +
             '</div>' +
           '</div>' +
-          // Mobile : les missions tout de suite, puis le bouton (« Mon espace » est dans la barre du bas)
-          '<h2 class="sr-only md:hidden">Les missions</h2>' +
+          // Mobile : « Missions du moment » en grandes cartes qui défilent à l'horizontale
+          // (dans leur propre conteneur : la page ne défile jamais de côté), points de position.
+          '<div class="mt-[22px] flex items-center justify-between gap-4 md:hidden">' +
+            '<h2 class="text-[1.25rem] leading-tight tracking-[-0.02em]">Missions du moment</h2>' +
+            (picks.length ? '<a href="#/missions" class="-mr-0.5 inline-flex min-h-[44px] shrink-0 items-center gap-1.5 pl-3.5 pr-0.5 font-display text-base font-bold text-ink">Tout voir<span class="sr-only"> les missions</span>' + icon('arrow', 'h-[18px] w-[18px]') + '</a>' : '') +
+          '</div>' +
           (picks.length
-            ? '<ul class="mt-5 grid grid-cols-1 gap-2 md:hidden">' + picks.map(missionRow).join('') + '</ul>' +
-              '<a href="#/missions" class="btn-primary mt-3 w-full md:hidden">Voir les missions ' + icon('arrow', 'h-5 w-5') + '</a>'
-            : '<div class="mt-5 md:hidden">' + emptyCompact + '</div>') +
+            ? '<ul class="c-rail relative -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pt-1.5 md:hidden" data-rail>' + picks.map(railCard).join('') + '</ul>' +
+              (picks.length > 1 ? '<div class="mt-[18px] flex gap-1.5 md:hidden" aria-hidden="true">' + picks.map((m, i) => '<span class="c-dot' + (i === 0 ? ' is-on' : '') + '" data-dot></span>').join('') + '</div>' : '')
+            : '<div class="mt-1.5 md:hidden">' + emptyCompact + '</div>') +
           // Bas (≥ md, comme Campus) : le début de la suite, un pan blanc aux coins arrondis
           // (même arrondi que les photos) qui recouvre le bas de la vidéo et invite à défiler.
           '<div class="absolute inset-x-0 bottom-0 hidden h-10 rounded-t-3xl bg-surface md:block lg:h-12 lg:rounded-t-4xl" aria-hidden="true"></div>' +
@@ -280,8 +284,31 @@ Meleze.views.home = (function () {
     return '<video class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" data-hero-video muted loop playsinline preload="none" aria-hidden="true"></video>';
   }
 
+  // ---- Cartes du téléphone : points de position, défilement conservé ----------------------
+  let railLeft = 0; // position du défilement (rétablie après un nouveau rendu)
+  function mountRail(root) {
+    const rail = root.querySelector('[data-rail]');
+    if (!rail) return;
+    const dots = root.querySelectorAll('[data-dot]');
+    if (railLeft) rail.scrollLeft = railLeft;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      railLeft = rail.scrollLeft;
+      const items = rail.children;
+      if (!dots.length || !items.length) return;
+      const step = items.length > 1 ? items[1].offsetLeft - items[0].offsetLeft : 1;
+      const end = rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 2;
+      const i = end ? items.length - 1 : Math.min(items.length - 1, Math.round(rail.scrollLeft / step));
+      dots.forEach((d, k) => d.classList.toggle('is-on', k === i));
+    };
+    rail.addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(update); }, { passive: true });
+    update();
+  }
+
   let heroObserver = null;
   function mounted(root) {
+    mountRail(root);
     const video = root.querySelector('[data-hero-video]');
     const v = Meleze.media && Meleze.media.heroVideo;
     if (!video || !v) return;
@@ -310,6 +337,7 @@ Meleze.views.home = (function () {
   }
   function unmount() {
     if (heroObserver) { heroObserver.disconnect(); heroObserver = null; }
+    railLeft = 0;
   }
 
   const actions = {

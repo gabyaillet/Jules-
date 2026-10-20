@@ -9,6 +9,10 @@
    touriste peut ajouter son e-mail (« Gardez vos bons ») pour retrouver ses
    bons sur un autre téléphone (« Retrouver mes bons »), avec un code à 6
    chiffres reçu par e-mail.
+   Téléphone (< 768 px, concept « Cartes ») : la mission en cours devient un
+   bloc quasi noir (vignette, pancarte, consigne en gras, gros bouton vert
+   « Prendre la photo ») et chaque bon un bloc vert « à détacher » (code et
+   « Utiliser mon bon » côte à côte). Même HTML, styles dans src/input.css.
    ========================================================================== */
 window.Meleze = window.Meleze || {};
 Meleze.views = Meleze.views || {};
@@ -44,8 +48,8 @@ Meleze.views.wallet = (function () {
 
   /** Ce que la photo doit montrer : la consigne écrite par le partenaire. */
   function hintBlock(m) {
-    return '<p class="font-display text-base font-semibold text-ink">La photo doit montrer :</p>' +
-      '<p class="mt-1 text-lg font-semibold leading-snug text-ink">' + esc(m.photoHint || 'La mission réalisée.') + '</p>';
+    return '<p class="c-need-k font-display text-base font-semibold text-ink">La photo doit montrer :</p>' +
+      '<p class="c-need-v mt-1 text-lg font-semibold leading-snug text-ink">' + esc(m.photoHint || 'La mission réalisée.') + '</p>';
   }
 
   /** Résultat de la dernière vérification (cette visite, sinon celui enregistré par le serveur). */
@@ -81,7 +85,7 @@ Meleze.views.wallet = (function () {
           (c.tech ? '<p class="mt-2 text-sm text-surface/75">Code technique : ' + esc(c.tech) + '</p>' : '') +
         '</div>';
     }
-    return '<div id="check-' + esc(p.id) + '" tabindex="-1" class="mt-5 outline-none empty:hidden" aria-live="polite">' + inner + '</div>';
+    return '<div id="check-' + esc(p.id) + '" tabindex="-1" class="c-check mt-5 outline-none empty:hidden" aria-live="polite">' + inner + '</div>';
   }
 
   /**
@@ -95,15 +99,15 @@ Meleze.views.wallet = (function () {
     const retired = !m || m.active === false;
     const id = esc(p.id);
     const header = m
-      ? '<div class="flex items-center gap-4">' +
-          '<div class="ph ph-sm aspect-square w-20 shrink-0 sm:w-24">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
+      ? '<div class="c-shoot-head flex items-center gap-4">' +
+          '<div class="c-shoot-ph ph ph-sm aspect-square w-20 shrink-0 sm:w-24">' + photo(m, { sizes: '100px', alt: '' }) + '</div>' +
           '<div class="min-w-0 flex-1">' +
-            '<span class="tag tag-sign ' + esc(typeOf(m.type).color) + '">' + esc(typeOf(m.type).label) + '</span>' +
-            '<h3 class="mt-2 text-2xl leading-[1.05] sm:text-[1.75rem]">' + esc(m.title) + '</h3>' +
-            (retired ? '<span class="tag mt-2 bg-sunk text-ink">Mission retirée</span>' : '') +
+            '<span class="c-sign tag tag-sign ' + esc(typeOf(m.type).color) + '">' + esc(typeOf(m.type).label) + '</span>' +
+            '<h3 class="c-shoot-title mt-2 text-2xl leading-[1.05] sm:text-[1.75rem]">' + esc(m.title) + '</h3>' +
+            (retired ? '<span class="c-retired tag mt-2 bg-sunk text-ink">Mission retirée</span>' : '') +
           '</div>' +
         '</div>'
-      : '<h3 class="text-2xl leading-[1.05] sm:text-[1.75rem]">Mission retirée</h3>';
+      : '<h3 class="c-shoot-title text-2xl leading-[1.05] sm:text-[1.75rem]">Mission retirée</h3>';
 
     let body;
     if (retired) {
@@ -115,26 +119,28 @@ Meleze.views.wallet = (function () {
       } else if (c && c.phase === 'error' && c.photo) {
         actions = '<div class="flex flex-col gap-3 sm:flex-row">' +
             '<button type="button" class="btn-primary min-h-[60px] w-full text-lg sm:w-auto" data-action="resend" data-id="' + id + '">Réessayer l’envoi</button>' +
-            '<button type="button" class="btn-secondary min-h-[60px] w-full text-lg sm:w-auto" data-action="photo" data-id="' + id + '">Reprendre la photo</button>' +
+            '<button type="button" class="btn-secondary min-h-[60px] w-full text-lg sm:w-auto" data-action="photo" data-id="' + id + '">' + icon('camera', 'md:hidden') + 'Reprendre la photo</button>' +
           '</div>';
       } else if (left > 0) {
         actions = '<button type="button" class="btn-primary min-h-[60px] w-full text-lg sm:w-auto" data-action="photo" data-id="' + id + '">' +
-          (c && (c.phase === 'invalid' || c.phase === 'error') ? 'Reprendre la photo' : 'Prendre la photo') + '</button>';
+          icon('camera', 'md:hidden') + (c && (c.phase === 'invalid' || c.phase === 'error') ? 'Reprendre la photo' : 'Prendre la photo') + '</button>';
       } else {
         actions = '<p class="font-display text-lg font-bold text-ink">Vous avez utilisé vos ' + MAX_ATTEMPTS + ' essais pour cette mission.</p>';
       }
       body = hintBlock(m) +
         checkArea(p, c) +
-        (actions ? '<div class="mt-5">' + actions + '</div>' : '') +
+        (actions ? '<div class="c-shoot-actions mt-5">' + actions + '</div>' : '') +
+        // Téléphone : rappel sous le bouton, comme sur la maquette
+        (left > 0 && !verifying ? '<p class="c-shoot-note md:hidden">Une IA la vérifie en quelques secondes</p>' : '') +
         (left > 0 && !verifying
-          ? '<p class="mt-3 text-base text-ink">' + (left === MAX_ATTEMPTS ? left + ' essais possibles' : 'Encore ' + left + ' essai' + s(left)) + '</p>'
+          ? '<p class="c-tries mt-3 text-base text-ink">' + (left === MAX_ATTEMPTS ? left + ' essais possibles' : 'Encore ' + left + ' essai' + s(left)) + '</p>'
           : '');
     }
 
-    return '<li class="flex flex-col" id="participation-' + id + '">' +
+    return '<li class="c-shoot flex flex-col" id="participation-' + id + '">' +
       header +
-      '<div class="mt-5 bg-sunk p-6">' + body + '</div>' +
-      (verifying ? '' : '<div class="mt-2"><button type="button" class="' + BTN_LINK + '" data-action="cancel" data-id="' + id + '"' + (busy.has('cancel:' + p.id) ? ' disabled' : '') + '>Annuler ma participation</button></div>') +
+      '<div class="c-shoot-body mt-5 bg-sunk p-6">' + body + '</div>' +
+      (verifying ? '' : '<div class="c-shoot-cancel mt-2"><button type="button" class="' + BTN_LINK + '" data-action="cancel" data-id="' + id + '"' + (busy.has('cancel:' + p.id) ? ' disabled' : '') + '>Annuler ma participation</button></div>') +
     '</li>';
   }
 
@@ -143,9 +149,10 @@ Meleze.views.wallet = (function () {
     const v = store.state.vouchers.find((x) => x.id === c.voucherId || x.participationId === p.id);
     const id = esc(p.id);
     return '<li class="flex flex-col" id="participation-' + id + '">' +
-      '<div id="check-' + id + '" tabindex="-1" class="bg-forest p-6 text-white outline-none sm:p-7" aria-live="polite">' +
-        '<p class="font-display text-base font-semibold">' + esc(m ? m.title : 'Mission') + '</p>' +
-        '<p class="mt-2 font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.02em]">Mission validée !</p>' +
+      '<div id="check-' + id + '" tabindex="-1" class="c-win bg-forest p-6 text-white outline-none sm:p-7" aria-live="polite">' +
+        '<p class="c-win-k font-display text-base font-semibold">' + esc(m ? m.title : 'Mission') + '</p>' +
+        '<p class="c-win-h mt-2 font-display text-[2rem] font-bold leading-[1.05] tracking-[-0.02em]">' +
+          '<span class="c-win-ok md:hidden" aria-hidden="true">' + icon('check') + '</span>Mission validée !</p>' +
         (c.reason ? '<p class="mt-2 text-lg leading-snug">' + esc(c.reason) + '</p>' : '') +
         (v
           ? '<p class="mt-5 text-lg">Votre cadeau : <span class="font-bold">' + esc(v.title) + '</span>, offert par ' + esc(v.partner) + '.</p>'
@@ -170,16 +177,19 @@ Meleze.views.wallet = (function () {
    * locale, modifiable sur le téléphone), ni bouton « Utiliser », ni bloc
    * « Bon utilisé » présenté comme une preuve.
    */
+  /** Téléphone : petit libellé « Code » au-dessus du code (le lecteur d'écran lit « Code du bon : »). */
+  const CODE_K = '<span class="c-vch-codek md:hidden" aria-hidden="true">Code</span>';
+
   function voucherCard(v, state) {
     const id = esc(v.id);
     const live = state.confirmed;
     if (!live) {
       const loading = state.status === 'loading' || state.status === 'idle';
-      return '<li id="voucher-' + id + '" tabindex="-1" class="flex flex-col bg-sunk p-6 text-ink outline-none">' +
-        '<p class="font-display text-base font-semibold">' + esc(v.partner) + '</p>' +
-        '<h3 class="mt-3 text-[1.75rem] leading-[1.05] tracking-[-0.025em]">' + esc(v.title) + '</h3>' +
-        '<p class="mt-auto pt-7 font-mono text-2xl font-bold tracking-[0.14em] text-muted"><span class="sr-only">Code du bon : </span>' + esc(v.code) + '</p>' +
-        '<p class="mt-4 flex items-center gap-3 font-display text-base font-semibold">' +
+      return '<li id="voucher-' + id + '" tabindex="-1" class="c-vch c-vch-off flex flex-col bg-sunk p-6 text-ink outline-none">' +
+        '<p class="c-vch-partner font-display text-base font-semibold">' + esc(v.partner) + '</p>' +
+        '<h3 class="c-vch-title mt-3 text-[1.75rem] leading-[1.05] tracking-[-0.025em]">' + esc(v.title) + '</h3>' +
+        '<p class="c-vch-code mt-auto pt-7 font-mono text-2xl font-bold tracking-[0.14em] text-muted"><span class="sr-only">Code du bon : </span>' + CODE_K + esc(v.code) + '</p>' +
+        '<p class="c-vch-state mt-4 flex items-center gap-3 font-display text-base font-semibold">' +
           (loading ? spinner('h-5 w-5') + 'Vérification du bon…'
             : (v.usedAt ? 'Utilisé le ' + esc(dateTime(v.usedAt)) + '. ' : '') + 'Connexion nécessaire pour vérifier ce bon.') +
         '</p>' +
@@ -187,24 +197,27 @@ Meleze.views.wallet = (function () {
     }
     if (v.usedAt) {
       // Bon utilisé : aplat vert « Bon utilisé » + date et heure (preuve pour le partenaire)
-      return '<li id="voucher-' + id + '" tabindex="-1" class="flex flex-col bg-sunk p-6 outline-none">' +
-        '<div class="bg-forest px-5 py-4 text-white">' +
+      return '<li id="voucher-' + id + '" tabindex="-1" class="c-vch c-vch-off flex flex-col bg-sunk p-6 outline-none">' +
+        '<div class="c-vch-stamp bg-forest px-5 py-4 text-white">' +
           '<p class="font-display text-2xl font-bold leading-tight">Bon utilisé</p>' +
           '<p class="mt-1 font-display text-lg font-semibold">le ' + esc(dateTime(v.usedAt)) + '</p>' +
         '</div>' +
-        '<p class="mt-5 font-display text-base font-semibold text-ink">' + esc(v.partner) + '</p>' +
-        '<h3 class="mt-2 text-2xl leading-[1.05] tracking-[-0.025em] text-ink">' + esc(v.title) + '</h3>' +
-        '<p class="mt-4 font-mono text-lg font-bold tracking-[0.12em] text-muted">' + esc(v.code) + '</p>' +
+        '<p class="c-vch-partner mt-5 font-display text-base font-semibold text-ink">' + esc(v.partner) + '</p>' +
+        '<h3 class="c-vch-title mt-2 text-2xl leading-[1.05] tracking-[-0.025em] text-ink">' + esc(v.title) + '</h3>' +
+        '<p class="c-vch-code mt-4 font-mono text-lg font-bold tracking-[0.12em] text-muted">' + CODE_K + esc(v.code) + '</p>' +
       '</li>';
     }
     const working = busy.has('use:' + v.id);
-    return '<li id="voucher-' + id + '" tabindex="-1" class="flex flex-col bg-forest p-6 text-white outline-none">' +
-      '<p class="font-display text-base font-semibold">' + esc(v.partner) + '</p>' +
-      '<h3 class="mt-3 text-[1.75rem] leading-[1.05] tracking-[-0.025em]">' + esc(v.title) + '</h3>' +
-      '<p class="mt-auto pt-7 font-mono text-2xl font-bold tracking-[0.14em]"><span class="sr-only">Code du bon : </span>' + esc(v.code) + '</p>' +
-      '<button type="button" class="btn-light mt-5 w-full focus-visible:outline-white" data-action="use" data-id="' + id + '"' + (working ? ' disabled aria-busy="true"' : '') + '>' +
+    return '<li id="voucher-' + id + '" tabindex="-1" class="c-vch flex flex-col bg-forest p-6 text-white outline-none">' +
+      // Téléphone : « Bon cadeau » + « À utiliser », puis le titre, le partenaire et un filet pointillé
+      '<p class="c-vch-k md:hidden" aria-hidden="true"><span>' + icon('gift') + 'Bon cadeau</span><span class="c-vch-pill">À utiliser</span></p>' +
+      '<p class="c-vch-partner font-display text-base font-semibold">' + esc(v.partner) + '</p>' +
+      '<h3 class="c-vch-title mt-3 text-[1.75rem] leading-[1.05] tracking-[-0.025em]">' + esc(v.title) + '</h3>' +
+      '<div class="c-vch-cut md:hidden" aria-hidden="true"></div>' +
+      '<p class="c-vch-code mt-auto pt-7 font-mono text-2xl font-bold tracking-[0.14em]"><span class="sr-only">Code du bon : </span>' + CODE_K + esc(v.code) + '</p>' +
+      '<button type="button" class="c-vch-use btn-light mt-5 w-full focus-visible:outline-white" data-action="use" data-id="' + id + '"' + (working ? ' disabled aria-busy="true"' : '') + '>' +
         (working ? spinner('h-5 w-5') + 'Validation…' : 'Utiliser mon bon') + '</button>' +
-      '<p class="mt-3 text-base">À faire devant le partenaire.</p>' +
+      '<p class="c-vch-note mt-3 text-base">À faire devant le partenaire.</p>' +
     '</li>';
   }
 
@@ -255,23 +268,34 @@ Meleze.views.wallet = (function () {
           '<button type="button" class="' + BTN_LINK + '" data-action="mail-close">Annuler</button>' +
         '</div>';
     }
-    return '<section id="mail-panel" class="mt-8 bg-sunk p-6 sm:p-8" aria-labelledby="mail-h">' +
+    return '<section id="mail-panel" class="c-mail mt-8 bg-sunk p-6 sm:p-8" aria-labelledby="mail-h">' +
       '<h2 id="mail-h" tabindex="-1" class="text-[1.75rem] outline-none sm:text-3xl">' + title + '</h2>' + body +
     '</section>';
   }
 
-  /** Sous l'intro : adresse qui garde les bons, ou les deux liens (ajouter / retrouver). */
-  function accountBlock(state) {
-    if (mail && !(mail.mode === 'save' && state.email)) return mailPanel(state);
-    if (state.email) {
-      return '<p id="mail-saved" tabindex="-1" class="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-lg text-ink outline-none">' +
-        '<span class="tag bg-forest text-white">Bons sauvegardés</span>' +
-        '<span class="min-w-0 break-words font-semibold">' + esc(state.email) + '</span></p>';
-    }
-    return '<div class="mt-4 flex flex-wrap gap-x-6 gap-y-1">' +
+  /** Les deux liens : ajouter son e-mail (s'il y a un compte), retrouver ses bons. */
+  function accountLinks(state, cls) {
+    return '<div class="' + cls + ' flex flex-wrap gap-x-6 gap-y-1">' +
       (state.hasAccount ? '<button type="button" class="' + BTN_LINK + '" data-action="mail-open" data-mode="save">Gardez vos bons : ajoutez votre e-mail</button>' : '') +
       '<button type="button" class="' + BTN_LINK + '" data-action="mail-open" data-mode="recover">Retrouver mes bons</button>' +
     '</div>';
+  }
+
+  /** Les liens sont proposés quand aucun panneau n'est ouvert et qu'aucun e-mail n'est enregistré. */
+  const showLinks = (state) => !state.email && !(mail && !(mail.mode === 'save' && state.email));
+
+  /**
+   * Sous l'intro : panneau e-mail ouvert, adresse qui garde les bons, ou les deux liens.
+   * Téléphone : les liens sont sous « Mes bons » (voir render), ici réservés à l'ordinateur.
+   */
+  function accountBlock(state) {
+    if (mail && !(mail.mode === 'save' && state.email)) return mailPanel(state);
+    if (state.email) {
+      return '<p id="mail-saved" tabindex="-1" class="c-saved mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-lg text-ink outline-none">' +
+        '<span class="tag bg-forest text-white">Bons sauvegardés</span>' +
+        '<span class="min-w-0 break-words font-semibold">' + esc(state.email) + '</span></p>';
+    }
+    return accountLinks(state, 'c-desk mt-4');
   }
 
   // ------------------------------------------------------------------------
@@ -291,10 +315,10 @@ Meleze.views.wallet = (function () {
   }
 
   function render(state) {
-    const head = '<h1 id="page-title" tabindex="-1" class="text-5xl font-extrabold sm:text-6xl lg:text-7xl">Mon <span class="mark">espace</span></h1>';
+    const head = '<h1 id="page-title" tabindex="-1" class="c-h1 text-5xl font-extrabold sm:text-6xl lg:text-7xl">Mon <span class="mark">espace</span></h1>';
     const waiting = waitingPage(state);
     if (waiting) {
-      return '<div class="mx-auto max-w-app px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">' + head +
+      return '<div class="c-page mx-auto max-w-app px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">' + head +
         '<div class="mt-8" aria-live="polite">' + waiting + '</div></div>';
     }
 
@@ -309,6 +333,9 @@ Meleze.views.wallet = (function () {
       (a.usedAt ? 1 : 0) - (b.usedAt ? 1 : 0) ||
       String(b.usedAt || b.createdAt || '').localeCompare(String(a.usedAt || a.createdAt || '')));
     const activeCount = vouchers.filter((v) => !v.usedAt).length;
+    // Téléphone : « Mission(s) en cours » ; « Mes missions » dès qu'une mission vient d'être validée
+    const fresh = ongoing.filter((p) => checks[p.id] && checks[p.id].phase === 'valid').length;
+    const phoneLabel = fresh ? 'Mes missions' : 'Mission' + s(ongoing.length) + ' en cours';
     const H2 = 'text-[2.5rem] sm:text-5xl';
 
     let intro = 'Prêt·e pour une première mission ?';
@@ -320,7 +347,7 @@ Meleze.views.wallet = (function () {
     const NUM = 'font-display text-[2.25rem] font-bold leading-none tracking-[-0.04em] sm:text-5xl';
     const CAP = 'font-display text-base font-semibold leading-snug sm:text-lg';
     const stats = validated.length || vouchers.length
-      ? '<ul class="mt-8 grid max-w-2xl grid-cols-2 gap-3">' +
+      ? '<ul class="c-desk mt-8 grid max-w-2xl grid-cols-2 gap-3">' +
           '<li class="' + TILE + ' bg-ink text-surface">' +
             '<p class="' + NUM + ' whitespace-nowrap">' + (minutes ? esc(duration(minutes)) : validated.length) + '</p>' +
             '<p class="' + CAP + '">' + (minutes ? 'pour la montagne' : 'mission' + s(validated.length) + ' validée' + s(validated.length)) + '</p></li>' +
@@ -332,26 +359,28 @@ Meleze.views.wallet = (function () {
 
     // Données de la copie locale (chargement échoué) : toujours signalé.
     const offline = state.status === 'offline' || state.status === 'error'
-      ? '<p class="mt-6 bg-ink px-5 py-3 font-display text-base font-semibold text-surface" role="status">' +
+      ? '<p class="c-banner mt-6 bg-ink px-5 py-3 font-display text-base font-semibold text-surface" role="status">' +
           (state.status === 'offline' ? 'Hors connexion' : 'Serveur injoignable') + ' : dernières données enregistrées sur cet appareil.</p>'
       : '';
 
-    return '<div class="mx-auto max-w-app px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">' +
+    // Téléphone : ni phrase d'accueil ni repères chiffrés (classe c-desk) : la mission en cours
+    // et les bons viennent tout de suite sous le titre, comme sur la maquette « Cartes ».
+    return '<div class="c-page mx-auto max-w-app px-5 pb-16 pt-10 sm:px-8 lg:pb-24 lg:pt-16">' +
       head +
-      '<p class="mt-4 max-w-xl font-display text-xl font-semibold leading-snug tracking-[-0.01em] text-ink sm:text-2xl">' + intro + '</p>' +
+      '<p class="c-desk mt-4 max-w-xl font-display text-xl font-semibold leading-snug tracking-[-0.01em] text-ink sm:text-2xl">' + intro + '</p>' +
       accountBlock(state) +
       offline +
       stats +
 
-      '<div class="mt-14 space-y-16 lg:mt-20 lg:space-y-20">' +
+      '<div class="c-secs mt-14 space-y-16 lg:mt-20 lg:space-y-20">' +
         // ---- Missions en cours : la photo à prendre ---------------------------------------
         '<section aria-labelledby="ongoing">' +
-          '<h2 id="ongoing" class="' + H2 + '">Mes missions</h2>' +
+          '<h2 id="ongoing" class="c-label ' + H2 + '"><span class="c-desk">Mes missions</span><span class="md:hidden">' + phoneLabel + '</span></h2>' +
           (ongoing.length
             ? '<ul class="mt-7 grid gap-14 lg:grid-cols-2 lg:gap-x-8">' +
                 ongoing.map((p) => (checks[p.id] && checks[p.id].phase === 'valid' ? successCard(p, get(p), checks[p.id]) : activeCard(p, get(p)))).join('') +
               '</ul>'
-            : '<div class="mt-7 bg-sunk p-6 sm:p-8">' +
+            : '<div class="c-empty mt-7 bg-sunk p-6 sm:p-8">' +
                 '<p class="font-display text-[1.75rem] font-bold leading-tight tracking-[-0.02em] text-ink">Aucune mission en cours.</p>' +
                 '<a href="#/missions" class="btn mt-6 min-h-[56px] bg-ink text-lg text-surface hover:bg-ink/85">Trouver une mission ' + icon('arrow', 'h-5 w-5') + '</a>' +
               '</div>') +
@@ -359,18 +388,22 @@ Meleze.views.wallet = (function () {
 
         // ---- Bons : valables d'abord, puis utilisés -----------------------------------------
         '<section aria-labelledby="rewards">' +
-          '<h2 id="rewards" class="' + H2 + '">Mes bons</h2>' +
+          '<h2 id="rewards" class="c-label ' + H2 + '">Mes bons</h2>' +
           (vouchers.length
-            ? '<p class="mt-3 font-display text-xl font-semibold leading-snug text-ink">Montrez le bon au partenaire, puis utilisez-le devant lui.</p>' +
+            ? '<p class="c-desk mt-3 font-display text-xl font-semibold leading-snug text-ink">Montrez le bon au partenaire, puis utilisez-le devant lui.</p>' +
               '<ul class="mt-7 grid gap-4 md:grid-cols-2 lg:gap-6 xl:grid-cols-3">' + vouchers.map((v) => voucherCard(v, state)).join('') + '</ul>'
-            : '<p class="mt-7 bg-sunk p-6 font-display text-xl font-semibold leading-snug text-ink sm:p-8">Vos bons arriveront ici après une mission validée.</p>') +
+            : '<p class="c-empty mt-7 bg-sunk p-6 font-display text-xl font-semibold leading-snug text-ink sm:p-8">Vos bons arriveront ici après une mission validée.</p>') +
+          // Téléphone : garder ses bons / les retrouver, juste sous les bons
+          (showLinks(state) ? accountLinks(state, 'c-account md:hidden') : '') +
         '</section>' +
 
         // ---- Historique (tuiles grises) ----------------------------------------------------
         (validated.length
           ? '<section aria-labelledby="validated">' +
-              '<h2 id="validated" class="text-[1.75rem] sm:text-3xl">Missions validées</h2>' +
-              '<ul class="mt-5 space-y-2">' +
+              '<h2 id="validated" class="c-label text-[1.75rem] sm:text-3xl">Missions validées</h2>' +
+              // Téléphone : les repères chiffrés (c-desk) sont masqués ; le temps donné reste affiché ici
+              (minutes ? '<p class="c-given md:hidden">Déjà <strong>' + esc(duration(minutes)) + '</strong> pour la montagne. Merci&nbsp;!</p>' : '') +
+              '<ul class="c-history mt-5 space-y-2">' +
                 validated.map((p) =>
                   '<li class="flex flex-col gap-0.5 bg-sunk px-5 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">' +
                     '<span class="font-display text-lg font-semibold leading-snug text-ink">' + esc(get(p) ? get(p).title : 'Mission retirée') + '</span>' +
@@ -382,7 +415,7 @@ Meleze.views.wallet = (function () {
 
         // ---- Données : liées à ce navigateur, effaçables d'un geste -------------------------
         (state.hasAccount || state.participations.length || state.vouchers.length
-          ? '<section aria-labelledby="data-h" class="bg-sunk p-6 sm:p-8">' +
+          ? '<section aria-labelledby="data-h" class="c-data bg-sunk p-6 sm:p-8">' +
               '<h2 id="data-h" class="text-[1.75rem] sm:text-3xl">Vos données</h2>' +
               '<p class="mt-3 max-w-xl text-lg leading-snug text-ink">' +
                 (state.email ? 'Vos missions et vos bons sont liés à votre e-mail. ' : 'Sans compte ni e-mail : vos missions et vos bons sont liés à ce navigateur. ') +

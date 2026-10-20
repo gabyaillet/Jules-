@@ -79,7 +79,7 @@ Meleze.views.legal = (function () {
     const e = EDITEUR;
     const mail = e.email ? link('mailto:' + e.email, esc(e.email)) : val('');
     return '<div class="' + WRAP + ' pb-16 pt-12 lg:pb-24 lg:pt-20">' +
-      '<h1 id="page-title" tabindex="-1" class="text-5xl font-extrabold sm:text-7xl">Mentions légales</h1>' +
+      '<h1 id="page-title" tabindex="-1" class="c-h1 text-5xl font-extrabold sm:text-7xl">Mentions légales</h1>' +
       '<p class="mt-4 text-muted">Dernière mise à jour : ' + MISE_A_JOUR + '</p>' +
 
       section('editeur', 'Éditeur du site',
