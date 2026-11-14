@@ -68,6 +68,8 @@ Meleze.api = (function () {
     emailTaken: 'Cette adresse est déjà utilisée. Choisissez « Retrouver mes bons ».',
     noSavedVouchers: 'Aucun bon n’est enregistré avec cette adresse.',
     missionGone: 'Cette mission n’est plus proposée.',
+    emailSend: 'L’e-mail n’a pas pu être envoyé (service d’envoi en panne). Réessayez plus tard ; si cela continue, prévenez l’équipe Mélèze.',
+    server: 'Le serveur rencontre un problème. Réessayez dans un instant.',
   };
   /** Qui prévenir quand le service est mal réglé (contact de l'éditeur). */
   const CONTACT = 'Prévenez l’équipe Mélèze (contact dans les mentions légales).';
@@ -172,7 +174,11 @@ Meleze.api = (function () {
   function isNetworkError(e) {
     if (!e) return false;
     const msg = String(e.message || '');
-    return e.name === 'AuthRetryableFetchError' || e.name === 'FunctionsFetchError' ||
+    // supabase-js range aussi les réponses 5xx du serveur d'authentification dans
+    // AuthRetryableFetchError (ex. 500 « Error sending magic link email ») : seul le
+    // statut 0 (requête impossible) est une vraie coupure réseau.
+    if (e.name === 'AuthRetryableFetchError') return !e.status;
+    return e.name === 'FunctionsFetchError' ||
       (!e.code && /Failed to fetch|NetworkError|Load failed|AbortError|TimeoutError|FetchError|network/i.test(msg));
   }
 
@@ -194,6 +200,11 @@ Meleze.api = (function () {
     const status = e && e.status;
     const code = (e && e.code) || '';
     if (status === 429 || /rate_limit/.test(code)) return new ApiError(MESSAGES.tooMany, 'rate_limit', 429);
+    // Panne côté serveur (souvent l'envoi des e-mails : SMTP mal réglé ou refusé)
+    if (status >= 500) {
+      const mail = /e-?mail|smtp|mailer/i.test(String((e && e.message) || ''));
+      return new ApiError((mail ? MESSAGES.emailSend : MESSAGES.server) + ' (code ' + status + ')', mail ? 'email_send_failed' : 'server_error', status);
+    }
     return new ApiError(fallback || MESSAGES.generic, code || 'auth', status);
   }
 
@@ -257,6 +268,7 @@ Meleze.api = (function () {
     const status = e && e.status;
     if (e && (status === 429 || /rate_limit/.test(e.code || ''))) return new ApiError(MESSAGES.tooMany, 'rate_limit', 429);
     if (e && (!online() || isNetworkError(e))) return new ApiError(MESSAGES.offline, 'offline');
+    if (status >= 500) return new ApiError(MESSAGES.server + ' (code ' + status + ')', 'server_error', status);
     return new ApiError(MESSAGES.badCode, 'bad_code', status);
   }
 
